@@ -1,19 +1,19 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { LatexText } from "@/shared/utils/latex";
 import type { QuizQuestion } from "../course.types";
 
 interface QuizQuestionRadioGroupProps {
   question: QuizQuestion;
-  /** Index de la question dans le quiz (pour l'affichage) */
   index: number;
 }
 
 /**
  * Groupe radio pour une question QCM à choix unique.
- * - Choix unique (radio), JAMAIS checkbox (`correct_option_index` est un entier)
- * - Timer fourni par le backend (`time_limit_seconds`)
- * - Feedback correct/incorrect après sélection
+ * - Feedback correct/incorrect uniquement APRÈS sélection
+ * - Timer fourni par le backend (time_limit_seconds)
+ * - Rendu LaTeX dans les options et explications
  */
 export function QuizQuestionRadioGroup({ question, index }: QuizQuestionRadioGroupProps) {
   const [selected, setSelected] = useState<number | null>(null);
@@ -24,7 +24,7 @@ export function QuizQuestionRadioGroup({ question, index }: QuizQuestionRadioGro
 
   const isRevealed = selected !== null || expired;
 
-  // Timer countdown
+  // Timer countdown — reset si la question change
   useEffect(() => {
     if (timeLeft == null || timeLeft <= 0 || isRevealed) return;
 
@@ -53,12 +53,12 @@ export function QuizQuestionRadioGroup({ question, index }: QuizQuestionRadioGro
   const isCorrect = selected === question.correct_option_index;
 
   return (
-    <fieldset className="rounded-lg border border-gray-200 p-4" disabled={isRevealed}>
+    <fieldset className="rounded-lg border border-gray-200 p-4">
       <legend className="sr-only">Question {index + 1}</legend>
       <div className="flex items-start justify-between gap-3 mb-3">
         <h3 className="text-sm font-semibold text-gray-900">
           <span className="text-indigo-600 mr-1">Q{index + 1}.</span>
-          {question.question}
+          <LatexText text={question.question} />
         </h3>
         {timeLeft != null && !isRevealed && (
           <span className="flex-shrink-0 text-xs font-mono text-gray-500">
@@ -69,11 +69,14 @@ export function QuizQuestionRadioGroup({ question, index }: QuizQuestionRadioGro
 
       <div className="space-y-2">
         {question.options.map((option, optIdx) => {
+          const isSelected = selected === optIdx;
+          const isCorrectOption = optIdx === question.correct_option_index;
+
           let ringClass = "";
           if (isRevealed) {
-            if (optIdx === question.correct_option_index) {
+            if (isCorrectOption) {
               ringClass = "ring-2 ring-green-500 bg-green-50";
-            } else if (optIdx === selected && !isCorrect) {
+            } else if (isSelected && !isCorrect) {
               ringClass = "ring-2 ring-red-500 bg-red-50";
             }
           }
@@ -92,16 +95,18 @@ export function QuizQuestionRadioGroup({ question, index }: QuizQuestionRadioGro
                 type="radio"
                 name={`quiz-q-${index}`}
                 value={optIdx}
-                checked={selected === optIdx}
+                checked={isSelected}
                 onChange={() => handleChange(optIdx)}
                 disabled={isRevealed}
                 className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"
               />
-              <span className="flex-1 text-gray-700">{option}</span>
-              {isRevealed && optIdx === question.correct_option_index && (
+              <span className="flex-1 text-gray-700">
+                <LatexText text={option} />
+              </span>
+              {isRevealed && isCorrectOption && (
                 <span className="text-green-600 font-medium text-xs">✓ Correct</span>
               )}
-              {isRevealed && optIdx === selected && !isCorrect && (
+              {isRevealed && isSelected && !isCorrect && (
                 <span className="text-red-600 font-medium text-xs">✗ Incorrect</span>
               )}
             </label>
@@ -109,9 +114,9 @@ export function QuizQuestionRadioGroup({ question, index }: QuizQuestionRadioGro
         })}
       </div>
 
-      {isRevealed && (
+      {isRevealed && question.explanation && (
         <p className="mt-3 text-sm text-gray-600 bg-gray-50 rounded-lg p-3">
-          💡 {question.explanation}
+          💡 <LatexText text={question.explanation} />
         </p>
       )}
     </fieldset>

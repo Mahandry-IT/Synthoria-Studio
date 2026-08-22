@@ -18,9 +18,15 @@ export function ErrorState({ error, onRetry }: ErrorStateProps) {
   if (!error) return null;
 
   const status = error instanceof HttpError ? error.status : 0;
-  const message = (status in ERROR_MESSAGES)
-    ? ERROR_MESSAGES[status]
-    : error.message || DEFAULT_MESSAGE;
+  const bodyDetail =
+    error instanceof HttpError && error.body && typeof error.body === "object"
+      ? (error.body as Record<string, unknown>).detail
+      : undefined;
+  const message =
+    (typeof bodyDetail === "string" && bodyDetail) ||
+    (status in ERROR_MESSAGES ? ERROR_MESSAGES[status] : null) ||
+    error.message ||
+    DEFAULT_MESSAGE;
 
   const iconColor = status >= 500 ? "text-red-500" : "text-amber-500";
 

@@ -1,12 +1,13 @@
 "use client";
 
+import { LatexText } from "@/shared/utils/latex";
+
 interface NextStepsListProps {
   steps: string[];
 }
 
 /**
- * Affiche les prochaines étapes suggérées.
- * Le backend peut retourner des next_steps de repli (= unconfirmed_points).
+ * Affiche les prochaines étapes suggérées avec rendu LaTeX.
  */
 export function NextStepsList({ steps }: NextStepsListProps) {
   if (steps.length === 0) return null;
@@ -22,7 +23,7 @@ export function NextStepsList({ steps }: NextStepsListProps) {
             <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-500">
               {i + 1}
             </span>
-            <span>{step}</span>
+            <span><LatexText text={step} /></span>
           </li>
         ))}
       </ul>

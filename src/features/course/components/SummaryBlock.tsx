@@ -1,12 +1,13 @@
 "use client";
 
+import { LatexText } from "@/shared/utils/latex";
+
 interface SummaryBlockProps {
   summary: string;
 }
 
 /**
- * Affiche le résumé du cours.
- * Le backend peut retourner un summary de repli (= titre de section).
+ * Affiche le résumé du cours avec rendu LaTeX.
  */
 export function SummaryBlock({ summary }: SummaryBlockProps) {
   if (!summary || summary.trim().length === 0) return null;
@@ -16,7 +17,9 @@ export function SummaryBlock({ summary }: SummaryBlockProps) {
       <h2 id="summary-heading" className="text-sm font-semibold text-indigo-800 mb-2">
         Résumé
       </h2>
-      <p className="text-sm text-indigo-700 leading-relaxed">{summary}</p>
+      <p className="text-sm text-indigo-700 leading-relaxed">
+        <LatexText text={summary} />
+      </p>
     </section>
   );
 }

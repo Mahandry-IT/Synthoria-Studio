@@ -1,5 +1,5 @@
 import { postMultipart, getJson } from "@/shared/api/httpClient";
-import type { PDFIngestMultiResponse, FileListResponse } from "./ingestion.types";
+import type { PDFIngestResponse, FileListResponse } from "./ingestion.types";
 
 /**
  * Upload un ou plusieurs fichiers PDF pour ingestion.
@@ -7,12 +7,12 @@ import type { PDFIngestMultiResponse, FileListResponse } from "./ingestion.types
  * @param files - Tableau de fichiers File à uploader
  * @throws {HttpError} en cas d'erreur serveur
  */
-export async function ingestPdf(files: File[]): Promise<PDFIngestMultiResponse> {
+export async function ingestPdf(files: File[]): Promise<PDFIngestResponse> {
   const formData = new FormData();
   for (const file of files) {
     formData.append("files", file);
   }
-  return postMultipart<PDFIngestMultiResponse>("/pdf/ingest", formData);
+  return postMultipart<PDFIngestResponse>("/pdf/ingest", formData);
 }
 
 /**

@@ -1,6 +1,7 @@
 "use client";
 
 import type { CoursePitfall } from "../course.types";
+import { LatexText } from "@/shared/utils/latex";
 
 interface PitfallsListProps {
   pitfalls: CoursePitfall[];
@@ -8,7 +9,7 @@ interface PitfallsListProps {
 
 /**
  * Affiche les pièges courants.
- * ⚠️ Affiché si `common_pitfalls` non null.
+ * L'API utilise description/why_it_happens/how_to_avoid.
  */
 export function PitfallsList({ pitfalls }: PitfallsListProps) {
   if (pitfalls.length === 0) return null;
@@ -21,11 +22,24 @@ export function PitfallsList({ pitfalls }: PitfallsListProps) {
       <ul className="space-y-3">
         {pitfalls.map((pitfall, i) => (
           <li key={i} className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-            <h3 className="text-sm font-semibold text-amber-800">{pitfall.title}</h3>
-            <p className="mt-1 text-sm text-amber-700">{pitfall.description}</p>
-            {pitfall.tip && (
-              <p className="mt-2 text-xs text-amber-600 italic">
-                💡 {pitfall.tip}
+            <p className="text-sm font-semibold text-amber-800">
+              <LatexText text={pitfall.description} />
+            </p>
+            {pitfall.why_it_happens && (
+              <p className="mt-2 text-sm text-amber-700">
+                <span className="font-medium">Pourquoi :</span>{" "}
+                <LatexText text={pitfall.why_it_happens} />
+              </p>
+            )}
+            {pitfall.how_to_avoid && (
+              <p className="mt-1 text-xs text-amber-600 italic">
+                💡 <LatexText text={pitfall.how_to_avoid} />
+              </p>
+            )}
+            {/* Legacy fallback */}
+            {!pitfall.why_it_happens && pitfall.tip && (
+              <p className="mt-1 text-xs text-amber-600 italic">
+                💡 <LatexText text={pitfall.tip} />
               </p>
             )}
           </li>

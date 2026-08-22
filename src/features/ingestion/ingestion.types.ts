@@ -6,18 +6,15 @@ export interface IngestedFile {
   filename: string;
   status: FileIngestStatus;
   message: string;
-  chunks?: number | null;
+  chunks_added?: number | null;
+  documents_added?: number | null;
 }
 
 export interface PDFIngestResponse {
+  status: string;
   files: IngestedFile[];
   total_chunks: number;
-}
-
-export interface PDFIngestMultiResponse {
-  results: IngestedFile[];
-  total_files: number;
-  total_chunks: number;
+  total_documents: number;
 }
 
 // ─── File List Response ─────────────────────────────────────

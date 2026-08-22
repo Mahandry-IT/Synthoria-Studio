@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useDropzone } from "react-dropzone";
-import { Button } from "@/components/Button";
+import { useDropzone, type FileRejection } from "react-dropzone";
 import { useIngestPdf } from "../hooks/useIngestPdf";
 import { MAX_PDF_SIZE_BYTES } from "@/shared/utils/constants";
 
@@ -15,7 +14,7 @@ export function FileUploadPanel() {
   const [rejectedFiles, setRejectedFiles] = useState<string[]>([]);
 
   const onDrop = useCallback(
-    (acceptedFiles: File[], rejections: { file: File; errors: { message: string }[] }[]) => {
+    (acceptedFiles: File[], rejections: FileRejection[]) => {
       setRejectedFiles(rejections.map((r) => r.file.name));
 
       if (acceptedFiles.length > 0) {
@@ -31,6 +30,13 @@ export function FileUploadPanel() {
     maxSize: MAX_PDF_SIZE_BYTES,
     multiple: true,
   });
+
+  const files = data?.files ?? [];
+  const totalChunks = data?.total_chunks ?? 0;
+  const totalDocs = data?.total_documents ?? 0;
+
+  const failedFiles = files.filter((f) => f.status === "failed");
+  const successFiles = files.filter((f) => f.status === "ok");
 
   return (
     <div className="space-y-4">
@@ -88,7 +94,7 @@ export function FileUploadPanel() {
 
       {rejectedFiles.length > 0 && (
         <div className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
-          <p className="font-medium">Fichiers rejetés :</p>
+          <p className="font-medium">Fichiers rejetés (validation client) :</p>
           <ul className="mt-1 list-inside list-disc">
             {rejectedFiles.map((name) => (
               <li key={name}>{name}</li>
@@ -97,23 +103,31 @@ export function FileUploadPanel() {
         </div>
       )}
 
-      {data && (
+      {failedFiles.length > 0 && (
+        <div className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
+          <p className="font-medium">Fichiers échoués (serveur) :</p>
+          <ul className="mt-1 list-inside list-disc">
+            {failedFiles.map((f) => (
+              <li key={f.filename}>
+                ✗ {f.filename} — {f.message}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {successFiles.length > 0 && (
         <div className="rounded-lg bg-green-50 p-4 text-sm text-green-800">
           <p className="font-medium">
-            {data.total_files} fichier(s) ingéré(s) — {data.total_chunks} morceau(x) créés
+            {successFiles.length} fichier(s) ingéré(s) — {totalChunks} morceau(x), {totalDocs} document(s)
           </p>
           <ul className="mt-2 space-y-1">
-            {data.results.map((f) => (
-              <li
-                key={f.filename}
-                className={
-                  f.status === "ok"
-                    ? "text-green-700"
-                    : "text-red-600"
-                }
-              >
-                {f.status === "ok" ? "✓" : "✗"} {f.filename}{" "}
-                <span className="text-xs opacity-75">({f.message})</span>
+            {successFiles.map((f) => (
+              <li key={f.filename} className="text-green-700">
+                ✓ {f.filename}
+                {f.chunks_added != null && (
+                  <span className="text-xs opacity-75"> ({f.chunks_added} chunks)</span>
+                )}
               </li>
             ))}
           </ul>
