@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ingestPdf } from "../ingestion.api";
 import type { PDFIngestResponse } from "../ingestion.types";
 import { HttpError } from "@/shared/api/httpClient";
-import { toastError, toastSuccess } from "@/shared/ui/toast";
+import { toastError, toastSuccess, toastWarning } from "@/shared/ui/toast";
 
 interface UseIngestPdfReturn {
   mutate: (files: File[]) => void;
@@ -24,11 +24,13 @@ export function useIngestPdf(): UseIngestPdfReturn {
     mutationFn: ingestPdf,
     onSuccess: (data) => {
       const count = data.files?.length ?? 0;
-      const failed = data.files?.filter((f) => f.status === "failed").length ?? 0;
+      const failed = data.files?.filter((f) => f.status === "failed" || f.status === "error").length ?? 0;
       if (count > 0 && failed === 0) {
         toastSuccess(`${count} fichier(s) ingéré(s) avec succès !`);
-      } else if (failed > 0) {
-        toastError(`${failed} fichier(s) échoué(s) sur ${count}.`);
+      } else if (failed > 0 && failed < count) {
+        toastWarning(`${failed} fichier(s) échoué(s) sur ${count}.`);
+      } else if (failed === count) {
+        toastError(`${failed} fichier(s) échoué(s).`);
       }
       queryClient.invalidateQueries({ queryKey: ["files"] });
     },
