@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+import axios, { type AxiosRequestConfig, type AxiosError } from "axios";
 
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 1000;
@@ -16,64 +16,59 @@ export class HttpError extends Error {
   }
 }
 
+/** Instance axios préconfigurée pour le proxy Next.js */
+const api = axios.create({
+  baseURL: "/api",
+  timeout: DEFAULT_TIMEOUT_MS,
+  headers: { Accept: "application/json" },
+});
+
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-function shouldRetry(status: number, error?: Error): boolean {
-  if (error?.name === "AbortError") return false;
-  if (error?.name === "TimeoutError") return false;
-  return status >= 500 || !status; // network errors have status 0
+function shouldRetry(status: number): boolean {
+  return status >= 500 || !status;
+}
+
+function toHttpError(err: AxiosError): HttpError {
+  const status = err.response?.status ?? 0;
+  const body = err.response?.data ?? null;
+  return new HttpError(status, `HTTP ${status}`, body);
 }
 
 /**
- * Wrapper fetch avec timeout, retry backoff exponentiel sur 5xx/réseau.
+ * Wrapper axios avec timeout, retry backoff exponentiel sur 5xx/réseau.
  * Ne retry PAS sur erreurs 4xx.
  */
 export async function httpClient<T>(
   path: string,
-  options: RequestInit & { timeout?: number } = {},
+  config: AxiosRequestConfig = {},
 ): Promise<T> {
-  const { timeout = DEFAULT_TIMEOUT_MS, ...fetchOptions } = options;
-  const url = `${API_URL}${path}`;
+  const { timeout = DEFAULT_TIMEOUT_MS, ...rest } = config;
 
   let lastError: Error | undefined;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const res = await fetch(url, {
-        ...fetchOptions,
-        signal: AbortSignal.timeout(timeout),
-        headers: {
-          ...fetchOptions.headers,
-        },
-      });
-
-      if (!res.ok) {
-        let body: unknown;
-        try {
-          body = await res.json();
-        } catch {
-          body = await res.text().catch(() => null);
-        }
-
-        if (shouldRetry(res.status)) {
-          lastError = new HttpError(res.status, `HTTP ${res.status}`, body);
-        } else {
-          throw new HttpError(res.status, `HTTP ${res.status}`, body);
-        }
-      } else {
-        const text = await res.text();
-        if (!text) return undefined as T;
-        return JSON.parse(text) as T;
-      }
+      const res = await api.request<T>({ ...rest, url: path, timeout });
+      return res.data;
     } catch (err) {
-      if (err instanceof HttpError && !shouldRetry(0, err)) {
+      if (!axios.isAxiosError(err)) {
         throw err;
       }
-      lastError = err instanceof Error ? err : new Error(String(err));
-      if (!shouldRetry(0, lastError)) {
-        throw lastError;
+
+      const httpErr = toHttpError(err);
+
+      // HttpError 4xx → throw immédiat (pas de retry)
+      if (httpErr.status >= 400 && httpErr.status < 500) {
+        throw httpErr;
+      }
+
+      lastError = httpErr;
+
+      if (!shouldRetry(httpErr.status)) {
+        throw httpErr;
       }
     }
 
@@ -87,25 +82,25 @@ export async function httpClient<T>(
 }
 
 /** POST JSON helper */
-export function postJson<T>(path: string, body: unknown, init?: RequestInit): Promise<T> {
+export function postJson<T>(path: string, body: unknown, config?: AxiosRequestConfig): Promise<T> {
   return httpClient<T>(path, {
     method: "POST",
-    body: JSON.stringify(body),
+    data: body,
     headers: { "Content-Type": "application/json" },
-    ...init,
+    ...config,
   });
 }
 
 /** GET helper */
-export function getJson<T>(path: string, init?: RequestInit): Promise<T> {
-  return httpClient<T>(path, { method: "GET", ...init });
+export function getJson<T>(path: string, config?: AxiosRequestConfig): Promise<T> {
+  return httpClient<T>(path, { method: "GET", ...config });
 }
 
 /** POST multipart helper (pour l'upload de fichiers) */
-export async function postMultipart<T>(path: string, formData: FormData): Promise<T> {
+export function postMultipart<T>(path: string, formData: FormData): Promise<T> {
   return httpClient<T>(path, {
     method: "POST",
-    body: formData,
-    // Ne pas définir Content-Type — le navigateur le fait automatiquement avec le boundary
+    data: formData,
+    headers: { "Content-Type": "multipart/form-data" },
   });
 }
