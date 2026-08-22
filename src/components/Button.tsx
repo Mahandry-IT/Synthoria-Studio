@@ -24,11 +24,14 @@ const variantClasses: Record<ButtonVariant, string> = {
  * Bouton réutilisable avec variants et état loading.
  */
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = "primary", loading, disabled, className = "", children, ...props }, ref) => {
+  ({ variant = "primary", loading = false, disabled, className = "", children, ...props }, ref) => {
+    const isDisabled = disabled === true || loading;
+
     return (
       <button
         ref={ref}
-        disabled={disabled || loading}
+        disabled={isDisabled}
+        suppressHydrationWarning
         className={[
           "inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium",
           "transition-colors duration-150",

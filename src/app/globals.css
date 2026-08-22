@@ -1,7 +1,8 @@
 @import "tailwindcss";
+@import "react-toastify/dist/ReactToastify.css";
 
 :root {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 @media (prefers-reduced-motion: reduce) {

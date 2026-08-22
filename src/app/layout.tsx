@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Geist } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import { Sidebar } from "@/components/Sidebar";
 
-const inter = Inter({
+const geist = Geist({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-geist",
 });
 
 export const metadata: Metadata = {
@@ -19,31 +20,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={inter.variable}>
-      <body className="min-h-screen bg-gray-50 font-sans antialiased text-gray-900">
+    <html lang="fr" className={geist.variable}>
+      <body
+        suppressHydrationWarning
+        className="min-h-screen bg-gray-50 font-sans antialiased text-gray-900"
+      >
         <Providers>
-          <header className="border-b border-gray-200 bg-white">
-            <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-              <a href="/" className="text-lg font-bold text-gray-900">
-                Synthoria
-              </a>
-              <nav className="flex items-center gap-4 text-sm" aria-label="Navigation principale">
-                <a
-                  href="/"
-                  className="text-gray-600 transition-colors hover:text-gray-900"
-                >
-                  Upload
-                </a>
-                <a
-                  href="/ask"
-                  className="text-gray-600 transition-colors hover:text-gray-900"
-                >
-                  Poser une question
-                </a>
-              </nav>
-            </div>
-          </header>
-          <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+          <div className="flex h-screen overflow-hidden">
+            <Sidebar />
+            <main className="flex-1 overflow-y-auto px-6 py-8">
+              <div className="mx-auto max-w-4xl">{children}</div>
+            </main>
+          </div>
         </Providers>
       </body>
     </html>
