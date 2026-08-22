@@ -1,24 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Synthoria
+
+Application Next.js pour la génération de cours structurés par IA.
 
 ## Getting Started
 
-First, run the development server:
+### Development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
+
+## Docker
+
+### Quick Start
+
+```bash
+# Build and run with Docker Compose
+cp .env.example .env
+docker compose up -d --build
+
+# Or build and run with Docker
+docker build -t synthoria .
+docker run -p 3000:3000 synthoria
+```
+
+### Development with Docker
+
+```bash
+# Run development server with hot reload
+docker compose --profile dev up dev
+```
+
+### Build Arguments
+
+- `NODE_ENV`: Set to `production` (default) or `development`
+
+### Environment Variables
+
+- `PORT`: Server port (default: 3000)
+- `HOSTNAME`: Server hostname (default: "0.0.0.0")
 
 ## Learn More
 
