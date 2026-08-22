@@ -8,7 +8,7 @@ import { PitfallsList } from "@/features/course/components/PitfallsList";
 import { QuizPanel } from "@/features/course/components/QuizPanel";
 import { SummaryBlock } from "@/features/course/components/SummaryBlock";
 import { NextStepsList } from "@/features/course/components/NextStepsList";
-import { ErrorState } from "@/components/ErrorState";
+import { AnswerBlock } from "@/features/course/components/AnswerBlock";
 import { Skeleton } from "@/components/Skeleton";
 import { Card } from "@/components/Card";
 import { useGenerateCourse } from "@/features/course/hooks/useGenerateCourse";
@@ -16,12 +16,7 @@ import { Badge } from "@/components/Badge";
 import type { QuestionInputValues } from "@/features/course/course.schema";
 
 /**
- * Page de question + génération de cours (Mode 2/3).
- *
- * - Mode 2 : question + fichier(s) sélectionné(s)
- * - Mode 3 : question seule → recherche web
- *
- * Le mode est auto-détecté : pas de filename → Mode 3, filename → Mode 2.
+ * Page de question + génération de cours.
  */
 export default function AskPage() {
   const { mutate, data, error, isPending, reset } = useGenerateCourse();
@@ -33,11 +28,12 @@ export default function AskPage() {
       filename: values.filename ?? undefined,
       format: values.format,
       language: values.language,
+
     });
   }
 
-  const isMode3 = data && (!data.meta || !data.sources.some((s) => s.type === "file"));
-  const isMode2 = data && data.sources.some((s) => s.type === "file");
+  const isMode3 = data && (!data.meta || !data.sources?.some((s) => s.type === "file"));
+  const isMode2 = data && data.sources?.some((s) => s.type === "file");
 
   return (
     <div className="space-y-6">
@@ -46,7 +42,7 @@ export default function AskPage() {
           Poser une question
         </h1>
         <p className="mt-1 text-sm text-gray-500">
-          Demandez une explication sur un sujet. Vous pouvez optionally sélectionner
+          Demandez une explication sur un sujet. Vous pouvez sélectionner
           des fichiers ingestés comme contexte.
         </p>
       </div>
@@ -63,13 +59,11 @@ export default function AskPage() {
         </div>
       )}
 
-      {error && <ErrorState error={error} onRetry={() => reset()} />}
-
       {data && (
         <div className="space-y-6">
           <div className="flex items-center gap-2">
             {isMode3 && (
-              <Badge variant="blue">🔍 Recherche web</Badge>
+              <Badge variant="indigo">🔍 Recherche web</Badge>
             )}
             {isMode2 && (
               <Badge variant="indigo">📄 Basé sur vos documents</Badge>
@@ -86,13 +80,27 @@ export default function AskPage() {
             </Card>
           )}
 
-          <SourcesList sources={data.sources} />
+          <SourcesList sources={data.sources ?? []} />
 
-          {data.sections && <SectionsList sections={data.sections} />}
+          {/* Réponse principale (top-level answer) */}
+          {data.answer && (
+            <Card className="p-5">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Réponse</h2>
+              <AnswerBlock answer={data.answer} />
+            </Card>
+          )}
 
-          {data.common_pitfalls && <PitfallsList pitfalls={data.common_pitfalls} />}
+          {data.sections && data.sections.length > 0 && (
+            <SectionsList sections={data.sections} />
+          )}
 
-          {data.quiz && data.quiz.length > 0 && <QuizPanel questions={data.quiz} />}
+          {data.common_pitfalls && data.common_pitfalls.length > 0 && (
+            <PitfallsList pitfalls={data.common_pitfalls} />
+          )}
+
+          {data.quiz && data.quiz.length > 0 && (
+            <QuizPanel questions={data.quiz} />
+          )}
 
           {data.summary && <SummaryBlock summary={data.summary} />}
 

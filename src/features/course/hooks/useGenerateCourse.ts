@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { generateCourse } from "../course.api";
 import type { CourseGenerationRequest, CourseGenerationResponse } from "../course.types";
 import { HttpError } from "@/shared/api/httpClient";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 
 interface UseGenerateCourseReturn {
   mutate: (payload: CourseGenerationRequest) => void;
@@ -22,6 +23,12 @@ interface UseGenerateCourseReturn {
 export function useGenerateCourse(): UseGenerateCourseReturn {
   const mutation = useMutation({
     mutationFn: generateCourse,
+    onSuccess: () => {
+      toastSuccess("Cours généré avec succès !");
+    },
+    onError: (err) => {
+      toastError(err);
+    },
   });
 
   return {

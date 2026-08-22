@@ -2,9 +2,10 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
+import { ToastContainer } from "react-toastify";
 
 /**
- * Providers globaux : React Query.
+ * Providers globaux : React Query + Toast notifications.
  * Instancié côté client uniquement (use client).
  */
 export function Providers({ children }: { children: ReactNode }) {
@@ -21,6 +22,17 @@ export function Providers({ children }: { children: ReactNode }) {
   );
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      {children}
+      <ToastContainer
+        position="bottom-right"
+        autoClose={4000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        theme="colored"
+      />
+    </QueryClientProvider>
   );
 }
