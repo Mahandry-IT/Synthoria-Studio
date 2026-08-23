@@ -20,9 +20,16 @@ export async function POST(request: NextRequest) {
     });
 
     if (!res.ok) {
-      const errorBody = await res.text();
+      const errorText = await res.text();
+      let detail = errorText;
+      try {
+        const parsed = JSON.parse(errorText);
+        if (typeof parsed.detail === "string") detail = parsed.detail;
+      } catch {
+        // errorText n'est pas du JSON, on le garde tel quel
+      }
       return NextResponse.json(
-        { detail: errorBody },
+        { detail },
         { status: res.status },
       );
     }
