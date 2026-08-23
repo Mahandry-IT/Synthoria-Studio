@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import QuizIcon from "@mui/icons-material/Quiz";
+import HistoryIcon from "@mui/icons-material/History";
 
 interface NavItem {
   label: string;
@@ -14,6 +15,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: "Upload", href: "/", icon: <CloudUploadIcon /> },
   { label: "Question", href: "/ask", icon: <QuizIcon /> },
+  { label: "History", href: "/history", icon: <HistoryIcon /> },
 ];
 
 /**
