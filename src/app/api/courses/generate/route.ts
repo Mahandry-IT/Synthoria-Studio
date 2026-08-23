@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-const GENERATION_TIMEOUT_MS = 180_000;
+const GENERATION_TIMEOUT_MS = 360_000;
 
 /**
  * Proxy API route pour /courses/generate.
  * Le rewrite proxy Next.js a un timeout trop court (~30s) pour la génération
- * de cours qui prend 30-60s+. Cette route utilise fetch natif avec timeout étendu.
+ * de cours qui prend 30-120s+. Cette route utilise fetch natif avec timeout étendu.
  */
 export async function POST(request: NextRequest) {
   try {
