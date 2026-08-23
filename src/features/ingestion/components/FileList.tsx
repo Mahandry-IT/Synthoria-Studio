@@ -1,7 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useFiles } from "../hooks/useFiles";
 import { Skeleton } from "@/components/Skeleton";
+import { Pagination } from "@/components/Pagination";
+
+const PAGE_SIZE = 10;
 
 interface FileListProps {
   /** Callback quand un ou plusieurs fichiers sont sélectionnés */
@@ -13,11 +17,12 @@ interface FileListProps {
 }
 
 /**
- * Liste des fichiers PDF ingestés avec support de sélection.
+ * Liste paginée des fichiers PDF ingestés avec support de sélection.
  * Utilisé dans le Mode 2 pour choisir le(s) fichier(s) de contexte.
  */
 export function FileList({ onSelect, selected = [], multi = false }: FileListProps) {
-  const { data, isLoading, error } = useFiles();
+  const [page, setPage] = useState(1);
+  const { data, isLoading, error } = useFiles(page, PAGE_SIZE);
 
   if (isLoading) {
     return <Skeleton lines={3} className="p-4" />;
@@ -31,7 +36,7 @@ export function FileList({ onSelect, selected = [], multi = false }: FileListPro
     );
   }
 
-  if (!data || data.files.length === 0) {
+  if (!data || data.data.length === 0) {
     return (
       <p className="text-sm text-gray-500">
         Aucun fichier PDF ingesté. Uploadez-en un dans l&apos;onglet précédent.
@@ -53,8 +58,9 @@ export function FileList({ onSelect, selected = [], multi = false }: FileListPro
   }
 
   return (
+    <div>
     <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200" role="listbox" aria-label="Fichiers disponibles">
-      {data.files.map((file) => {
+      {data.data.map((file) => {
         const isSelected = selected.includes(file.filename);
         return (
           <li
@@ -89,5 +95,11 @@ export function FileList({ onSelect, selected = [], multi = false }: FileListPro
         );
       })}
     </ul>
+    <Pagination
+      page={data.meta.page}
+      totalPages={data.meta.totalPages}
+      onPageChange={setPage}
+    />
+    </div>
   );
 }

@@ -11,14 +11,17 @@ interface UseFilesReturn {
 }
 
 /**
- * Query React Query pour récupérer la liste des fichiers PDF ingestés.
+ * Query React Query pour récupérer la liste paginée des fichiers PDF ingestés.
  * Utilisé pour peupler le sélecteur de fichiers du Mode 2.
  */
-export function useFiles(): UseFilesReturn {
+export function useFiles(
+  page: number = 1,
+  limit: number = 10,
+): UseFilesReturn {
   const query = useQuery({
-    queryKey: ["files"],
-    queryFn: listFiles,
-    staleTime: 30_000, // 30s — les fichiers changent rarement
+    queryKey: ["files", page, limit],
+    queryFn: () => listFiles(page, limit),
+    staleTime: 30_000,
   });
 
   return {
