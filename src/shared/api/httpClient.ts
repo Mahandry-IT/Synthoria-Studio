@@ -40,16 +40,18 @@ function toHttpError(err: AxiosError): HttpError {
 /**
  * Wrapper axios avec timeout, retry backoff exponentiel sur 5xx/réseau.
  * Ne retry PAS sur erreurs 4xx.
+ * Passer `noRetry: true` pour un appel unique (ex: génération de cours).
  */
 export async function httpClient<T>(
   path: string,
-  config: AxiosRequestConfig = {},
+  config: AxiosRequestConfig & { noRetry?: boolean } = {},
 ): Promise<T> {
-  const { timeout = DEFAULT_TIMEOUT_MS, ...rest } = config;
+  const { timeout = DEFAULT_TIMEOUT_MS, noRetry = false, ...rest } = config;
+  const maxAttempts = noRetry ? 1 : MAX_RETRIES + 1;
 
   let lastError: Error | undefined;
 
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       const res = await api.request<T>({ ...rest, url: path, timeout });
       return res.data;
@@ -72,7 +74,7 @@ export async function httpClient<T>(
       }
     }
 
-    if (attempt < MAX_RETRIES) {
+    if (attempt < maxAttempts - 1) {
       const delay = Math.min(BASE_DELAY_MS * 2 ** attempt, MAX_DELAY_MS);
       await sleep(delay);
     }
@@ -82,7 +84,7 @@ export async function httpClient<T>(
 }
 
 /** POST JSON helper */
-export function postJson<T>(path: string, body: unknown, config?: AxiosRequestConfig): Promise<T> {
+export function postJson<T>(path: string, body: unknown, config?: AxiosRequestConfig & { noRetry?: boolean }): Promise<T> {
   return httpClient<T>(path, {
     method: "POST",
     data: body,

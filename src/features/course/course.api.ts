@@ -15,6 +15,7 @@ export async function generateCourse(
   const raw = await postJson<CourseGenerationResponse>(
     "/courses/generate",
     payload,
+    { timeout: 300_000, noRetry: true },
   );
 
   const parsed = courseResponseSchema.safeParse(raw);
