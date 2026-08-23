@@ -1,0 +1,106 @@
+import axios, { type AxiosRequestConfig, type AxiosError } from "axios";
+
+const MAX_RETRIES = 3;
+const BASE_DELAY_MS = 1000;
+const MAX_DELAY_MS = 10_000;
+const DEFAULT_TIMEOUT_MS = 60_000;
+
+export class HttpError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+    public readonly body?: unknown,
+  ) {
+    super(message);
+    this.name = "HttpError";
+  }
+}
+
+/** Instance axios préconfigurée pour le proxy Next.js */
+const api = axios.create({
+  baseURL: "/api",
+  timeout: DEFAULT_TIMEOUT_MS,
+  headers: { Accept: "application/json" },
+});
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+function shouldRetry(status: number): boolean {
+  return status >= 500 || !status;
+}
+
+function toHttpError(err: AxiosError): HttpError {
+  const status = err.response?.status ?? 0;
+  const body = err.response?.data ?? null;
+  return new HttpError(status, `HTTP ${status}`, body);
+}
+
+/**
+ * Wrapper axios avec timeout, retry backoff exponentiel sur 5xx/réseau.
+ * Ne retry PAS sur erreurs 4xx.
+ */
+export async function httpClient<T>(
+  path: string,
+  config: AxiosRequestConfig = {},
+): Promise<T> {
+  const { timeout = DEFAULT_TIMEOUT_MS, ...rest } = config;
+
+  let lastError: Error | undefined;
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const res = await api.request<T>({ ...rest, url: path, timeout });
+      return res.data;
+    } catch (err) {
+      if (!axios.isAxiosError(err)) {
+        throw err;
+      }
+
+      const httpErr = toHttpError(err);
+
+      // HttpError 4xx → throw immédiat (pas de retry)
+      if (httpErr.status >= 400 && httpErr.status < 500) {
+        throw httpErr;
+      }
+
+      lastError = httpErr;
+
+      if (!shouldRetry(httpErr.status)) {
+        throw httpErr;
+      }
+    }
+
+    if (attempt < MAX_RETRIES) {
+      const delay = Math.min(BASE_DELAY_MS * 2 ** attempt, MAX_DELAY_MS);
+      await sleep(delay);
+    }
+  }
+
+  throw lastError ?? new Error("Request failed after retries");
+}
+
+/** POST JSON helper */
+export function postJson<T>(path: string, body: unknown, config?: AxiosRequestConfig): Promise<T> {
+  return httpClient<T>(path, {
+    method: "POST",
+    data: body,
+    headers: { "Content-Type": "application/json" },
+    ...config,
+  });
+}
+
+/** GET helper */
+export function getJson<T>(path: string, config?: AxiosRequestConfig): Promise<T> {
+  return httpClient<T>(path, { method: "GET", ...config });
+}
+
+/** POST multipart helper (pour l'upload de fichiers) */
+export function postMultipart<T>(path: string, formData: FormData): Promise<T> {
+  return httpClient<T>(path, {
+    method: "POST",
+    data: formData,
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+}
