@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { LatexText } from "@/shared/utils/latex";
+import { CircularTimer } from "./CircularTimer";
 import type { QuizQuestion } from "../course.types";
 
 interface QuizQuestionRadioGroupProps {
@@ -10,19 +11,21 @@ interface QuizQuestionRadioGroupProps {
 }
 
 /**
- * Groupe radio pour une question QCM à choix unique.
+ * Groupe checkbox pour une question QCM à choix multiples.
  * - Feedback correct/incorrect uniquement APRÈS sélection
  * - Timer fourni par le backend (time_limit_seconds)
  * - Rendu LaTeX dans les options et explications
  */
 export function QuizQuestionRadioGroup({ question, index }: QuizQuestionRadioGroupProps) {
-  const [selected, setSelected] = useState<number | null>(null);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const totalTime = question.time_limit_seconds ?? 0;
   const [timeLeft, setTimeLeft] = useState<number | null>(
     question.time_limit_seconds ?? null,
   );
+  const expiredRef = useRef(false);
   const [expired, setExpired] = useState(false);
 
-  const isRevealed = selected !== null || expired;
+  const isRevealed = selected.size > 0 || expired;
 
   // Timer countdown — reset si la question change
   useEffect(() => {
@@ -32,7 +35,7 @@ export function QuizQuestionRadioGroup({ question, index }: QuizQuestionRadioGro
       setTimeLeft((prev) => {
         if (prev == null || prev <= 1) {
           clearInterval(timer);
-          setExpired(true);
+          expiredRef.current = true;
           return 0;
         }
         return prev - 1;
@@ -42,15 +45,36 @@ export function QuizQuestionRadioGroup({ question, index }: QuizQuestionRadioGro
     return () => clearInterval(timer);
   }, [timeLeft, isRevealed]);
 
+  // Gérer l'expiration hors du render
+  useEffect(() => {
+    if (expiredRef.current) {
+      expiredRef.current = false;
+      setExpired(true);
+    }
+  });
+
   const handleChange = useCallback(
     (optionIndex: number) => {
       if (isRevealed) return;
-      setSelected(optionIndex);
+      setSelected((prev) => {
+        const next = new Set(prev);
+        if (next.has(optionIndex)) {
+          next.delete(optionIndex);
+        } else {
+          next.add(optionIndex);
+        }
+        return next;
+      });
     },
     [isRevealed],
   );
 
-  const isCorrect = selected === question.correct_option_index;
+  const correctIndices = Array.isArray(question.correct_option_index)
+    ? question.correct_option_index
+    : [question.correct_option_index];
+  const isCorrect =
+    selected.size === correctIndices.length &&
+    Array.from(selected).every((i) => correctIndices.includes(i));
 
   return (
     <fieldset className="rounded-lg border border-gray-200 p-4">
@@ -61,16 +85,14 @@ export function QuizQuestionRadioGroup({ question, index }: QuizQuestionRadioGro
           <LatexText text={question.question} />
         </h3>
         {timeLeft != null && !isRevealed && (
-          <span className="flex-shrink-0 text-xs font-mono text-gray-500">
-            {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
-          </span>
+          <CircularTimer timeLeft={timeLeft} totalTime={totalTime} />
         )}
       </div>
 
       <div className="space-y-2">
         {question.options.map((option, optIdx) => {
-          const isSelected = selected === optIdx;
-          const isCorrectOption = optIdx === question.correct_option_index;
+          const isSelected = selected.has(optIdx);
+          const isCorrectOption = correctIndices.includes(optIdx);
 
           let ringClass = "";
           if (isRevealed) {
@@ -92,13 +114,11 @@ export function QuizQuestionRadioGroup({ question, index }: QuizQuestionRadioGro
               ].join(" ")}
             >
               <input
-                type="radio"
-                name={`quiz-q-${index}`}
-                value={optIdx}
+                type="checkbox"
                 checked={isSelected}
                 onChange={() => handleChange(optIdx)}
                 disabled={isRevealed}
-                className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
               />
               <span className="flex-1 text-gray-700">
                 <LatexText text={option} />

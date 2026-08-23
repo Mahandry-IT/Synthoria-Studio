@@ -1,0 +1,103 @@
+"use client";
+
+import { useState, useCallback, useMemo } from "react";
+import type { QuizQuestion, QuizPhase, QuizUserAnswer } from "../course.types";
+
+interface UseQuizFlowReturn {
+  phase: QuizPhase;
+  currentIndex: number;
+  answers: QuizUserAnswer[];
+  score: number;
+  total: number;
+  start: () => void;
+  answer: (indices: number[]) => void;
+  next: () => void;
+  restart: () => void;
+  isActive: boolean;
+}
+
+/**
+ * Machine à états pour le flux QCM : intro → in_progress → results.
+ * Gère la phase, l'index courant, les réponses et le score.
+ */
+export function useQuizFlow(questions: QuizQuestion[]): UseQuizFlowReturn {
+  const [phase, setPhase] = useState<QuizPhase>("intro");
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [answers, setAnswers] = useState<QuizUserAnswer[]>([]);
+
+  const total = questions.length;
+
+  const start = useCallback(() => {
+    setPhase("in_progress");
+    setCurrentIndex(0);
+    setAnswers([]);
+  }, []);
+
+  const answer = useCallback(
+    (indices: number[]) => {
+      if (phase !== "in_progress") return;
+
+      setAnswers((prev) => {
+        const existing = prev.findIndex((a) => a.questionIndex === currentIndex);
+        const newAnswer: QuizUserAnswer = {
+          questionIndex: currentIndex,
+          selectedOptionIndices: indices,
+        };
+
+        if (existing >= 0) {
+          const next = [...prev];
+          next[existing] = newAnswer;
+          return next;
+        }
+        return [...prev, newAnswer];
+      });
+    },
+    [phase, currentIndex],
+  );
+
+  const next = useCallback(() => {
+    if (phase !== "in_progress") return;
+
+    if (currentIndex >= total - 1) {
+      setPhase("results");
+    } else {
+      setCurrentIndex((prev) => prev + 1);
+    }
+  }, [phase, currentIndex, total]);
+
+  const restart = useCallback(() => {
+    setPhase("intro");
+    setCurrentIndex(0);
+    setAnswers([]);
+  }, []);
+
+  const score = useMemo(() => {
+    return answers.filter((a) => {
+      const question = questions[a.questionIndex];
+      if (!question) return false;
+      const correct = question.correct_option_index;
+      // Support both single (number) and multi (number[]) correct answers
+      const correctIndices = Array.isArray(correct) ? correct : [correct];
+      const selected = a.selectedOptionIndices;
+      return (
+        selected.length === correctIndices.length &&
+        selected.every((i) => correctIndices.includes(i))
+      );
+    }).length;
+  }, [answers, questions]);
+
+  const isActive = phase === "in_progress";
+
+  return {
+    phase,
+    currentIndex,
+    answers,
+    score,
+    total,
+    start,
+    answer,
+    next,
+    restart,
+    isActive,
+  };
+}
