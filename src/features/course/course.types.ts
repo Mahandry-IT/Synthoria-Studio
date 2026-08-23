@@ -76,6 +76,15 @@ export interface QuizQuestion {
   time_limit_seconds?: number | null;
 }
 
+// ─── Quiz flow types ───────────────────────────────────────
+
+export type QuizPhase = "intro" | "in_progress" | "results";
+
+export interface QuizUserAnswer {
+  questionIndex: number;
+  selectedOptionIndices: number[];
+}
+
 // ─── Request ────────────────────────────────────────────────
 
 export interface CourseGenerationRequest {

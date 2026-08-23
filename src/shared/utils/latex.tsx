@@ -23,7 +23,7 @@ export function LatexText({ text, className = "" }: { text: string; className?: 
         const math = part.slice(2, -2).trim();
         const span = document.createElement("span");
         try {
-          katex.render(math, span, { displayMode: true, throwOnError: false });
+          katex.render(math, span, { displayMode: true, throwOnError: false, strict: false });
         } catch {
           span.textContent = math;
         }
@@ -32,7 +32,7 @@ export function LatexText({ text, className = "" }: { text: string; className?: 
         const math = part.slice(1, -1).trim();
         const span = document.createElement("span");
         try {
-          katex.render(math, span, { displayMode: false, throwOnError: false });
+          katex.render(math, span, { displayMode: false, throwOnError: false, strict: false });
         } catch {
           span.textContent = math;
         }
