@@ -16,10 +16,17 @@ export async function ingestPdf(files: File[]): Promise<PDFIngestResponse> {
 }
 
 /**
- * Liste les fichiers PDF déjà ingestés.
+ * Liste les fichiers PDF déjà ingestés, avec pagination.
  *
+ * @param page - Numéro de page (≥ 1)
+ * @param limit - Nombre d'éléments par page
  * @throws {HttpError} en cas d'erreur serveur
  */
-export async function listFiles(): Promise<FileListResponse> {
-  return getJson<FileListResponse>("/pdf/files");
+export async function listFiles(
+  page: number = 1,
+  limit: number = 10,
+): Promise<FileListResponse> {
+  return getJson<FileListResponse>("/pdf/files", {
+    params: { page, limit },
+  });
 }

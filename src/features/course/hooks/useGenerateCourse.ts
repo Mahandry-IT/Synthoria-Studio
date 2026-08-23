@@ -1,10 +1,14 @@
 "use client";
 
+import { useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { generateCourse } from "../course.api";
 import type { CourseGenerationRequest, CourseGenerationResponse } from "../course.types";
 import { HttpError } from "@/shared/api/httpClient";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
+import { useSessionStorageState } from "@/shared/hooks/useSessionStorageState";
+
+const STORAGE_KEY = "synthoria:last-course";
 
 interface UseGenerateCourseReturn {
   mutate: (payload: CourseGenerationRequest) => void;
@@ -16,14 +20,18 @@ interface UseGenerateCourseReturn {
 
 /**
  * Mutation React Query pour la génération de cours.
- * Expose data (CourseGenerationResponse | null), error (HttpError | null), isPending.
- *
- * Le mode est auto-détecté : pas de filename → Mode 3, filename → Mode 2.
+ * Le cours est persisté en sessionStorage pour survivre à un refresh.
  */
 export function useGenerateCourse(): UseGenerateCourseReturn {
+  const [persistedData, setPersistedData] = useSessionStorageState<CourseGenerationResponse>(
+    STORAGE_KEY,
+    null,
+  );
+
   const mutation = useMutation({
     mutationFn: generateCourse,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      setPersistedData(data);
       toastSuccess("Cours généré avec succès !");
     },
     onError: (err) => {
@@ -31,11 +39,17 @@ export function useGenerateCourse(): UseGenerateCourseReturn {
     },
   });
 
+  const reset = useCallback(() => {
+    setPersistedData(null);
+    mutation.reset();
+  }, [mutation, setPersistedData]);
+
   return {
     mutate: mutation.mutate,
-    data: mutation.data ?? null,
+    // Le cours mutation est prioritaire (pendant génération), puis le persisté (après refresh)
+    data: mutation.data ?? persistedData,
     error: mutation.error instanceof HttpError ? mutation.error : null,
     isPending: mutation.isPending,
-    reset: mutation.reset,
+    reset,
   };
 }

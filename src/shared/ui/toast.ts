@@ -1,27 +1,6 @@
 import { toast } from "react-toastify";
 
-import { ERROR_MESSAGES } from "@/features/course/course.types";
-import type { HttpError } from "@/shared/api/httpClient";
-
-/**
- * Extrait le message lisible depuis une erreur HTTP.
- * Priorité : body.detail (FastAPI) → ERROR_MESSAGES[status] → error.message
- */
-function resolveErrorMessage(err: unknown): string {
-  if (err instanceof Error && "status" in err) {
-    const httpErr = err as HttpError;
-    const bodyDetail =
-      httpErr.body && typeof httpErr.body === "object"
-        ? (httpErr.body as Record<string, unknown>).detail
-        : undefined;
-
-    if (typeof bodyDetail === "string" && bodyDetail) return bodyDetail;
-    if (httpErr.status in ERROR_MESSAGES) return ERROR_MESSAGES[httpErr.status];
-  }
-
-  if (err instanceof Error) return err.message;
-  return "Une erreur inattendue est survenue.";
-}
+import { resolveErrorMessage } from "@/shared/api/errors";
 
 /** Toast erreur — fermeture auto après 6 s */
 export function toastError(err: unknown): void {

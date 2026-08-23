@@ -1,14 +1,12 @@
 "use client";
 
-import { ERROR_MESSAGES } from "@/features/course/course.types";
 import { HttpError } from "@/shared/api/httpClient";
+import { resolveErrorMessage } from "@/shared/api/errors";
 
 interface ErrorStateProps {
   error: HttpError | Error | null;
   onRetry?: () => void;
 }
-
-const DEFAULT_MESSAGE = "Une erreur inattendue est survenue. Veuillez réessayer.";
 
 /**
  * Affiche un état d'erreur avec mapping visuel par code HTTP.
@@ -18,15 +16,7 @@ export function ErrorState({ error, onRetry }: ErrorStateProps) {
   if (!error) return null;
 
   const status = error instanceof HttpError ? error.status : 0;
-  const bodyDetail =
-    error instanceof HttpError && error.body && typeof error.body === "object"
-      ? (error.body as Record<string, unknown>).detail
-      : undefined;
-  const message =
-    (typeof bodyDetail === "string" && bodyDetail) ||
-    (status in ERROR_MESSAGES ? ERROR_MESSAGES[status] : null) ||
-    error.message ||
-    DEFAULT_MESSAGE;
+  const message = resolveErrorMessage(error);
 
   const iconColor = status >= 500 ? "text-red-500" : "text-amber-500";
 

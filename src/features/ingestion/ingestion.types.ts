@@ -1,4 +1,5 @@
 import type { FileIngestStatus } from "@/features/course/course.types";
+import type { PaginationMeta } from "@/shared/types/pagination";
 
 // ─── PDF Ingestion Response ─────────────────────────────────
 
@@ -27,6 +28,7 @@ export interface FileInfo {
 }
 
 export interface FileListResponse {
-  files: FileInfo[];
-  total: number;
+  status: string;
+  data: FileInfo[];
+  meta: PaginationMeta;
 }
