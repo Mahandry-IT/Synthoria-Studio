@@ -28,9 +28,9 @@ export function SectionsList({ sections }: SectionsListProps) {
 
           return (
             <Card key={section.id ?? i} className="p-5">
-              <h3 className="text-base font-semibold text-gray-900 mb-3">
-                <span className="text-indigo-600 mr-2">{i + 1}.</span>
-                <LatexText text={section.title} />
+              <h3 className="text-base font-semibold text-indigo-600 mb-3">
+                <span className="mr-2">{i + 1}.</span>
+                <LatexText text={section.title.replace(/^\d+\.\s*/, '')} />
               </h3>
               {hasContent ? (
                 <AnswerBlock answer={{
