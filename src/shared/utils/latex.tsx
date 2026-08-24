@@ -5,6 +5,22 @@ import katex from "katex";
 import "katex/dist/katex.min.css";
 
 /**
+ * Échappe les caractères spéciaux pour KaTeX.
+ * KaTeX n'a pas de métriques pour certains caractères (€, etc.) en mode text.
+ */
+function escapeKatexText(text: string): string {
+  // Caractères spéciaux qui doivent être échappés dans le mode texte KaTeX
+  return text
+    .replace(/€/g, "\euro ")
+    .replace(/£/g, "\pounds ")
+    .replace(/©/g, "\copyright ")
+    .replace(/®/g, "\textregistered ")
+    .replace(/™/g, "\texttrademark ")
+    .replace(/°/g, "\degree ")
+    .replace(/§/g, "\S ");
+}
+
+/**
  * Rendu inline de texte contenant du LaTeX ($...$ et $$...$$).
  * Parse le texte, extrait les blocs math et les rend avec KaTeX.
  */
@@ -38,7 +54,8 @@ export function LatexText({ text, className = "" }: { text: string; className?: 
         }
         ref.current.appendChild(span);
       } else {
-        ref.current.appendChild(document.createTextNode(part));
+        // Texte hors LaTeX : échapper les caractères spéciaux pour KaTeX
+        ref.current.appendChild(document.createTextNode(escapeKatexText(part)));
       }
     }
   }, [text]);
