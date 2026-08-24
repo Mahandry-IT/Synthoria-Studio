@@ -15,7 +15,7 @@ interface QuizPanelProps {
  * Interface publique inchangée : `{ questions: QuizQuestion[] }`.
  */
 export function QuizPanel({ questions }: QuizPanelProps) {
-  const { phase, currentIndex, answers, score, total, start, answer, next, restart, isActive } =
+  const { phase, currentIndex, answers, score, totalPoints, total, start, answer, next, restart, isActive } =
     useQuizFlow(questions);
 
   if (questions.length === 0) return null;
@@ -27,7 +27,7 @@ export function QuizPanel({ questions }: QuizPanelProps) {
       </h2>
 
       {phase === "intro" && (
-        <QuizIntro questionCount={total} onStart={start} />
+        <QuizIntro questions={questions} onStart={start} />
       )}
 
       {phase === "in_progress" && (
@@ -49,6 +49,7 @@ export function QuizPanel({ questions }: QuizPanelProps) {
           questions={questions}
           answers={answers}
           score={score}
+          totalPoints={totalPoints}
           onRestart={restart}
         />
       )}

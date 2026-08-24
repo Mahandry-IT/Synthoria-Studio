@@ -21,8 +21,8 @@ interface CourseViewProps {
  * Réutilisé par la page Ask et la page historique détail.
  */
 export function CourseView({ data }: CourseViewProps) {
-  const isMode3 = !data.meta || !data.sources?.some((s) => s.type === "file");
-  const isMode2 = data.sources?.some((s) => s.type === "file");
+  const isMode3 = data.mode === "question_only";
+  const isMode2 = data.mode === "file_question";
 
   return (
     <div className="space-y-6">
@@ -37,9 +37,17 @@ export function CourseView({ data }: CourseViewProps) {
 
       {data.introduction && (
         <Card className="p-5">
-          <p className="text-sm text-gray-700 leading-relaxed">
-            {data.introduction}
-          </p>
+          <div className="text-sm text-gray-700 leading-relaxed space-y-2">
+            {typeof data.introduction === "object" ? (
+              Object.entries(data.introduction).map(([key, value]) => (
+                <p key={key}>
+                  <span className="font-medium">{key}:</span> {value}
+                </p>
+              ))
+            ) : (
+              <p>{data.introduction}</p>
+            )}
+          </div>
         </Card>
       )}
 

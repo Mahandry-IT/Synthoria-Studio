@@ -1,21 +1,25 @@
 "use client";
 
 import { useRef, useEffect } from "react";
+import type { QuizQuestion } from "../course.types";
 
 interface QuizIntroProps {
-  questionCount: number;
+  questions: QuizQuestion[];
   onStart: () => void;
 }
 
 /**
- * Écran d'intro du quiz : affiche le nombre de questions et un bouton "Commencer".
+ * Écran d'intro du quiz : affiche le nombre de questions, les points et un bouton "Commencer".
  */
-export function QuizIntro({ questionCount, onStart }: QuizIntroProps) {
+export function QuizIntro({ questions, onStart }: QuizIntroProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     buttonRef.current?.focus();
   }, []);
+
+  const questionCount = questions.length;
+  const totalPoints = questions.reduce((sum, q) => sum + (q.points ?? 1), 0);
 
   return (
     <section
@@ -27,6 +31,11 @@ export function QuizIntro({ questionCount, onStart }: QuizIntroProps) {
       </h3>
       <p className="text-sm text-gray-600 mb-1" aria-live="polite">
         {questionCount} question{questionCount > 1 ? "s" : ""}
+        {totalPoints > 0 && (
+          <span className="ml-2 text-indigo-600 font-medium">
+            • {totalPoints} point{totalPoints > 1 ? "s" : ""}
+          </span>
+        )}
       </p>
       <p className="text-sm text-gray-500 mb-4">
         Une question à la fois — le feedback apparaîtra à la fin.

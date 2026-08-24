@@ -18,8 +18,6 @@ export default function AskPage() {
     mutate({
       question: values.question,
       filename: values.filename ?? undefined,
-      format: values.format,
-      language: values.language,
     });
   }
 

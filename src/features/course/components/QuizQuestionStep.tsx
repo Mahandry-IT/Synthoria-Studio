@@ -13,6 +13,25 @@ interface QuizQuestionStepProps {
   isActive: boolean;
 }
 
+/** Badge de difficulté */
+function DifficultyBadge({ difficulty }: { difficulty: string }) {
+  const colors: Record<string, string> = {
+    facile: "bg-green-100 text-green-700",
+    normale: "bg-yellow-100 text-yellow-700",
+    difficile: "bg-red-100 text-red-700",
+  };
+  const labels: Record<string, string> = {
+    facile: "Facile",
+    normale: "Normale",
+    difficile: "Difficile",
+  };
+  return (
+    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${colors[difficulty] ?? ""}`}>
+      {labels[difficulty] ?? difficulty}
+    </span>
+  );
+}
+
 /**
  * Affiche une seule question QCM avec sélection multiple (checkboxes).
  * - Pas de reveal correct/incorrect pendant le quiz
@@ -99,10 +118,24 @@ export function QuizQuestionStep({
       <legend className="sr-only">Question {index + 1} sur {total}</legend>
 
       <div className="flex items-start justify-between gap-3 mb-3">
-        <h3 className="text-sm font-semibold text-gray-900">
-          <span className="text-indigo-600 mr-1">Q{index + 1}.</span>
-          <LatexText text={question.question} />
-        </h3>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="text-sm font-semibold text-gray-900">
+              <span className="text-indigo-600 mr-1">Q{index + 1}.</span>
+              <LatexText text={question.question} />
+            </h3>
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            {question.difficulty && (
+              <DifficultyBadge difficulty={question.difficulty} />
+            )}
+            {question.points != null && question.points > 0 && (
+              <span className="text-xs text-gray-500">
+                {question.points} pt{question.points > 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
+        </div>
         {timeLeft != null && isActive && (
           <CircularTimer timeLeft={timeLeft} totalTime={totalTime} />
         )}

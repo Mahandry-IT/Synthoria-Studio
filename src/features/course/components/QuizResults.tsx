@@ -7,13 +7,14 @@ interface QuizResultsProps {
   questions: QuizQuestion[];
   answers: QuizUserAnswer[];
   score: number;
+  totalPoints: number;
   onRestart: () => void;
 }
 
 /**
  * Écran de résultats du quiz : score global et détail par question.
  */
-export function QuizResults({ questions, answers, score, onRestart }: QuizResultsProps) {
+export function QuizResults({ questions, answers, score, totalPoints, onRestart }: QuizResultsProps) {
   const total = questions.length;
 
   return (
@@ -27,6 +28,11 @@ export function QuizResults({ questions, answers, score, onRestart }: QuizResult
           {score} / {total}
         </p>
         <p className="text-sm text-gray-500 mt-1">
+          {totalPoints > 0 && (
+            <span className="block mb-1">
+              Points : {score} / {totalPoints}
+            </span>
+          )}
           {score === total
             ? "Parfait ! 🎉"
             : score >= total * 0.7
@@ -40,8 +46,7 @@ export function QuizResults({ questions, answers, score, onRestart }: QuizResult
         {questions.map((question, qIdx) => {
           const answer = answers.find((a) => a.questionIndex === qIdx);
           const userIndices = answer?.selectedOptionIndices ?? [];
-          const correct = question.correct_option_index;
-          const correctIndices = Array.isArray(correct) ? correct : [correct];
+          const correctIndices = question.correct_option_indices ?? [];
           const isCorrect =
             userIndices.length === correctIndices.length &&
             userIndices.every((i) => correctIndices.includes(i));

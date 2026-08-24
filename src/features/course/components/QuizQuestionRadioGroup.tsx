@@ -69,9 +69,7 @@ export function QuizQuestionRadioGroup({ question, index }: QuizQuestionRadioGro
     [isRevealed],
   );
 
-  const correctIndices = Array.isArray(question.correct_option_index)
-    ? question.correct_option_index
-    : [question.correct_option_index];
+  const correctIndices = question.correct_option_indices ?? [];
   const isCorrect =
     selected.size === correctIndices.length &&
     Array.from(selected).every((i) => correctIndices.includes(i));

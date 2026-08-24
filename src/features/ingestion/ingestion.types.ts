@@ -21,10 +21,10 @@ export interface PDFIngestResponse {
 // ─── File List Response ─────────────────────────────────────
 
 export interface FileInfo {
+  /** Identifiant séquentiel du fichier (1, 2, 3...) */
+  id: number;
+  /** Nom du fichier PDF */
   filename: string;
-  size_bytes?: number | null;
-  ingested_at?: string | null;
-  chunks?: number | null;
 }
 
 export interface FileListResponse {
