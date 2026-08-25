@@ -8,6 +8,7 @@ interface UseQuizFlowReturn {
   currentIndex: number;
   answers: QuizUserAnswer[];
   score: number;
+  totalPoints: number;
   total: number;
   start: () => void;
   answer: (indices: number[]) => void;
@@ -71,13 +72,12 @@ export function useQuizFlow(questions: QuizQuestion[]): UseQuizFlowReturn {
     setAnswers([]);
   }, []);
 
+  // Score = nombre de questions correctes
   const score = useMemo(() => {
     return answers.filter((a) => {
       const question = questions[a.questionIndex];
       if (!question) return false;
-      const correct = question.correct_option_index;
-      // Support both single (number) and multi (number[]) correct answers
-      const correctIndices = Array.isArray(correct) ? correct : [correct];
+      const correctIndices = question.correct_option_indices ?? [];
       const selected = a.selectedOptionIndices;
       return (
         selected.length === correctIndices.length &&
@@ -86,6 +86,11 @@ export function useQuizFlow(questions: QuizQuestion[]): UseQuizFlowReturn {
     }).length;
   }, [answers, questions]);
 
+  // Total des points possibles (somme des points de chaque question)
+  const totalPoints = useMemo(() => {
+    return questions.reduce((sum, q) => sum + (q.points ?? 1), 0);
+  }, [questions]);
+
   const isActive = phase === "in_progress";
 
   return {
@@ -93,6 +98,7 @@ export function useQuizFlow(questions: QuizQuestion[]): UseQuizFlowReturn {
     currentIndex,
     answers,
     score,
+    totalPoints,
     total,
     start,
     answer,

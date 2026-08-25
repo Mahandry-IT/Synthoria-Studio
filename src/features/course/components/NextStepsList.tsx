@@ -1,6 +1,6 @@
 "use client";
 
-import { LatexText } from "@/shared/utils/latex";
+import { RichText } from "./RichText";
 
 interface NextStepsListProps {
   steps: string[];
@@ -23,7 +23,7 @@ export function NextStepsList({ steps }: NextStepsListProps) {
             <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-500">
               {i + 1}
             </span>
-            <span><LatexText text={step} /></span>
+            <span><RichText text={step} /></span>
           </li>
         ))}
       </ul>

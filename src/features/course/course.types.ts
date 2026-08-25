@@ -11,6 +11,8 @@ export type SourceType = "file" | "web";
 
 export type FileIngestStatus = "ok" | "failed" | "error";
 
+export type QuizDifficulty = "facile" | "normale" | "difficile";
+
 // ─── Sub-types ──────────────────────────────────────────────
 
 export interface Step {
@@ -71,8 +73,14 @@ export interface CoursePitfall {
 export interface QuizQuestion {
   question: string;
   options: string[];
-  correct_option_index: number;
+  /** Indices 0-based des bonnes réponses (1 = unique, >1 = QCM multiple) */
+  correct_option_indices: number[];
+  /** Niveau de difficulté */
+  difficulty: QuizDifficulty;
+  /** Points alloués (calculé côté serveur, total = 20/20) */
+  points: number;
   explanation?: string;
+  /** 45s par défaut, 80s si la question implique un calcul */
   time_limit_seconds?: number | null;
 }
 
@@ -88,21 +96,29 @@ export interface QuizUserAnswer {
 // ─── Request ────────────────────────────────────────────────
 
 export interface CourseGenerationRequest {
-  question: string;
+  question?: string | null;
+  /** Mode de génération : file_question ou question_only */
+  mode?: "file_question" | "question_only";
+  /** Nombre de chunks à récupérer pour le contexte (1-20, défaut 20) */
+  top_k?: number;
+  /** Filtre optionnel sur un ou plusieurs documents déjà ingérés */
   filename?: string | string[];
-  format?: string;
-  language?: string;
+  /** Si true, récupère l'intégralité des chunks du/des fichier(s) */
+  full_document?: boolean;
 }
 
 // ─── Response ───────────────────────────────────────────────
 
 export interface CourseGenerationResponse {
-  mode?: string;
-  format?: string;
+  mode: "file_only" | "file_question" | "question_only";
+  format: "full_course" | "focused_answer";
   meta: CourseMeta;
-  introduction?: string | null;
+  /** Uniquement pour format == "full_course" */
+  introduction?: Record<string, string> | null;
   sources: CourseSource[];
+  /** Uniquement pour format == "focused_answer" */
   answer?: CourseAnswer;
+  /** Uniquement pour format == "full_course" */
   sections?: CourseSection[] | null;
   common_pitfalls?: CoursePitfall[] | null;
   quiz?: QuizQuestion[] | null;

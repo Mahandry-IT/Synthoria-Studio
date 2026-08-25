@@ -93,7 +93,7 @@ export function FileList({ onSelect, selected = [], multi = false, search = "" }
             const isSelected = selected.includes(file.filename);
             return (
               <li
-                key={file.filename}
+                key={file.id}
                 role="option"
                 aria-selected={isSelected}
                 onClick={() => toggle(file.filename)}
@@ -109,11 +109,6 @@ export function FileList({ onSelect, selected = [], multi = false, search = "" }
                 </svg>
                 <div className="flex-1 truncate">
                   <span className="font-medium">{file.filename}</span>
-                  {file.chunks != null && (
-                    <span className="ml-2 text-xs text-gray-400">
-                      {file.chunks} morceau{file.chunks > 1 ? "x" : ""}
-                    </span>
-                  )}
                 </div>
                 {isSelected && (
                   <svg className="h-5 w-5 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">

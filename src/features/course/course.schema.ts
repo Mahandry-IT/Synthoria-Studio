@@ -43,10 +43,16 @@ const coursePitfallSchema = z.object({
 
 const quizQuestionSchema = z.object({
   question: z.string(),
-  options: z.array(z.string()),
-  correct_option_index: z.number(),
+  options: z.array(z.string()).min(2),
+  /** Indices 0-based des bonnes réponses (1 = unique, >1 = QCM multiple) */
+  correct_option_indices: z.array(z.number()).default([]),
+  /** Niveau de difficulté */
+  difficulty: z.enum(["facile", "normale", "difficile"]).default("normale"),
+  /** Points alloués (calculé côté serveur, total = 20/20) */
+  points: z.number().min(0).default(1),
   explanation: z.string().optional().default(""),
-  time_limit_seconds: z.number().nullable().optional(),
+  /** 45s par défaut, 80s si la question implique un calcul */
+  time_limit_seconds: z.number().default(45),
 });
 
 const courseSourceSchema = z.object({
@@ -66,10 +72,10 @@ const courseMetaSchema = z.object({
 });
 
 export const courseResponseSchema = z.object({
-  mode: z.string().optional(),
-  format: z.string().optional(),
+  mode: z.enum(["file_only", "file_question", "question_only"]),
+  format: z.enum(["full_course", "focused_answer"]),
   meta: courseMetaSchema,
-  introduction: z.string().nullable().optional(),
+  introduction: z.record(z.string(), z.string()).nullable().optional(),
   sources: z.array(courseSourceSchema).optional().default([]),
   answer: courseAnswerSchema.optional(),
   sections: z.array(courseSectionSchema).nullable().optional(),

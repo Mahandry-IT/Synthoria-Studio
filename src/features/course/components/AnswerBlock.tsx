@@ -1,7 +1,7 @@
 "use client";
 
 import { Card } from "@/components/Card";
-import { LatexText } from "@/shared/utils/latex";
+import { RichText } from "./RichText";
 import type { CourseAnswer } from "../course.types";
 
 interface AnswerBlockProps {
@@ -23,21 +23,21 @@ export function AnswerBlock({ answer }: AnswerBlockProps) {
       {answer.quoi && (
         <div>
           <h4 className="font-medium text-gray-900 mb-1">Quoi</h4>
-          <LatexText text={answer.quoi} className="leading-relaxed" />
+          <RichText text={answer.quoi} className="leading-relaxed" />
         </div>
       )}
 
       {answer.pourquoi && (
         <div>
           <h4 className="font-medium text-gray-900 mb-1">Pourquoi</h4>
-          <LatexText text={answer.pourquoi} className="leading-relaxed" />
+          <RichText text={answer.pourquoi} className="leading-relaxed" />
         </div>
       )}
 
       {answer.comment && (
         <div>
           <h4 className="font-medium text-gray-900 mb-1">Comment</h4>
-          <LatexText text={answer.comment} className="leading-relaxed" />
+          <RichText text={answer.comment} className="leading-relaxed" />
         </div>
       )}
 
@@ -46,19 +46,19 @@ export function AnswerBlock({ answer }: AnswerBlockProps) {
           <h4 className="font-medium text-gray-900 mb-2">Exemple</h4>
           {answer.worked_example.statement && (
             <p className="text-gray-600 italic mb-3">
-              <LatexText text={answer.worked_example.statement} />
+              <RichText text={answer.worked_example.statement} />
             </p>
           )}
           <ol className="space-y-2 list-decimal list-inside">
             {answer.worked_example.steps.map((step, i) => (
               <li key={step.id ?? i} className="text-gray-700">
-                <LatexText text={step.content} />
+                <RichText text={step.content} />
               </li>
             ))}
           </ol>
           {answer.worked_example.result && (
             <p className="mt-3 text-green-700 font-medium">
-              <LatexText text={answer.worked_example.result} />
+              <RichText text={answer.worked_example.result} />
             </p>
           )}
         </Card>
@@ -70,7 +70,7 @@ export function AnswerBlock({ answer }: AnswerBlockProps) {
           <ul className="list-disc list-inside space-y-1">
             {answer.key_points.map((point, i) => (
               <li key={i} className="text-gray-600">
-                <LatexText text={point} />
+                <RichText text={point} />
               </li>
             ))}
           </ul>
