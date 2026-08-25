@@ -1,7 +1,7 @@
 "use client";
 
 import type { CoursePitfall } from "../course.types";
-import { LatexText } from "@/shared/utils/latex";
+import { RichText } from "./RichText";
 
 interface PitfallsListProps {
   pitfalls: CoursePitfall[];
@@ -23,23 +23,23 @@ export function PitfallsList({ pitfalls }: PitfallsListProps) {
         {pitfalls.map((pitfall, i) => (
           <li key={i} className="rounded-lg border border-amber-200 bg-amber-50 p-4">
             <p className="text-sm font-semibold text-amber-800">
-              <LatexText text={pitfall.description} />
+              <RichText text={pitfall.description} />
             </p>
             {pitfall.why_it_happens && (
               <p className="mt-2 text-sm text-amber-700">
                 <span className="font-medium">Pourquoi :</span>{" "}
-                <LatexText text={pitfall.why_it_happens} />
+                <RichText text={pitfall.why_it_happens} />
               </p>
             )}
             {pitfall.how_to_avoid && (
               <p className="mt-1 text-xs text-amber-600 italic">
-                💡 <LatexText text={pitfall.how_to_avoid} />
+                💡 <RichText text={pitfall.how_to_avoid} />
               </p>
             )}
             {/* Legacy fallback */}
             {!pitfall.why_it_happens && pitfall.tip && (
               <p className="mt-1 text-xs text-amber-600 italic">
-                💡 <LatexText text={pitfall.tip} />
+                💡 <RichText text={pitfall.tip} />
               </p>
             )}
           </li>

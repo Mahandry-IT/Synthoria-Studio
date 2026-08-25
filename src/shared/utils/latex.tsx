@@ -5,6 +5,34 @@ import katex from "katex";
 import "katex/dist/katex.min.css";
 
 /**
+ * Garde de sécurité : détermine si un candidate LaTeX semble être
+ * du vrai math ou de la prose capturée accidentellement entre deux `$`.
+ *
+ * Rejette (→ rendu texte brut) si le candidate contient :
+ * - des symboles monétaires isolés (`€ £ ¥`) hors `\text{}`
+ * - de la ponctuation de phrase interne (`.`, `!`, `?`)
+ * - plus de ~80 caractères avec plusieurs espaces (prose)
+ *
+ * @see plan-sync-frontend-backend.md — étape 6
+ */
+function isLikelyMath(candidate: string): boolean {
+  const trimmed = candidate.trim();
+
+  // Symboles monétaires hors \text{...}
+  // On retire les \text{...} avant de tester
+  const stripped = trimmed.replace(/\\text\{[^}]*\}/g, "");
+  if (/[€£¥]/.test(stripped)) return false;
+
+  // Ponctuation de phrase interne (pas en début/fin)
+  if (/[.!?][a-zA-ZÀ-ÿ]/.test(trimmed)) return false;
+
+  // Prose : > ~80 caractères avec plusieurs espaces
+  if (trimmed.length > 80 && (trimmed.match(/\s/g)?.length ?? 0) > 3) return false;
+
+  return true;
+}
+
+/**
  * Échappe les caractères spéciaux pour KaTeX.
  */
 function escapeKatexText(text: string): string {
@@ -67,13 +95,23 @@ function parseBoldMarkdown(
       part.startsWith("$$") &&
       part.endsWith("$$")
     ) {
-      fragment.appendChild(renderMath(part.slice(2, -2).trim(), true));
+      const candidate = part.slice(2, -2).trim();
+      fragment.appendChild(
+        isLikelyMath(candidate)
+          ? renderMath(candidate, true)
+          : document.createTextNode(escapeKatexText(part))
+      );
     } else if (
       part.startsWith("$") &&
       part.endsWith("$") &&
       part.length > 2
     ) {
-      fragment.appendChild(renderMath(part.slice(1, -1).trim(), false));
+      const candidate = part.slice(1, -1).trim();
+      fragment.appendChild(
+        isLikelyMath(candidate)
+          ? renderMath(candidate, false)
+          : document.createTextNode(escapeKatexText(part))
+      );
     } else {
       fragment.appendChild(document.createTextNode(escapeKatexText(part)));
     }

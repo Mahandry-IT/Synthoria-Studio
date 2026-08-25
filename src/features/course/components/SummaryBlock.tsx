@@ -1,6 +1,6 @@
 "use client";
 
-import { LatexText } from "@/shared/utils/latex";
+import { RichText } from "./RichText";
 
 interface SummaryBlockProps {
   summary: string;
@@ -18,7 +18,7 @@ export function SummaryBlock({ summary }: SummaryBlockProps) {
         Résumé
       </h2>
       <p className="text-sm text-indigo-700 leading-relaxed">
-        <LatexText text={summary} />
+        <RichText text={summary} />
       </p>
     </section>
   );
