@@ -29,7 +29,7 @@ export function useIngestPdf(): UseIngestPdfReturn {
         toastSuccess(`${count} fichier(s) ingéré(s) avec succès !`);
       } else if (failed > 0 && failed < count) {
         toastWarning(`${failed} fichier(s) échoué(s) sur ${count}.`);
-      } else if (failed === count) {
+      } else if (count > 0 && failed === count) {
         toastError(`${failed} fichier(s) échoué(s).`);
       }
       queryClient.invalidateQueries({ queryKey: ["files"] });
