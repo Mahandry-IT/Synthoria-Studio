@@ -126,10 +126,56 @@ export interface CourseGenerationResponse {
   next_steps?: string[] | null;
 }
 
+// ─── Plan de cours (génération en deux temps) ──────────────
+
+export type PlannedSectionType =
+  | "introduction"
+  | "development"
+  | "common_pitfalls"
+  | "summary"
+  | "next_steps";
+
+export interface PlannedSection {
+  type: PlannedSectionType;
+  title: string;
+  objective: string;
+  subtopics: string[];
+  /** Position 1-based dans le cours */
+  order: number;
+}
+
+export interface CoursePlanMeta {
+  title: string;
+  subject: string;
+  language: string;
+}
+
+/** Réponse de POST /courses/plan */
+export interface CoursePlan {
+  plan_id: string;
+  expires_at: string;
+  mode: "file_question" | "question_only";
+  meta: CoursePlanMeta;
+  sections: PlannedSection[];
+  coverage_notes: string;
+}
+
+/** Mêmes paramètres que la génération directe */
+export type CoursePlanRequest = CourseGenerationRequest;
+
+/** Requête de POST /courses/generate/from-plan */
+export interface CourseFromPlanRequest {
+  plan_id: string;
+  sections: PlannedSection[];
+}
+
 // ─── Error types ────────────────────────────────────────────
 
 export const ERROR_MESSAGES: Record<number, string> = {
+  404: "Plan introuvable. Régénérez le plan.",
+  410: "Ce plan a expiré. Régénérez-le.",
   413: "Votre question est trop longue. Raccourcissez-la et réessayez.",
+  422: "Le plan est invalide : au moins une section de développement est requise (80 sections maximum).",
   429: "Quota d'appels Gemini atteint. Réessayez dans quelques instants.",
   502: "Réponse invalide du moteur IA. Réessayez.",
   503: "Le moteur IA est temporairement indisponible. Réessayez dans quelques instants.",

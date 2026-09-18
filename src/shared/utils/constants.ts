@@ -10,3 +10,12 @@ export const MODE_LABELS = {
   "full_course": "Cours complet",
   "quiz_only": "Quiz",
 } as const;
+
+/** Plafond de sections d'un plan (aligné sur COURSE_PLAN_MAX_SECTIONS du backend — protection anti-abus, pas une limite pédagogique) */
+export const COURSE_PLAN_MAX_SECTIONS = 80;
+
+/** Limites de champs d'une section de plan (alignées sur le backend) */
+export const PLAN_TITLE_MAX_LENGTH = 200;
+export const PLAN_OBJECTIVE_MAX_LENGTH = 1000;
+export const PLAN_SUBTOPIC_MAX_LENGTH = 300;
+export const PLAN_SUBTOPICS_MAX_ITEMS = 20;
