@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { COURSE_QUESTION_MAX_LENGTH } from "@/shared/utils/constants";
+import {
+  COURSE_PLAN_MAX_SECTIONS,
+  COURSE_QUESTION_MAX_LENGTH,
+  PLAN_OBJECTIVE_MAX_LENGTH,
+  PLAN_SUBTOPIC_MAX_LENGTH,
+  PLAN_SUBTOPICS_MAX_ITEMS,
+  PLAN_TITLE_MAX_LENGTH,
+} from "@/shared/utils/constants";
 
 // ─── Schemas de réponse (validation défensive) ──────────────
 
@@ -103,3 +110,42 @@ export const questionInputSchema = z.object({
 });
 
 export type QuestionInputValues = z.infer<typeof questionInputSchema>;
+
+// ─── Plan de cours ──────────────────────────────────────────
+
+export const plannedSectionSchema = z.object({
+  type: z.enum(["introduction", "development", "common_pitfalls", "summary", "next_steps"]),
+  title: z.string().trim().min(1, "Chaque section doit avoir un titre.").max(PLAN_TITLE_MAX_LENGTH),
+  objective: z.string().trim().max(PLAN_OBJECTIVE_MAX_LENGTH).default(""),
+  subtopics: z
+    .array(z.string().trim().min(1).max(PLAN_SUBTOPIC_MAX_LENGTH))
+    .max(PLAN_SUBTOPICS_MAX_ITEMS)
+    .default([]),
+  order: z.number().int().min(1),
+});
+
+/** Réponse de POST /courses/plan */
+export const coursePlanSchema = z.object({
+  plan_id: z.string().min(1),
+  expires_at: z.string(),
+  mode: z.enum(["file_question", "question_only"]),
+  meta: z.object({
+    title: z.string().default(""),
+    subject: z.string().default(""),
+    language: z.string().default("fr"),
+  }),
+  sections: z.array(plannedSectionSchema).min(1),
+  coverage_notes: z.string().default(""),
+});
+
+/** Requête de POST /courses/generate/from-plan (mêmes règles que le backend) */
+export const courseFromPlanRequestSchema = z.object({
+  plan_id: z.string().min(1),
+  sections: z
+    .array(plannedSectionSchema)
+    .min(1, "Le plan doit contenir au moins une section.")
+    .max(COURSE_PLAN_MAX_SECTIONS, `Un plan ne peut pas dépasser ${COURSE_PLAN_MAX_SECTIONS} sections.`)
+    .refine((sections) => sections.some((s) => s.type === "development"), {
+      message: "Le plan doit contenir au moins une section de développement.",
+    }),
+});
