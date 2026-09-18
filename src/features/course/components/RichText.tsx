@@ -5,6 +5,25 @@ import { sanitizeExtractedText } from "@/shared/utils/textSanitize";
 
 // ─── Parsers ──────────────────────────────────────────────
 
+// Caractères Private Use Area : jamais présents dans le texte backend.
+const MASK_OPEN = "";
+const MASK_CLOSE = "";
+const MASK_PATTERN = new RegExp(`${MASK_OPEN}(\\d+)${MASK_CLOSE}`, "g");
+
+/**
+ * Remplace chaque segment `$$...$$` / `$...$` par un jeton opaque.
+ * @returns le texte masqué et `restore`, qui réinjecte les formules d'origine.
+ */
+function maskMath(text: string): { masked: string; restore: (s: string) => string } {
+  const segments: string[] = [];
+  const masked = text.replace(/\$\$[\s\S]+?\$\$|\$[^$\n]+?\$/g, (segment) => {
+    segments.push(segment);
+    return `${MASK_OPEN}${segments.length - 1}${MASK_CLOSE}`;
+  });
+  const restore = (s: string) => s.replace(MASK_PATTERN, (_m, i: string) => segments[Number(i)] ?? "");
+  return { masked, restore };
+}
+
 /**
  * Détecte un tableau aplati backend : "H1 | H2 — r1 | r2; r1b | r2b"
  * Séparateur `—` entre headers et rows, `;` entre lignes.
@@ -121,14 +140,20 @@ interface RichTextProps {
 export function RichText({ text, className = "" }: RichTextProps) {
   if (!text || text.trim().length === 0) return null;
 
-  const sanitized = sanitizeExtractedText(text);
+  // Les formules sont masquées pour que ni la sanitisation (`x^e` → `xê`) ni la
+  // détection de table/liste (`|x|`, `\;`, `—`) ne les altèrent.
+  const { masked, restore } = maskMath(text);
+  const sanitized = sanitizeExtractedText(masked);
 
   // 1. Table aplatie ?
   const table = parseFlattenedTable(sanitized);
   if (table) {
     return (
       <span className={className}>
-        <RichTable headers={table.headers} rows={table.rows} />
+        <RichTable
+          headers={table.headers.map(restore)}
+          rows={table.rows.map((row) => row.map(restore))}
+        />
       </span>
     );
   }
@@ -138,11 +163,11 @@ export function RichText({ text, className = "" }: RichTextProps) {
   if (list) {
     return (
       <span className={className}>
-        <RichList items={list} />
+        <RichList items={list.map(restore)} />
       </span>
     );
   }
 
   // 3. Fallback : rendu LaTeX via LatexText
-  return <LatexText text={sanitized} className={className} />;
+  return <LatexText text={restore(sanitized)} className={className} />;
 }
