@@ -75,7 +75,7 @@ export function QuizResults({ questions, answers, score, totalPoints, onRestart 
                   let ringClass = "";
                   if (isCorrectOption) {
                     ringClass = "ring-2 ring-green-500 bg-green-50";
-                  } else if (isUserChoice && !isCorrect) {
+                  } else if (isUserChoice) {
                     ringClass = "ring-2 ring-red-500 bg-red-50";
                   }
 
@@ -88,12 +88,12 @@ export function QuizResults({ questions, answers, score, totalPoints, onRestart 
                       ].join(" ")}
                     >
                       <span className="flex-1 text-gray-700">
-                        <LatexText text={option} />
+                        <LatexText text={option} autoMath />
                       </span>
                       {isCorrectOption && (
                         <span className="text-green-600 font-medium text-xs">✓ Correct</span>
                       )}
-                      {isUserChoice && !isCorrect && (
+                      {isUserChoice && !isCorrectOption && (
                         <span className="text-red-600 font-medium text-xs">✗ Ta réponse</span>
                       )}
                     </div>
@@ -117,7 +117,7 @@ export function QuizResults({ questions, answers, score, totalPoints, onRestart 
           onClick={onRestart}
           className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
         >
-          Recommencer
+          Retour au cours
         </button>
       </div>
     </section>

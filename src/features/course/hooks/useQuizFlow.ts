@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import type { QuizQuestion, QuizPhase, QuizUserAnswer } from "../course.types";
 
-interface UseQuizFlowReturn {
+export interface UseQuizFlowReturn {
   phase: QuizPhase;
   currentIndex: number;
   answers: QuizUserAnswer[];

@@ -1,22 +1,24 @@
 "use client";
 
 import type { QuizQuestion } from "../course.types";
-import { useQuizFlow } from "../hooks/useQuizFlow";
+import type { UseQuizFlowReturn } from "../hooks/useQuizFlow";
 import { QuizIntro } from "./QuizIntro";
 import { QuizQuestionStep } from "./QuizQuestionStep";
 import { QuizResults } from "./QuizResults";
 
 interface QuizPanelProps {
   questions: QuizQuestion[];
+  /** État du quiz, porté par le parent pour qu'il puisse masquer le cours pendant le quiz. */
+  flow: UseQuizFlowReturn;
 }
 
 /**
- * Panel QCM orchestrateur : gère les phases intro → in_progress → results.
- * Interface publique inchangée : `{ questions: QuizQuestion[] }`.
+ * Panel QCM : affiche l'écran correspondant à la phase intro → in_progress → results.
+ * Seule l'intro est destinée à s'afficher dans la page du cours ; les autres phases
+ * occupent une page dédiée (voir CourseView).
  */
-export function QuizPanel({ questions }: QuizPanelProps) {
-  const { phase, currentIndex, answers, score, totalPoints, total, start, answer, next, restart, isActive } =
-    useQuizFlow(questions);
+export function QuizPanel({ questions, flow }: QuizPanelProps) {
+  const { phase, currentIndex, answers, score, totalPoints, total, start, answer, next, restart, isActive } = flow;
 
   if (questions.length === 0) return null;
 

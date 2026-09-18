@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect } from "react";
 import { CourseMetaHeader } from "./CourseMetaHeader";
 import { SourcesList } from "./SourcesList";
 import { SectionsList } from "./SectionsList";
 import { PitfallsList } from "./PitfallsList";
 import { QuizPanel } from "./QuizPanel";
+import { useQuizFlow } from "../hooks/useQuizFlow";
 import { SummaryBlock } from "./SummaryBlock";
 import { NextStepsList } from "./NextStepsList";
 import { AnswerBlock } from "./AnswerBlock";
@@ -23,6 +25,20 @@ interface CourseViewProps {
 export function CourseView({ data }: CourseViewProps) {
   const isMode3 = data.mode === "question_only";
   const isMode2 = data.mode === "file_question";
+  const quiz = data.quiz ?? [];
+  const quizFlow = useQuizFlow(quiz);
+
+  const quizOnOwnPage = quizFlow.phase !== "intro";
+
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [quizOnOwnPage]);
+
+  // Le quiz démarré (ou terminé) occupe toute la page : impossible de revenir au cours
+  // avant la fin ; les résultats ramènent au cours via « Retour au cours ».
+  if (quizOnOwnPage) {
+    return <QuizPanel questions={quiz} flow={quizFlow} />;
+  }
 
   return (
     <div className="space-y-6">
@@ -70,9 +86,7 @@ export function CourseView({ data }: CourseViewProps) {
         <PitfallsList pitfalls={data.common_pitfalls} />
       )}
 
-      {data.quiz && data.quiz.length > 0 && (
-        <QuizPanel questions={data.quiz} />
-      )}
+      {quiz.length > 0 && <QuizPanel questions={quiz} flow={quizFlow} />}
 
       {data.summary && <SummaryBlock summary={data.summary} />}
 

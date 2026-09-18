@@ -16,8 +16,12 @@ import { useSessionStorageState } from "@/shared/hooks/useSessionStorageState";
 const COURSE_STORAGE_KEY = "synthoria:last-course";
 const PENDING_PLAN_STORAGE_KEY = "synthoria:pending-plan";
 
+/** Écran affiché : le formulaire de question, ou le résultat (plan à valider / cours). */
+export type AskView = "form" | "result";
+
 interface UseAskFlowReturn {
   phase: AskPhase;
+  view: AskView;
   pendingPlan: PendingPlan | null;
   course: CourseGenerationResponse | null;
   /** Génération du plan en cours */
@@ -32,6 +36,10 @@ interface UseAskFlowReturn {
   /** Repli : génère le cours en un seul appel, sans étape de plan */
   generateDirect: () => void;
   reset: () => void;
+  /** Revient au formulaire sans perdre le plan ou le cours en cours */
+  backToForm: () => void;
+  /** Retourne au plan ou au cours laissé en attente */
+  showResult: () => void;
 }
 
 /**
@@ -44,11 +52,15 @@ export function useAskFlow(): UseAskFlowReturn {
   const [course, setCourse] = useSessionStorageState<CourseGenerationResponse>(COURSE_STORAGE_KEY, null);
   const [pendingPlan, setPendingPlan] = useSessionStorageState<PendingPlan>(PENDING_PLAN_STORAGE_KEY, null);
   const [lastRequest, setLastRequest] = useState<CoursePlanRequest | null>(null);
+  const [view, setView] = useState<AskView>(() =>
+    resolveAskPhase(pendingPlan, course) === "question" ? "form" : "result",
+  );
 
   const planMutation = useMutation({
     mutationFn: generateCoursePlan,
     onSuccess: (plan, request) => {
       setPendingPlan({ request, plan });
+      setView("result");
       toastSuccess("Plan généré. Relisez-le, modifiez-le si besoin, puis validez.");
     },
     onError: toastError,
@@ -57,6 +69,7 @@ export function useAskFlow(): UseAskFlowReturn {
   const onCourseGenerated = (data: CourseGenerationResponse) => {
     setCourse(data);
     setPendingPlan(null);
+    setView("result");
     toastSuccess("Cours généré avec succès !");
   };
 
@@ -86,6 +99,7 @@ export function useAskFlow(): UseAskFlowReturn {
       filename: values.filename ?? undefined,
     };
     reset();
+    setView("form");
     setLastRequest(request);
     planMutation.mutate(request);
   }
@@ -109,6 +123,7 @@ export function useAskFlow(): UseAskFlowReturn {
 
   return {
     phase: resolveAskPhase(pendingPlan, course),
+    view,
     pendingPlan,
     course,
     isPlanning: planMutation.isPending,
@@ -119,5 +134,7 @@ export function useAskFlow(): UseAskFlowReturn {
     regeneratePlan,
     generateDirect,
     reset,
+    backToForm: () => setView("form"),
+    showResult: () => setView("result"),
   };
 }

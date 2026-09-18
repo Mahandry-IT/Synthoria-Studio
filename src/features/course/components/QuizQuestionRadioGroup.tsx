@@ -119,7 +119,7 @@ export function QuizQuestionRadioGroup({ question, index }: QuizQuestionRadioGro
                 className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
               />
               <span className="flex-1 text-gray-700">
-                <LatexText text={option} />
+                <LatexText text={option} autoMath />
               </span>
               {isRevealed && isCorrectOption && (
                 <span className="text-green-600 font-medium text-xs">✓ Correct</span>
