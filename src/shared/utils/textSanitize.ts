@@ -22,8 +22,8 @@ const ASCII_DIACRITIC_MAP: Record<string, string> = {
   "^a": "â", "^e": "ê", "^i": "î", "^o": "ô", "^u": "û",
   "^A": "Â", "^E": "Ê", "^I": "Î", "^O": "Ô", "^U": "Û",
   "`a": "à", "`e": "è", "`A": "À", "`E": "È",
-  "'a": "á", "'e": "é", "'i": "í", "'o": "ó", "'u": "ú",
-  "'A": "Á", "'E": "É", "'I": "Í", "'O": "Ó", "'U": "Ú",
+  // L'apostrophe droite `'` n'est volontairement pas mappée : c'est une apostrophe
+  // française (l'un, d'un), pas un accent aigu isolé.
   "~n": "ñ", "~N": "Ñ",
 };
 
@@ -82,7 +82,7 @@ function fixAsciiDiacritics(text: string): string {
     result = result.replace(new RegExp(escaped + "([aeiouAEIOU])"), (_m, v: string) => {
       // On utilise le couple (accent, voyelle) pour trouver la bonne lettre
       const key = pair[0] + v;
-      return ASCII_DIACRITIC_MAP[key] ?? v;
+      return ASCII_DIACRITIC_MAP[key] ?? _m;
     });
   }
   return result;
