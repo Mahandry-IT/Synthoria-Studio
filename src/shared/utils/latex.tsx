@@ -178,16 +178,31 @@ function createTableElement(rows: string[][]): HTMLTableElement {
 }
 
 /**
+ * Les choix de QCM arrivent souvent en LaTeX brut, sans délimiteurs (`IQR = \frac{a}{b}`).
+ * Si le texte n'a aucun `$` mais contient une commande LaTeX (ou un indice/exposant
+ * avec un `=`), il est enveloppé dans `$...$` pour être rendu comme formule.
+ */
+export function ensureMathDelimiters(text: string): string {
+  if (text.includes("$")) return text;
+  const isMath = /\\[a-zA-Z]+/.test(text) || (/[_^]/.test(text) && text.includes("="));
+  return isMath ? `$${text.trim()}$` : text;
+}
+
+/**
  * Rendu inline de texte contenant du LaTeX ($...$ et $$...$$),
  * du markdown gras (**text**) et des tableaux (| colonnes |).
  */
 export function LatexText({
-  text,
+  text: rawText,
   className = "",
+  autoMath = false,
 }: {
   text: string;
   className?: string;
+  /** Traite un texte sans `$` comme une formule s'il en a l'allure (choix de QCM). */
+  autoMath?: boolean;
 }) {
+  const text = autoMath ? ensureMathDelimiters(rawText) : rawText;
   const ref = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
