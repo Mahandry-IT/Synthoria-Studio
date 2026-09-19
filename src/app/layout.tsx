@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { Sidebar } from "@/components/Sidebar";
+import { ScrollableMain } from "@/components/ScrollableMain";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -28,9 +29,7 @@ export default function RootLayout({
         <Providers>
           <div className="flex h-screen overflow-hidden">
             <Sidebar />
-            <main className="flex-1 overflow-y-auto px-6 py-8">
-              <div className="mx-auto max-w-4xl">{children}</div>
-            </main>
+            <ScrollableMain>{children}</ScrollableMain>
           </div>
         </Providers>
       </body>

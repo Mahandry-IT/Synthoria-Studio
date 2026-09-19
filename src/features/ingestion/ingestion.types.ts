@@ -18,6 +18,17 @@ export interface PDFIngestResponse {
   total_documents: number;
 }
 
+/** Réponse brute du backend : forme multi-fichiers ou forme mono-fichier. */
+export type RawPDFIngestResponse =
+  | PDFIngestResponse
+  | {
+      status: string;
+      filename: string;
+      chunks_added?: number | null;
+      documents_added?: number | null;
+      message?: string | null;
+    };
+
 // ─── File List Response ─────────────────────────────────────
 
 export interface FileInfo {
