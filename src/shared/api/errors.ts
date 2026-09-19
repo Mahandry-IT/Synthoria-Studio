@@ -32,5 +32,6 @@ export function resolveErrorMessage(err: unknown): string {
   }
 
   if (err instanceof Error) return err.message;
+  if (typeof err === "string" && err) return err;
   return "Une erreur inattendue est survenue.";
 }
