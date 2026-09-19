@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
+import ChecklistIcon from "@mui/icons-material/Checklist";
+import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import { QuestionInput } from "@/features/course/components/QuestionInput";
 import { CourseView } from "@/features/course/components/CourseView";
 import { PlanReview } from "@/features/course/components/PlanReview";
-import { Skeleton } from "@/components/Skeleton";
+import { LoadingModal } from "@/components/LoadingModal";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { useAskFlow } from "@/features/course/hooks/useAskFlow";
@@ -20,6 +22,24 @@ export default function AskPage() {
   const isBusy = flow.isPlanning || flow.isGenerating;
   const showResult = flow.view === "result" && flow.phase !== "question";
 
+  // Modals d'attente (plan puis cours), communs aux deux écrans
+  const loadingModals = (
+    <>
+      <LoadingModal
+        open={flow.isPlanning}
+        icon={<ChecklistIcon sx={{ fontSize: 32 }} />}
+        title="Génération du plan"
+        message="Nous préparons le plan de votre cours, cela ne devrait prendre que quelques instants…"
+      />
+      <LoadingModal
+        open={flow.isGenerating}
+        icon={<AutoStoriesIcon sx={{ fontSize: 32 }} />}
+        title="Génération du cours"
+        message="Les sections sont rédigées par lots, cela peut prendre plusieurs minutes. Merci de patienter…"
+      />
+    </>
+  );
+
   // Changement d'écran : repartir du haut de la page
   useEffect(() => {
     window.scrollTo({ top: 0 });
@@ -34,14 +54,6 @@ export default function AskPage() {
           </Button>
         </div>
 
-        {flow.isPlanning && (
-          <div className="space-y-4" role="status" aria-live="polite">
-            <p className="text-sm text-gray-500">Génération du plan du cours…</p>
-            <Skeleton lines={2} />
-            <Skeleton lines={3} />
-          </div>
-        )}
-
         {flow.phase === "plan_review" && flow.pendingPlan && !flow.isPlanning && (
           <PlanReview
             key={flow.pendingPlan.plan.plan_id}
@@ -52,9 +64,9 @@ export default function AskPage() {
           />
         )}
 
-        {flow.isGenerating && <CourseGenerationLoader />}
-
         {flow.phase === "course" && flow.course && <CourseView data={flow.course} />}
+
+        {loadingModals}
       </div>
     );
   }
@@ -89,14 +101,6 @@ export default function AskPage() {
         <QuestionInput onSubmit={flow.submitQuestion} isPending={isBusy} />
       </Card>
 
-      {flow.isPlanning && (
-        <div className="space-y-4" role="status" aria-live="polite">
-          <p className="text-sm text-gray-500">Génération du plan du cours…</p>
-          <Skeleton lines={2} />
-          <Skeleton lines={3} />
-        </div>
-      )}
-
       {flow.planFailed && !flow.isPlanning && flow.phase === "question" && (
         <Card className="space-y-3 p-5">
           <p className="text-sm text-gray-700">
@@ -114,21 +118,7 @@ export default function AskPage() {
         </Card>
       )}
 
-      {flow.isGenerating && <CourseGenerationLoader />}
-    </div>
-  );
-}
-
-function CourseGenerationLoader() {
-  return (
-    <div className="space-y-4" role="status" aria-live="polite">
-      <p className="text-sm text-gray-500">
-        Génération du cours en cours : les sections sont rédigées par lots, cela peut prendre
-        plusieurs minutes.
-      </p>
-      <Skeleton lines={2} />
-      <Skeleton lines={4} />
-      <Skeleton lines={3} />
+      {loadingModals}
     </div>
   );
 }
