@@ -249,7 +249,7 @@ export function PlanReview({ plan, onValidate, onRegenerate, isGenerating }: Pla
         <Button type="button" variant="secondary" disabled={isGenerating || !canAdd} onClick={() => addSection()}>
           Ajouter une section
         </Button>
-        <Button type="button" variant="ghost" disabled={isGenerating} onClick={onRegenerate}>
+        <Button type="button" variant="outline" disabled={isGenerating} onClick={onRegenerate}>
           Régénérer le plan
         </Button>
       </div>

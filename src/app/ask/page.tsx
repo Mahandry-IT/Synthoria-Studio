@@ -29,7 +29,7 @@ export default function AskPage() {
     return (
       <div className="space-y-6">
         <div>
-          <Button type="button" variant="ghost" onClick={flow.backToForm} disabled={isBusy}>
+          <Button type="button" variant="outline" onClick={flow.backToForm} disabled={isBusy}>
             ← Retour au formulaire
           </Button>
         </div>
@@ -107,7 +107,7 @@ export default function AskPage() {
             <Button type="button" variant="secondary" onClick={flow.regeneratePlan}>
               Réessayer le plan
             </Button>
-            <Button type="button" variant="ghost" onClick={flow.generateDirect}>
+            <Button type="button" variant="outline" onClick={flow.generateDirect}>
               Générer directement le cours
             </Button>
           </div>
