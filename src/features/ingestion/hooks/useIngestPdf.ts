@@ -24,13 +24,24 @@ export function useIngestPdf(): UseIngestPdfReturn {
     mutationFn: ingestPdf,
     onSuccess: (data) => {
       const count = data.files?.length ?? 0;
-      const failed = data.files?.filter((f) => f.status === "failed" || f.status === "error").length ?? 0;
+      const failedFiles = data.files?.filter((f) => f.status === "failed" || f.status === "error") ?? [];
+      const failed = failedFiles.length;
       if (count > 0 && failed === 0) {
         toastSuccess(`${count} fichier(s) ingéré(s) avec succès !`);
       } else if (failed > 0 && failed < count) {
         toastWarning(`${failed} fichier(s) échoué(s) sur ${count}.`);
-      } else if (count > 0 && failed === count) {
-        toastError(`${failed} fichier(s) échoué(s).`);
+      } else if (failed > 0) {
+        // Message du serveur (ex. « File already uploaded ») plutôt qu'un texte générique
+        const alreadyUploaded = failedFiles.every((f) => /already uploaded/i.test(f.message ?? ""));
+        if (alreadyUploaded) {
+          toastWarning(
+            failed === 1
+              ? `« ${failedFiles[0].filename} » a déjà été importé.`
+              : `${failed} fichiers ont déjà été importés.`,
+          );
+        } else {
+          toastError(new Error(failedFiles.map((f) => `${f.filename} : ${f.message}`).join(" — ")));
+        }
       }
       queryClient.invalidateQueries({ queryKey: ["files"] });
     },

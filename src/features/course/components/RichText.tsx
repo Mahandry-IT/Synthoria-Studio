@@ -1,5 +1,8 @@
 "use client";
 
+import { CodeBlock } from "@/components/code/CodeBlock";
+import { InlineCode } from "@/components/code/InlineCode";
+import { maskCode } from "@/shared/utils/code/segments";
 import { LatexText } from "@/shared/utils/latex";
 import { sanitizeExtractedText } from "@/shared/utils/textSanitize";
 
@@ -129,9 +132,10 @@ interface RichTextProps {
 }
 
 /**
- * Rendu riche de texte backend : tables aplatiees, listes aplaties, LaTeX.
+ * Rendu riche de texte backend : tables aplaties, listes aplaties, LaTeX, code.
  * Applique `sanitizeExtractedText` avant parsing, puis déroute vers
- * `LatexText` pour tout segment non reconnu.
+ * `LatexText` pour tout segment non reconnu. Le code (`inline` ou ```bloc```)
+ * échappe à tout ce traitement et s'affiche tel quel, en lecture seule.
  *
  * Aucun `dangerouslySetInnerHTML` — construction JSX directe.
  *
@@ -140,10 +144,15 @@ interface RichTextProps {
 export function RichText({ text, className = "" }: RichTextProps) {
   if (!text || text.trim().length === 0) return null;
 
-  // Les formules sont masquées pour que ni la sanitisation (`x^e` → `xê`) ni la
+  // Le code est masqué en premier : ses `;`, `|`, `—`, `$` et `` `a `` ne doivent être
+  // pris ni pour une liste, une table ou une formule, ni pour un accent à corriger.
+  // Les formules sont ensuite masquées pour que ni la sanitisation (`x^e` → `xê`) ni la
   // détection de table/liste (`|x|`, `\;`, `—`) ne les altèrent.
-  const { masked, restore } = maskMath(text);
-  const sanitized = sanitizeExtractedText(masked);
+  const code = maskCode(text);
+  const math = maskMath(code.masked);
+  const sanitized = sanitizeExtractedText(math.masked);
+  // Pour un rendu imbriqué (cellule, item) : texte d'origine, qui sera ré-analysé.
+  const restore = (s: string) => code.restore(math.restore(s));
 
   // 1. Table aplatie ?
   const table = parseFlattenedTable(sanitized);
@@ -168,6 +177,23 @@ export function RichText({ text, className = "" }: RichTextProps) {
     );
   }
 
-  // 3. Fallback : rendu LaTeX via LatexText
-  return <LatexText text={restore(sanitized)} className={className} />;
+  // 3. Sans code : rendu LaTeX via LatexText
+  if (code.segments.length === 0) {
+    return <LatexText text={math.restore(sanitized)} className={className} />;
+  }
+
+  // 4. Avec code : texte via LatexText, code en pastille ou en boîte
+  return (
+    <span className={className}>
+      {code.split(math.restore(sanitized)).map((part, i) =>
+        typeof part === "string" ? (
+          <LatexText key={i} text={part} />
+        ) : part.block ? (
+          <CodeBlock key={i} code={part.code} language={part.language} />
+        ) : (
+          <InlineCode key={i} code={part.code} />
+        ),
+      )}
+    </span>
+  );
 }

@@ -98,11 +98,16 @@ export function getJson<T>(path: string, config?: AxiosRequestConfig): Promise<T
   return httpClient<T>(path, { method: "GET", ...config });
 }
 
-/** POST multipart helper (pour l'upload de fichiers) */
+/**
+ * POST multipart helper (pour l'upload de fichiers).
+ * Sans retry : l'ingestion n'est pas idempotente (un retry après un 5xx
+ * renverrait « File already uploaded » si le 1er appel a abouti côté serveur).
+ */
 export function postMultipart<T>(path: string, formData: FormData): Promise<T> {
   return httpClient<T>(path, {
     method: "POST",
     data: formData,
     headers: { "Content-Type": "multipart/form-data" },
+    noRetry: true,
   });
 }

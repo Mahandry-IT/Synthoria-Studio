@@ -15,3 +15,83 @@
     scroll-behavior: auto !important;
   }
 }
+
+/*
+ * Coloration syntaxique des boîtes de code (classes `hljs-*` émises par highlight.js).
+ * Palette proche de VS Code « Light+ », assombrie là où le contraste sur le fond de la boîte
+ * (gray-100, #f3f4f6) tombait sous 4,5:1 (WCAG AA) : tous les jetons sont ≥ 4,5:1.
+ */
+
+/* Commentaires */
+.code-highlight .hljs-comment,
+.code-highlight .hljs-quote {
+  color: #008000;
+}
+
+/* Mots-clés, types primitifs (int, void…), true / false / null, this / self */
+.code-highlight .hljs-keyword,
+.code-highlight .hljs-type,
+.code-highlight .hljs-literal,
+.code-highlight .hljs-variable.language_ {
+  color: #0000ff;
+}
+
+/* Directives (#include, #define), décorateurs, shebang */
+.code-highlight .hljs-meta,
+.code-highlight .hljs-meta .hljs-keyword {
+  color: #af00db;
+}
+
+.code-highlight .hljs-string,
+.code-highlight .hljs-meta .hljs-string {
+  color: #a31515;
+}
+
+.code-highlight .hljs-regexp {
+  color: #811f3f;
+}
+
+.code-highlight .hljs-number {
+  color: #0b7a4f;
+}
+
+/* Fonctions (définition et appel) */
+.code-highlight .hljs-title {
+  color: #795e26;
+}
+
+/* Classes, types de la bibliothèque standard (std::cout…) */
+.code-highlight .hljs-title.class_,
+.code-highlight .hljs-built_in {
+  color: #1d6f83;
+}
+
+.code-highlight .hljs-variable,
+.code-highlight .hljs-property {
+  color: #001080;
+}
+
+/* Clés JSON / YAML, attributs HTML */
+.code-highlight .hljs-attr {
+  color: #0451a5;
+}
+
+/* Propriétés CSS */
+.code-highlight .hljs-attribute {
+  color: #c50000;
+}
+
+/* Balises HTML, sélecteurs CSS */
+.code-highlight .hljs-tag,
+.code-highlight .hljs-name,
+.code-highlight .hljs-selector-tag,
+.code-highlight .hljs-selector-class,
+.code-highlight .hljs-selector-id,
+.code-highlight .hljs-selector-pseudo {
+  color: #800000;
+}
+
+/* Expression interpolée dans une chaîne (`${x}`, f"{x}") : couleur du texte, pas de la chaîne */
+.code-highlight .hljs-subst {
+  color: #1f2937;
+}
