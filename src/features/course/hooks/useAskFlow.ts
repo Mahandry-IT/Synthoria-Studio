@@ -3,18 +3,22 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { generateCourse, generateCourseFromPlan, generateCoursePlan } from "../course.api";
-import { resolveAskPhase, type AskPhase, type PendingPlan } from "../askFlow";
+import {
+  COURSE_STORAGE_KEY,
+  PENDING_PLAN_STORAGE_KEY,
+  resolveAskPhase,
+  type AskPhase,
+  type PendingPlan,
+} from "../askFlow";
 import type { QuestionInputValues } from "../course.schema";
 import type {
   CourseGenerationResponse,
   CoursePlanRequest,
   PlannedSection,
 } from "../course.types";
+import { usePodcastGeneration } from "@/features/podcast/hooks/usePodcastGeneration";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { useSessionStorageState } from "@/shared/hooks/useSessionStorageState";
-
-const COURSE_STORAGE_KEY = "synthoria:last-course";
-const PENDING_PLAN_STORAGE_KEY = "synthoria:pending-plan";
 
 /** Écran affiché : le formulaire de question, ou le résultat (plan à valider / cours). */
 export type AskView = "form" | "result";
@@ -40,6 +44,14 @@ interface UseAskFlowReturn {
   backToForm: () => void;
   /** Retourne au plan ou au cours laissé en attente */
   showResult: () => void;
+  /** Job podcast en cours de suivi (enchaîné après le cours), le cas échéant */
+  podcastJobId: string | null;
+  /** Relance du podcast (après un échec) en cours */
+  isPodcastRetrying: boolean;
+  /** Oublie le job podcast suivi (terminé, fermé ou introuvable) */
+  dismissPodcast: () => void;
+  /** Relance la génération du podcast d'une session */
+  retryPodcast: (sessionId: string) => void;
 }
 
 /**
@@ -51,6 +63,7 @@ interface UseAskFlowReturn {
 export function useAskFlow(): UseAskFlowReturn {
   const [course, setCourse] = useSessionStorageState<CourseGenerationResponse>(COURSE_STORAGE_KEY, null);
   const [pendingPlan, setPendingPlan] = useSessionStorageState<PendingPlan>(PENDING_PLAN_STORAGE_KEY, null);
+  const podcast = usePodcastGeneration();
   const [lastRequest, setLastRequest] = useState<CoursePlanRequest | null>(null);
   const [view, setView] = useState<AskView>(() =>
     resolveAskPhase(pendingPlan, course) === "question" ? "form" : "result",
@@ -71,6 +84,9 @@ export function useAskFlow(): UseAskFlowReturn {
     setPendingPlan(null);
     setView("result");
     toastSuccess("Cours généré avec succès !");
+    // Le podcast est un état parallèle : son échec ne remet jamais le cours en cause.
+    if (data.podcast_job_id) podcast.follow(data.podcast_job_id);
+    else if (data.session_id) podcast.start(data.session_id);
   };
 
   const fromPlanMutation = useMutation({
@@ -86,6 +102,7 @@ export function useAskFlow(): UseAskFlowReturn {
   });
 
   function reset() {
+    podcast.dismiss();
     setCourse(null);
     setPendingPlan(null);
     planMutation.reset();
@@ -136,5 +153,9 @@ export function useAskFlow(): UseAskFlowReturn {
     reset,
     backToForm: () => setView("form"),
     showResult: () => setView("result"),
+    podcastJobId: podcast.jobId,
+    isPodcastRetrying: podcast.isEnqueuing,
+    dismissPodcast: podcast.dismiss,
+    retryPodcast: (sessionId) => podcast.start(sessionId, { force: true }),
   };
 }

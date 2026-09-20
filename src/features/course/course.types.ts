@@ -124,6 +124,10 @@ export interface CourseGenerationResponse {
   quiz?: QuizQuestion[] | null;
   summary?: string | null;
   next_steps?: string[] | null;
+  /** Id de la session persistée côté backend (absent si la persistance a échoué ou sur un ancien cours) */
+  session_id?: string | null;
+  /** Job podcast lancé automatiquement par le backend après la génération, le cas échéant */
+  podcast_job_id?: string | null;
 }
 
 // ─── Plan de cours (génération en deux temps) ──────────────
@@ -167,6 +171,23 @@ export type CoursePlanRequest = CourseGenerationRequest;
 export interface CourseFromPlanRequest {
   plan_id: string;
   sections: PlannedSection[];
+}
+
+/** Élément de GET /courses/plans : plan non expiré, pas encore transformé en cours */
+export interface PendingPlanItem {
+  plan_id: string;
+  question: string;
+  title: string;
+  subject: string;
+  sections_count: number;
+  created_at: string;
+  expires_at: string;
+}
+
+/** Réponse de GET /courses/plans/{plan_id} : le plan et la requête d'origine (reprise) */
+export interface PendingPlanDetail extends CoursePlan {
+  question: string;
+  filenames: string[];
 }
 
 /** Requête de POST /courses/plan/refine-section : complète une section jugée incomplète */

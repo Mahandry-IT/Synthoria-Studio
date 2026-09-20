@@ -90,6 +90,9 @@ export const courseResponseSchema = z.object({
   quiz: z.array(quizQuestionSchema).nullable().optional(),
   summary: z.string().nullable().optional(),
   next_steps: z.array(z.string()).nullable().optional(),
+  // Absents des cours déjà en sessionStorage / historique : toujours optionnels
+  session_id: z.string().nullish(),
+  podcast_job_id: z.string().nullish(),
 });
 
 export type ParsedCourseResponse = z.infer<typeof courseResponseSchema>;
@@ -136,6 +139,35 @@ export const coursePlanSchema = z.object({
   }),
   sections: z.array(plannedSectionSchema).min(1),
   coverage_notes: z.string().default(""),
+});
+
+/** Élément de GET /courses/plans */
+export const pendingPlanItemSchema = z.object({
+  plan_id: z.string().min(1),
+  question: z.string().default(""),
+  title: z.string().default(""),
+  subject: z.string().default(""),
+  sections_count: z.number().int().min(0),
+  created_at: z.string(),
+  expires_at: z.string(),
+});
+
+/** Réponse paginée de GET /courses/plans */
+export const pendingPlansResponseSchema = z.object({
+  status: z.string().optional().default("ok"),
+  data: z.array(pendingPlanItemSchema),
+  meta: z.object({
+    page: z.number().int(),
+    limit: z.number().int(),
+    total: z.number().int(),
+    totalPages: z.number().int(),
+  }),
+});
+
+/** Réponse de GET /courses/plans/{plan_id} */
+export const pendingPlanDetailSchema = coursePlanSchema.extend({
+  question: z.string().default(""),
+  filenames: z.array(z.string()).default([]),
 });
 
 /** Réponse de POST /courses/plan/more-sections */
