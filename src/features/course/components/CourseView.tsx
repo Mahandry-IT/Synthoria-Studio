@@ -12,17 +12,24 @@ import { NextStepsList } from "./NextStepsList";
 import { AnswerBlock } from "./AnswerBlock";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
+import { SessionPodcast } from "@/features/podcast/components/SessionPodcast";
 import type { CourseGenerationResponse } from "../course.types";
 
 interface CourseViewProps {
   data: CourseGenerationResponse;
+  /**
+   * Session persistée du cours : active le bloc « Écouter ce cours » (podcast).
+   * Par défaut `data.session_id` ; l'historique la fournit explicitement.
+   */
+  sessionId?: string | null;
 }
 
 /**
  * Rendu complet d'un cours généré.
  * Réutilisé par la page Ask et la page historique détail.
  */
-export function CourseView({ data }: CourseViewProps) {
+export function CourseView({ data, sessionId: sessionIdProp }: CourseViewProps) {
+  const sessionId = sessionIdProp ?? data.session_id ?? null;
   const isMode3 = data.mode === "question_only";
   const isMode2 = data.mode === "file_question";
   const quiz = data.quiz ?? [];
@@ -50,6 +57,8 @@ export function CourseView({ data }: CourseViewProps) {
       </div>
 
       <CourseMetaHeader meta={data.meta} />
+
+      {sessionId && <SessionPodcast sessionId={sessionId} />}
 
       {data.introduction && (
         <Card className="p-5">
