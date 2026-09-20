@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { generateCourse, generateCourseFromPlan, generateCoursePlan } from "../course.api";
-import { resolveAskPhase, type AskPhase, type PendingPlan } from "../askFlow";
+import {
+  COURSE_STORAGE_KEY,
+  PENDING_PLAN_STORAGE_KEY,
+  resolveAskPhase,
+  type AskPhase,
+  type PendingPlan,
+} from "../askFlow";
 import type { QuestionInputValues } from "../course.schema";
 import type {
   CourseGenerationResponse,
@@ -13,9 +19,6 @@ import type {
 import { usePodcastGeneration } from "@/features/podcast/hooks/usePodcastGeneration";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { useSessionStorageState } from "@/shared/hooks/useSessionStorageState";
-
-const COURSE_STORAGE_KEY = "synthoria:last-course";
-const PENDING_PLAN_STORAGE_KEY = "synthoria:pending-plan";
 
 /** Écran affiché : le formulaire de question, ou le résultat (plan à valider / cours). */
 export type AskView = "form" | "result";

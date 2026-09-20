@@ -173,6 +173,23 @@ export interface CourseFromPlanRequest {
   sections: PlannedSection[];
 }
 
+/** Élément de GET /courses/plans : plan non expiré, pas encore transformé en cours */
+export interface PendingPlanItem {
+  plan_id: string;
+  question: string;
+  title: string;
+  subject: string;
+  sections_count: number;
+  created_at: string;
+  expires_at: string;
+}
+
+/** Réponse de GET /courses/plans/{plan_id} : le plan et la requête d'origine (reprise) */
+export interface PendingPlanDetail extends CoursePlan {
+  question: string;
+  filenames: string[];
+}
+
 /** Requête de POST /courses/plan/refine-section : complète une section jugée incomplète */
 export interface RefineSectionRequest {
   plan_id: string;

@@ -1,4 +1,5 @@
-import { postJson } from "@/shared/api/httpClient";
+import { getJson, postJson } from "@/shared/api/httpClient";
+import type { PaginatedResponse } from "@/shared/types/pagination";
 import type {
   CourseFromPlanRequest,
   CourseGenerationRequest,
@@ -6,6 +7,8 @@ import type {
   CoursePlan,
   CoursePlanRequest,
   MoreSectionsRequest,
+  PendingPlanDetail,
+  PendingPlanItem,
   PlannedSection,
   RefineSectionRequest,
 } from "./course.types";
@@ -14,6 +17,8 @@ import {
   coursePlanSchema,
   courseResponseSchema,
   moreSectionsResponseSchema,
+  pendingPlanDetailSchema,
+  pendingPlansResponseSchema,
   plannedSectionSchema,
 } from "./course.schema";
 
@@ -146,4 +151,40 @@ export async function generateMoreSections(payload: MoreSectionsRequest): Promis
   }
 
   return parsed.data.sections;
+}
+
+/**
+ * Plans en cours : proposés, non expirés et pas encore transformés en cours (dashboard).
+ *
+ * @throws {HttpError} en cas d'erreur HTTP
+ * @throws {Error} si la réponse ne correspond pas au schéma attendu
+ */
+export async function listPendingPlans(page: number, limit: number): Promise<PaginatedResponse<PendingPlanItem>> {
+  const raw = await getJson<unknown>("/courses/plans", { params: { page, limit } });
+
+  const parsed = pendingPlansResponseSchema.safeParse(raw);
+  if (!parsed.success) {
+    console.error("Zod validation failed for pending plans:", parsed.error);
+    throw new Error("Réponse invalide du serveur pour les plans en cours.");
+  }
+
+  return parsed.data;
+}
+
+/**
+ * Relit un plan proposé (sections + requête d'origine) pour le reprendre.
+ *
+ * @throws {HttpError} 404 plan inconnu, 410 plan expiré
+ * @throws {Error} si la réponse ne correspond pas au schéma attendu
+ */
+export async function getPendingPlan(planId: string): Promise<PendingPlanDetail> {
+  const raw = await getJson<unknown>(`/courses/plans/${encodeURIComponent(planId)}`);
+
+  const parsed = pendingPlanDetailSchema.safeParse(raw);
+  if (!parsed.success) {
+    console.error("Zod validation failed for pending plan detail:", parsed.error);
+    throw new Error("Réponse invalide du serveur pour le plan.");
+  }
+
+  return parsed.data;
 }
