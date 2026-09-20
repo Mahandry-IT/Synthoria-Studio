@@ -5,8 +5,17 @@ import type {
   CourseGenerationResponse,
   CoursePlan,
   CoursePlanRequest,
+  MoreSectionsRequest,
+  PlannedSection,
+  RefineSectionRequest,
 } from "./course.types";
-import { courseFromPlanRequestSchema, coursePlanSchema, courseResponseSchema } from "./course.schema";
+import {
+  courseFromPlanRequestSchema,
+  coursePlanSchema,
+  courseResponseSchema,
+  moreSectionsResponseSchema,
+  plannedSectionSchema,
+} from "./course.schema";
 
 /** La génération peut durer plusieurs minutes (lots de sections). */
 const GENERATION_TIMEOUT_MS = 300_000;
@@ -14,6 +23,8 @@ const GENERATION_TIMEOUT_MS = 300_000;
 const FROM_PLAN_TIMEOUT_MS = 600_000;
 /** Le plan est un seul appel structuré, plus court. */
 const PLAN_TIMEOUT_MS = 120_000;
+/** Complétion d'une section / nouvelles sections : un appel structuré (+ recherche ciblée). */
+const PLAN_ASSIST_TIMEOUT_MS = 120_000;
 
 /**
  * Valide la réponse d'un cours par Zod ; en cas d'écart, retourne les données
@@ -92,4 +103,47 @@ export async function generateCourseFromPlan(
   );
 
   return parseCourseResponse(raw);
+}
+
+/**
+ * Complète une section de plan jugée incomplète : l'IA ajoute ce qui manque (avec les
+ * précisions de l'utilisateur si `instructions` est renseigné, sinon de sa propre initiative).
+ *
+ * @throws {HttpError} en cas d'erreur HTTP (404 plan inconnu, 410 plan expiré, 422, 429, 502, 503)
+ * @throws {Error} si la réponse ne correspond pas au schéma de section attendu
+ */
+export async function refinePlanSection(payload: RefineSectionRequest): Promise<PlannedSection> {
+  const raw = await postJson<unknown>("/courses/plan/refine-section", payload, {
+    timeout: PLAN_ASSIST_TIMEOUT_MS,
+    noRetry: true,
+  });
+
+  const parsed = plannedSectionSchema.safeParse(raw);
+  if (!parsed.success) {
+    console.error("Zod validation failed for refined section:", parsed.error);
+    throw new Error("Réponse invalide du moteur IA pour la section. Réessayez.");
+  }
+
+  return parsed.data;
+}
+
+/**
+ * Génère de nouvelles sections de développement à partir de « Pour aller plus loin ».
+ *
+ * @throws {HttpError} en cas d'erreur HTTP (404 plan inconnu, 410 plan expiré, 422, 429, 502, 503)
+ * @throws {Error} si la réponse ne correspond pas au schéma attendu
+ */
+export async function generateMoreSections(payload: MoreSectionsRequest): Promise<PlannedSection[]> {
+  const raw = await postJson<unknown>("/courses/plan/more-sections", payload, {
+    timeout: PLAN_ASSIST_TIMEOUT_MS,
+    noRetry: true,
+  });
+
+  const parsed = moreSectionsResponseSchema.safeParse(raw);
+  if (!parsed.success) {
+    console.error("Zod validation failed for more sections:", parsed.error);
+    throw new Error("Réponse invalide du moteur IA pour les nouvelles sections. Réessayez.");
+  }
+
+  return parsed.data.sections;
 }

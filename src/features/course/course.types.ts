@@ -169,6 +169,23 @@ export interface CourseFromPlanRequest {
   sections: PlannedSection[];
 }
 
+/** Requête de POST /courses/plan/refine-section : complète une section jugée incomplète */
+export interface RefineSectionRequest {
+  plan_id: string;
+  /** Section actuelle (l'ancienne version, telle qu'éditée) */
+  section: PlannedSection;
+  /** Plan complet courant, pour éviter les doublons */
+  sections: PlannedSection[];
+  /** Ce que l'utilisateur veut voir ajouter ; absent = l'IA détermine ce qui manque */
+  instructions?: string;
+}
+
+/** Requête de POST /courses/plan/more-sections : sections issues de « Pour aller plus loin » */
+export interface MoreSectionsRequest {
+  plan_id: string;
+  sections: PlannedSection[];
+}
+
 // ─── Error types ────────────────────────────────────────────
 
 export const ERROR_MESSAGES: Record<number, string> = {
