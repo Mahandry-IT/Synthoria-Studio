@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 import { COURSE_PLAN_MAX_SECTIONS } from "@/shared/utils/constants";
 import {
   createBlankSection,
+  insertGeneratedSections,
   insertSection,
   moveSection,
   removeSection,
+  toAssistSections,
   toEditable,
   toPlannedSections,
+  toSectionPatch,
   updateSection,
   validatePlan,
 } from "./planEditing";
@@ -109,5 +112,64 @@ describe("toPlannedSections", () => {
       { type: "development", title: "Principe modifié", objective: "Comprendre", subtopics: ["flux", "rapport"], order: 1 },
       { type: "summary", title: "Résumé", objective: "Retenir", subtopics: ["a"], order: 2 },
     ]);
+  });
+});
+
+describe("assistance IA", () => {
+  it("toAssistSections nomme provisoirement les sections sans titre", () => {
+    const sections = [...toEditable([plan[1]]), createBlankSection()];
+
+    expect(titles(toAssistSections(sections))).toEqual(["Introduction", "Section 2 (sans titre)"]);
+    expect(titles(toPlannedSections(sections))).toEqual(["Introduction", ""]);
+  });
+
+  it("toSectionPatch convertit une section complétée en champs d'édition, sans toucher au type", () => {
+    const patch = toSectionPatch({
+      type: "summary",
+      title: "Titre",
+      objective: "Obj",
+      subtopics: ["a", "b"],
+      order: 1,
+    });
+
+    expect(patch).toEqual({ title: "Titre", objective: "Obj", subtopicsText: "a\nb" });
+  });
+
+  it("insertGeneratedSections place les nouvelles sections après la dernière section de développement", () => {
+    const sections = toEditable([
+      ...plan,
+      { type: "next_steps", title: "Suite", objective: "", subtopics: [], order: 4 },
+    ]);
+    const generated: PlannedSection[] = [
+      { type: "development", title: "N1", objective: "", subtopics: [], order: 5 },
+      { type: "development", title: "N2", objective: "", subtopics: [], order: 6 },
+    ];
+
+    const result = insertGeneratedSections(sections, generated);
+
+    expect(titles(result)).toEqual(["Introduction", "Principe", "N1", "N2", "Résumé", "Suite"]);
+  });
+
+  it("insertGeneratedSections ajoute en fin de plan s'il n'y a aucune section de développement", () => {
+    const sections = toEditable([plan[1]]);
+    const generated: PlannedSection[] = [{ type: "development", title: "N1", objective: "", subtopics: [], order: 2 }];
+
+    expect(titles(insertGeneratedSections(sections, generated))).toEqual(["Introduction", "N1"]);
+  });
+
+  it("insertGeneratedSections respecte le plafond de sections", () => {
+    const full = Array.from({ length: COURSE_PLAN_MAX_SECTIONS - 1 }, () => createBlankSection());
+    const generated: PlannedSection[] = [1, 2, 3].map((i) => ({
+      type: "development",
+      title: `N${i}`,
+      objective: "",
+      subtopics: [],
+      order: i,
+    }));
+
+    const result = insertGeneratedSections(full, generated);
+
+    expect(result).toHaveLength(COURSE_PLAN_MAX_SECTIONS);
+    expect(result[result.length - 1].title).toBe("N1");
   });
 });
