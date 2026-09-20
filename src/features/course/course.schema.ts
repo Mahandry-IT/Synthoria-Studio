@@ -90,6 +90,9 @@ export const courseResponseSchema = z.object({
   quiz: z.array(quizQuestionSchema).nullable().optional(),
   summary: z.string().nullable().optional(),
   next_steps: z.array(z.string()).nullable().optional(),
+  // Absents des cours déjà en sessionStorage / historique : toujours optionnels
+  session_id: z.string().nullish(),
+  podcast_job_id: z.string().nullish(),
 });
 
 export type ParsedCourseResponse = z.infer<typeof courseResponseSchema>;

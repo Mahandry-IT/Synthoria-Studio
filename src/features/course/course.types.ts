@@ -124,6 +124,10 @@ export interface CourseGenerationResponse {
   quiz?: QuizQuestion[] | null;
   summary?: string | null;
   next_steps?: string[] | null;
+  /** Id de la session persistée côté backend (absent si la persistance a échoué ou sur un ancien cours) */
+  session_id?: string | null;
+  /** Job podcast lancé automatiquement par le backend après la génération, le cas échéant */
+  podcast_job_id?: string | null;
 }
 
 // ─── Plan de cours (génération en deux temps) ──────────────

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { COURSE_PLAN_MAX_SECTIONS } from "@/shared/utils/constants";
-import { courseFromPlanRequestSchema, coursePlanSchema } from "./course.schema";
+import { courseFromPlanRequestSchema, coursePlanSchema, courseResponseSchema } from "./course.schema";
 
 const section = (order: number, type = "development") => ({
   type,
@@ -51,5 +51,30 @@ describe("coursePlanSchema", () => {
       plan_id: "p", expires_at: "x", mode: "file_question", meta: {}, sections: [], coverage_notes: "",
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe("courseResponseSchema — session_id et podcast_job_id", () => {
+  const base = { mode: "question_only", format: "focused_answer", meta: {}, sources: [] };
+
+  it("accepte un cours sans les nouveaux champs (sessionStorage / historique existants)", () => {
+    const result = courseResponseSchema.safeParse(base);
+
+    expect(result.success).toBe(true);
+    expect(result.data?.session_id).toBeUndefined();
+    expect(result.data?.podcast_job_id).toBeUndefined();
+  });
+
+  it("conserve session_id et podcast_job_id quand le backend les fournit", () => {
+    const result = courseResponseSchema.safeParse({ ...base, session_id: "s-1", podcast_job_id: "j-1" });
+
+    expect(result.data).toMatchObject({ session_id: "s-1", podcast_job_id: "j-1" });
+  });
+
+  it("accepte null (persistance échouée / podcast non lancé)", () => {
+    const result = courseResponseSchema.safeParse({ ...base, session_id: null, podcast_job_id: null });
+
+    expect(result.success).toBe(true);
+    expect(result.data?.session_id).toBeNull();
   });
 });
