@@ -13,6 +13,8 @@ export const MODE_LABELS = {
 
 /** Plafond de sections d'un plan (aligné sur COURSE_PLAN_MAX_SECTIONS du backend — protection anti-abus, pas une limite pédagogique) */
 export const COURSE_PLAN_MAX_SECTIONS = 80;
+/** Longueur max des précisions données à l'IA pour compléter une section (aligné sur le backend) */
+export const PLAN_INSTRUCTIONS_MAX_LENGTH = 1000;
 
 /** Limites de champs d'une section de plan (alignées sur le backend) */
 export const PLAN_TITLE_MAX_LENGTH = 200;
