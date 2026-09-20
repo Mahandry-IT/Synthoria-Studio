@@ -20,6 +20,32 @@ npm run build
 npm start
 ```
 
+## Pages
+
+| Route | Rôle |
+| --- | --- |
+| `/dashboard` | Tableau de bord : les 3 derniers podcasts (une carte, lecture inline) et les plans de cours en cours, avec compte à rebours d'expiration et bouton « Reprendre » |
+| `/` | Upload et ingestion de PDF |
+| `/ask` | Question → plan (relu/édité) → cours → podcast |
+| `/history` | Historique des cours ; le détail propose le podcast du cours |
+
+## Podcast
+
+Après la génération d'un cours, le backend crée un job de podcast (ou le front le demande via
+`POST /podcasts/generate/{session_id}` si `podcast_job_id` est absent). Le front :
+
+1. enchaîne un **modal de progression circulaire** (plan → cours → podcast) qui interroge
+   `GET /podcasts/jobs/{job_id}` toutes les 2 s, et s'arrête net à l'état terminal ;
+2. permet de **continuer en arrière-plan** (le modal devient un badge flottant) : le cours reste lisible ;
+3. affiche le lecteur audio (bloc « Écouter ce cours ») dès que le job est terminé.
+
+Un échec du podcast n'invalide jamais le cours affiché. L'audio est lu via `/api/podcasts/{job_id}/audio`
+(rewrite Next vers le backend) : le seek du lecteur exige que le rewrite relaie l'en-tête `Range`
+(`206 Partial Content`).
+
+Endpoints backend utilisés par le dashboard : `GET /podcasts?limit=3`, `GET /courses/plans` et
+`GET /courses/plans/{plan_id}`.
+
 ## Docker
 
 ### Quick Start
