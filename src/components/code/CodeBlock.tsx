@@ -30,6 +30,7 @@ interface CodeBlockProps {
 
 /**
  * Boîte de code en lecture seule (comme un bloc de code Notion) avec bouton « copier ».
+ * En-tête (langage + copier) au-dessus du code, pour rester lisible sur petit écran.
  * Le code est affiché tel quel, sans retour à la ligne automatique : défilement horizontal.
  *
  * Éléments « phrasing » uniquement (span/code/button) : ce composant est rendu dans des
@@ -53,34 +54,35 @@ export function CodeBlock({ code, language }: CodeBlockProps) {
   }
 
   return (
-    <span className="relative my-2 block rounded-lg border border-gray-200 bg-gray-100 font-normal not-italic">
-      {language && (
-        <span className="block px-3 pt-2 text-xs font-medium text-gray-500">{language}</span>
-      )}
+    <span className="my-2 block rounded-lg border border-gray-200 bg-gray-100 font-normal not-italic">
+      {/* En-tête : langage à gauche, bouton copier à droite (jamais superposés au code) */}
+      <span className="flex items-center justify-between gap-2 px-3 pt-2">
+        <span className="min-w-0 truncate text-xs font-medium text-gray-500">{language}</span>
+        <button
+          type="button"
+          onClick={handleCopy}
+          aria-label={copied ? "Code copié" : "Copier le code"}
+          className="-mr-1.5 flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-800 focus-visible:outline-2 focus-visible:outline-indigo-500"
+        >
+          {copied ? (
+            <>
+              <CheckIcon sx={{ fontSize: 16 }} className="text-green-600" />
+              Copié
+            </>
+          ) : (
+            <>
+              <ContentCopyIcon sx={{ fontSize: 16 }} />
+              Copier
+            </>
+          )}
+        </button>
+      </span>
       <code
         tabIndex={0}
-        className="code-highlight block overflow-x-auto whitespace-pre px-3 py-2.5 pr-24 font-mono text-[13px] leading-relaxed text-gray-800 focus-visible:outline-2 focus-visible:outline-indigo-500"
+        className="code-highlight block overflow-x-auto whitespace-pre px-3 py-2.5 font-mono text-[13px] leading-relaxed text-gray-800 focus-visible:outline-2 focus-visible:outline-indigo-500"
       >
         {tokens ? renderTokens(tokens) : code}
       </code>
-      <button
-        type="button"
-        onClick={handleCopy}
-        aria-label={copied ? "Code copié" : "Copier le code"}
-        className="absolute right-2 top-2 flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-800 focus-visible:outline-2 focus-visible:outline-indigo-500"
-      >
-        {copied ? (
-          <>
-            <CheckIcon sx={{ fontSize: 16 }} className="text-green-600" />
-            Copié
-          </>
-        ) : (
-          <>
-            <ContentCopyIcon sx={{ fontSize: 16 }} />
-            Copier
-          </>
-        )}
-      </button>
       <span role="status" className="sr-only">
         {copied ? "Code copié dans le presse-papiers" : ""}
       </span>
