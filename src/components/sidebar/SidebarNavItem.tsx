@@ -6,16 +6,19 @@ interface SidebarNavItemProps {
   icon: React.ReactNode;
   isActive: boolean;
   collapsed: boolean;
+  /** Appelé au clic (ex. pour refermer le menu mobile). */
+  onNavigate?: () => void;
 }
 
 /**
  * Lien de navigation de la sidebar.
  * En mode réduit, seule l'icône est visible (le libellé reste accessible via aria-label / title).
  */
-export function SidebarNavItem({ label, href, icon, isActive, collapsed }: SidebarNavItemProps) {
+export function SidebarNavItem({ label, href, icon, isActive, collapsed, onNavigate }: SidebarNavItemProps) {
   return (
     <Link
       href={href}
+      onClick={onNavigate}
       title={collapsed ? label : undefined}
       aria-label={collapsed ? label : undefined}
       aria-current={isActive ? "page" : undefined}

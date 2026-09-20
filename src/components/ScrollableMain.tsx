@@ -29,7 +29,7 @@ export function ScrollableMain({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <main ref={mainRef} className="flex-1 overflow-y-auto px-6 py-8">
+      <main ref={mainRef} className="flex-1 overflow-y-auto px-4 pb-8 pt-20 sm:px-6 md:pt-8">
         <div className="mx-auto max-w-4xl">{children}</div>
       </main>
 
