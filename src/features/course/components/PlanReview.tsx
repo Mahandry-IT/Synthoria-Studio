@@ -89,8 +89,8 @@ function SectionEditor({
 
   return (
     <Card className="p-4">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+        <div className="flex min-w-0 items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-800">
             {position}
           </span>
@@ -108,7 +108,7 @@ function SectionEditor({
             ))}
           </select>
         </div>
-        <div className="flex items-center">
+        <div className="ml-auto flex shrink-0 items-center">
           <IconButton label={`Monter la section ${position}`} onClick={() => onMove(-1)} disabled={disabled || isFirst}>
             ↑
           </IconButton>
