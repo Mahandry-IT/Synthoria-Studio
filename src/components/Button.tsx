@@ -4,8 +4,11 @@ import { type ButtonHTMLAttributes, forwardRef } from "react";
 
 type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "danger";
 
+type ButtonSize = "md" | "sm";
+
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
+  size?: ButtonSize;
   loading?: boolean;
 }
 
@@ -22,11 +25,16 @@ const variantClasses: Record<ButtonVariant, string> = {
     "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500",
 };
 
+const sizeClasses: Record<ButtonSize, string> = {
+  md: "px-4 py-2.5 text-sm",
+  sm: "px-2.5 py-1.5 text-xs",
+};
+
 /**
  * Bouton réutilisable avec variants et état loading.
  */
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = "primary", loading = false, disabled, className = "", children, ...props }, ref) => {
+  ({ variant = "primary", size = "md", loading = false, disabled, className = "", children, ...props }, ref) => {
     const isDisabled = disabled === true || loading;
 
     return (
@@ -35,7 +43,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isDisabled}
         suppressHydrationWarning
         className={[
-          "inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium",
+          "inline-flex items-center justify-center gap-2 rounded-lg font-medium",
+          sizeClasses[size],
           "transition-colors duration-150",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
           "disabled:cursor-not-allowed disabled:opacity-50",
