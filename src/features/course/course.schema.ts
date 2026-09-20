@@ -138,6 +138,11 @@ export const coursePlanSchema = z.object({
   coverage_notes: z.string().default(""),
 });
 
+/** Réponse de POST /courses/plan/more-sections */
+export const moreSectionsResponseSchema = z.object({
+  sections: z.array(plannedSectionSchema).min(1),
+});
+
 /** Requête de POST /courses/generate/from-plan (mêmes règles que le backend) */
 export const courseFromPlanRequestSchema = z.object({
   plan_id: z.string().min(1),

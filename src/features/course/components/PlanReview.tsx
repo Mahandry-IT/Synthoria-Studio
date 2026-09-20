@@ -1,32 +1,33 @@
 "use client";
 
 import { useState } from "react";
-import { AutoResizeTextarea } from "@/components/AutoResizeTextarea";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
+import { LoadingModal } from "@/components/LoadingModal";
 import { COURSE_PLAN_MAX_SECTIONS } from "@/shared/utils/constants";
 import {
-  SECTION_TYPE_LABELS,
   createBlankSection,
+  insertGeneratedSections,
   insertSection,
   moveSection,
   removeSection,
   toEditable,
+  toAssistSections,
   toPlannedSections,
+  toSectionPatch,
   updateSection,
   validatePlan,
   type EditableSection,
 } from "../planEditing";
-import type { CoursePlan, PlannedSection, PlannedSectionType } from "../course.types";
-
-const FIELD_CLASSES = [
-  "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm",
-  "placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500",
-  "disabled:opacity-50",
-].join(" ");
-
-const SECTION_TYPES = Object.keys(SECTION_TYPE_LABELS) as PlannedSectionType[];
+import { useMoreSections } from "../hooks/useMoreSections";
+import { useRefineSection } from "../hooks/useRefineSection";
+import { toastSuccess } from "@/shared/ui/toast";
+import type { CoursePlan, PlannedSection } from "../course.types";
+import { PlanSectionEditor } from "./PlanSectionEditor";
+import { RefineSectionModal } from "./RefineSectionModal";
 
 interface PlanReviewProps {
   plan: CoursePlan;
@@ -36,148 +37,10 @@ interface PlanReviewProps {
   isGenerating: boolean;
 }
 
-interface SectionEditorProps {
-  section: EditableSection;
-  index: number;
-  isFirst: boolean;
-  isLast: boolean;
-  disabled: boolean;
-  onChange: (patch: Partial<Omit<EditableSection, "key">>) => void;
-  onMove: (delta: -1 | 1) => void;
-  onRemove: () => void;
-  onAddAfter: () => void;
-}
-
-function IconButton({
-  label,
-  onClick,
-  disabled,
-  children,
-}: {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-  children: string;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-      disabled={disabled}
-      className="rounded-md px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-30"
-    >
-      {children}
-    </button>
-  );
-}
-
-function SectionEditor({
-  section,
-  index,
-  isFirst,
-  isLast,
-  disabled,
-  onChange,
-  onMove,
-  onRemove,
-  onAddAfter,
-}: SectionEditorProps) {
-  const position = index + 1;
-  const id = section.key;
-
-  return (
-    <Card className="p-4">
-      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-800">
-            {position}
-          </span>
-          <select
-            aria-label={`Type de la section ${position}`}
-            value={section.type}
-            disabled={disabled}
-            onChange={(e) => onChange({ type: e.target.value as PlannedSectionType })}
-            className="rounded-lg border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-          >
-            {SECTION_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {SECTION_TYPE_LABELS[type]}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="ml-auto flex shrink-0 items-center">
-          <IconButton label={`Monter la section ${position}`} onClick={() => onMove(-1)} disabled={disabled || isFirst}>
-            ↑
-          </IconButton>
-          <IconButton label={`Descendre la section ${position}`} onClick={() => onMove(1)} disabled={disabled || isLast}>
-            ↓
-          </IconButton>
-          <IconButton label={`Ajouter une section après la section ${position}`} onClick={onAddAfter} disabled={disabled}>
-            ＋
-          </IconButton>
-          <IconButton label={`Supprimer la section ${position}`} onClick={onRemove} disabled={disabled}>
-            ✕
-          </IconButton>
-        </div>
-      </div>
-
-      <div className="mt-3 space-y-3">
-        <div>
-          <label htmlFor={`${id}-title`} className="mb-1 block text-xs font-medium text-gray-600">
-            Titre
-          </label>
-          <AutoResizeTextarea
-            id={`${id}-title`}
-            rows={1}
-            value={section.title}
-            disabled={disabled}
-            onChange={(e) => onChange({ title: e.target.value.replace(/\s*\n\s*/g, " ") })}
-            onKeyDown={(e) => {
-              // Le titre est sur une seule ligne logique : Entrée ne crée pas de saut de ligne
-              if (e.key === "Enter") e.preventDefault();
-            }}
-            placeholder="Titre de la section"
-            className={FIELD_CLASSES}
-          />
-        </div>
-        <div>
-          <label htmlFor={`${id}-objective`} className="mb-1 block text-xs font-medium text-gray-600">
-            Objectif
-          </label>
-          <AutoResizeTextarea
-            id={`${id}-objective`}
-            rows={2}
-            value={section.objective}
-            disabled={disabled}
-            onChange={(e) => onChange({ objective: e.target.value })}
-            placeholder="Ce que l'apprenant doit savoir à l'issue de la section"
-            className={FIELD_CLASSES}
-          />
-        </div>
-        <div>
-          <label htmlFor={`${id}-subtopics`} className="mb-1 block text-xs font-medium text-gray-600">
-            Sous-thèmes <span className="font-normal text-gray-400">(un par ligne)</span>
-          </label>
-          <AutoResizeTextarea
-            id={`${id}-subtopics`}
-            rows={3}
-            value={section.subtopicsText}
-            disabled={disabled}
-            onChange={(e) => onChange({ subtopicsText: e.target.value })}
-            className={FIELD_CLASSES}
-          />
-        </div>
-      </div>
-    </Card>
-  );
-}
-
 /**
  * Revue et édition du plan d'un cours avant génération complète.
  * L'utilisateur peut modifier, réordonner, ajouter et supprimer des sections,
+ * faire compléter une section par l'IA, ajouter des sections issues de « Pour aller plus loin »,
  * puis valider (→ génération du cours) ou régénérer un nouveau plan.
  *
  * L'état d'édition est local : monter le composant avec `key={plan.plan_id}`
@@ -185,11 +48,49 @@ function SectionEditor({
  */
 export function PlanReview({ plan, onValidate, onRegenerate, isGenerating }: PlanReviewProps) {
   const [sections, setSections] = useState<EditableSection[]>(() => toEditable(plan.sections));
+  const [refineKey, setRefineKey] = useState<string | null>(null);
+  const refine = useRefineSection();
+  const moreSections = useMoreSections();
+
   const errors = validatePlan(sections);
   const canAdd = sections.length < COURSE_PLAN_MAX_SECTIONS;
+  const isAssisting = refine.isPending || moreSections.isPending;
+  const isLocked = isGenerating || isAssisting;
+  const refineTarget = sections.find((s) => s.key === refineKey) ?? null;
 
   const addSection = (afterKey?: string) =>
     setSections((current) => insertSection(current, createBlankSection(), afterKey));
+
+  const refineSection = (target: EditableSection, instructions: string) => {
+    setRefineKey(null);
+    const planned = toAssistSections(sections);
+    const index = sections.findIndex((s) => s.key === target.key);
+    refine.mutate(
+      {
+        plan_id: plan.plan_id,
+        section: planned[index],
+        sections: planned,
+        instructions: instructions || undefined,
+      },
+      {
+        onSuccess: (refined) => {
+          setSections((current) => updateSection(current, target.key, toSectionPatch(refined)));
+          toastSuccess("Section complétée. Relisez-la, vous pouvez encore la modifier.");
+        },
+      },
+    );
+  };
+
+  const addMoreSections = () =>
+    moreSections.mutate(
+      { plan_id: plan.plan_id, sections: toAssistSections(sections) },
+      {
+        onSuccess: (generated) => {
+          setSections((current) => insertGeneratedSections(current, generated));
+          toastSuccess("Nouvelles sections ajoutées après la dernière section de développement.");
+        },
+      },
+    );
 
   return (
     <div className="space-y-4">
@@ -208,7 +109,8 @@ export function PlanReview({ plan, onValidate, onRegenerate, isGenerating }: Pla
         </div>
         <p className="mt-3 text-sm text-gray-500">
           Relisez le plan, modifiez-le si besoin (titres, objectifs, ordre, sections), puis validez pour
-          générer le cours complet. Le cours suivra exactement ce plan.
+          générer le cours complet. Le cours suivra exactement ce plan. Une section vous semble incomplète ?
+          Le bouton <AutoAwesomeIcon sx={{ fontSize: 14 }} aria-hidden="true" /> la fait compléter par l&apos;IA.
         </p>
         {plan.coverage_notes && (
           <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
@@ -219,17 +121,18 @@ export function PlanReview({ plan, onValidate, onRegenerate, isGenerating }: Pla
 
       <div className="space-y-3">
         {sections.map((section, index) => (
-          <SectionEditor
+          <PlanSectionEditor
             key={section.key}
             section={section}
             index={index}
             isFirst={index === 0}
             isLast={index === sections.length - 1}
-            disabled={isGenerating}
+            disabled={isLocked}
             onChange={(patch) => setSections((current) => updateSection(current, section.key, patch))}
             onMove={(delta) => setSections((current) => moveSection(current, section.key, delta))}
             onRemove={() => setSections((current) => removeSection(current, section.key))}
             onAddAfter={() => canAdd && addSection(section.key)}
+            onRefine={() => setRefineKey(section.key)}
           />
         ))}
       </div>
@@ -246,18 +149,43 @@ export function PlanReview({ plan, onValidate, onRegenerate, isGenerating }: Pla
         <Button
           type="button"
           loading={isGenerating}
-          disabled={errors.length > 0}
+          disabled={errors.length > 0 || isAssisting}
           onClick={() => onValidate(toPlannedSections(sections))}
         >
           Valider et générer le cours complet
         </Button>
-        <Button type="button" variant="secondary" disabled={isGenerating || !canAdd} onClick={() => addSection()}>
+        <Button type="button" variant="outline" disabled={isLocked || !canAdd} onClick={addMoreSections}>
+          <AutoAwesomeIcon sx={{ fontSize: 16 }} />
+          Ajouter plus de sections
+        </Button>
+        <Button type="button" variant="secondary" disabled={isLocked || !canAdd} onClick={() => addSection()}>
           Ajouter une section
         </Button>
-        <Button type="button" variant="outline" disabled={isGenerating} onClick={onRegenerate}>
+        <Button type="button" variant="outline" disabled={isLocked} onClick={onRegenerate}>
           Régénérer le plan
         </Button>
       </div>
+
+      {refineTarget && (
+        <RefineSectionModal
+          sectionTitle={refineTarget.title}
+          onSubmit={(instructions) => refineSection(refineTarget, instructions)}
+          onCancel={() => setRefineKey(null)}
+        />
+      )}
+
+      <LoadingModal
+        open={refine.isPending}
+        icon={<AutoAwesomeIcon sx={{ fontSize: 32 }} />}
+        title="Complétion de la section"
+        message="L'IA recherche et ajoute les informations manquantes, cela ne devrait prendre que quelques instants…"
+      />
+      <LoadingModal
+        open={moreSections.isPending}
+        icon={<AutoStoriesIcon sx={{ fontSize: 32 }} />}
+        title="Ajout de nouvelles sections"
+        message="L'IA développe les pistes « Pour aller plus loin » en nouvelles sections, merci de patienter…"
+      />
     </div>
   );
 }

@@ -133,3 +133,35 @@ export function toPlannedSections(sections: EditableSection[]): PlannedSection[]
     order: i + 1,
   }));
 }
+
+/**
+ * Comme `toPlannedSections`, mais pour les requêtes d'assistance IA : le plan peut encore
+ * contenir des sections sans titre (le backend exige un titre), qu'on nomme provisoirement.
+ */
+export function toAssistSections(sections: EditableSection[]): PlannedSection[] {
+  return toPlannedSections(sections).map((s) => (s.title ? s : { ...s, title: `Section ${s.order} (sans titre)` }));
+}
+
+/** Champs d'édition correspondant à une section complétée par l'IA (le type de la section est conservé). */
+export function toSectionPatch(refined: PlannedSection): Partial<Omit<EditableSection, "key">> {
+  return {
+    title: refined.title,
+    objective: refined.objective,
+    subtopicsText: refined.subtopics.join("\n"),
+  };
+}
+
+/**
+ * Insère de nouvelles sections de développement juste après la dernière section de
+ * développement existante (à défaut, en fin de plan), sans dépasser le plafond du plan.
+ */
+export function insertGeneratedSections(
+  sections: EditableSection[],
+  generated: PlannedSection[],
+): EditableSection[] {
+  const capacity = Math.max(0, COURSE_PLAN_MAX_SECTIONS - sections.length);
+  const added = toEditable(generated).slice(0, capacity);
+  const lastDevelopment = sections.map((s) => s.type).lastIndexOf("development");
+  const at = lastDevelopment === -1 ? sections.length : lastDevelopment + 1;
+  return [...sections.slice(0, at), ...added, ...sections.slice(at)];
+}
