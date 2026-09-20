@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AutoResizeTextarea } from "@/components/AutoResizeTextarea";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
@@ -88,8 +89,8 @@ function SectionEditor({
 
   return (
     <Card className="p-4">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+        <div className="flex min-w-0 items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-800">
             {position}
           </span>
@@ -107,7 +108,7 @@ function SectionEditor({
             ))}
           </select>
         </div>
-        <div className="flex items-center">
+        <div className="ml-auto flex shrink-0 items-center">
           <IconButton label={`Monter la section ${position}`} onClick={() => onMove(-1)} disabled={disabled || isFirst}>
             ↑
           </IconButton>
@@ -128,12 +129,16 @@ function SectionEditor({
           <label htmlFor={`${id}-title`} className="mb-1 block text-xs font-medium text-gray-600">
             Titre
           </label>
-          <input
+          <AutoResizeTextarea
             id={`${id}-title`}
-            type="text"
+            rows={1}
             value={section.title}
             disabled={disabled}
-            onChange={(e) => onChange({ title: e.target.value })}
+            onChange={(e) => onChange({ title: e.target.value.replace(/\s*\n\s*/g, " ") })}
+            onKeyDown={(e) => {
+              // Le titre est sur une seule ligne logique : Entrée ne crée pas de saut de ligne
+              if (e.key === "Enter") e.preventDefault();
+            }}
             placeholder="Titre de la section"
             className={FIELD_CLASSES}
           />
@@ -142,27 +147,27 @@ function SectionEditor({
           <label htmlFor={`${id}-objective`} className="mb-1 block text-xs font-medium text-gray-600">
             Objectif
           </label>
-          <textarea
+          <AutoResizeTextarea
             id={`${id}-objective`}
             rows={2}
             value={section.objective}
             disabled={disabled}
             onChange={(e) => onChange({ objective: e.target.value })}
             placeholder="Ce que l'apprenant doit savoir à l'issue de la section"
-            className={`${FIELD_CLASSES} resize-none`}
+            className={FIELD_CLASSES}
           />
         </div>
         <div>
           <label htmlFor={`${id}-subtopics`} className="mb-1 block text-xs font-medium text-gray-600">
             Sous-thèmes <span className="font-normal text-gray-400">(un par ligne)</span>
           </label>
-          <textarea
+          <AutoResizeTextarea
             id={`${id}-subtopics`}
             rows={3}
             value={section.subtopicsText}
             disabled={disabled}
             onChange={(e) => onChange({ subtopicsText: e.target.value })}
-            className={`${FIELD_CLASSES} resize-y`}
+            className={FIELD_CLASSES}
           />
         </div>
       </div>
