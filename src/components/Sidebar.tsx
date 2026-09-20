@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import QuizIcon from "@mui/icons-material/Quiz";
 import HistoryIcon from "@mui/icons-material/History";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { SidebarNavItem } from "@/components/sidebar/SidebarNavItem";
@@ -42,9 +42,15 @@ export function Sidebar() {
           collapsed ? "justify-center" : "gap-3 px-4"
         }`}
       >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white">
-          <AutoAwesomeIcon fontSize="small" />
-        </span>
+        <Image
+          src="/logo-mark.svg"
+          alt={collapsed ? "Synthoria" : ""}
+          width={36}
+          height={36}
+          unoptimized
+          priority
+          className="h-9 w-9 shrink-0"
+        />
         {!collapsed && <span className="text-lg font-bold text-gray-900">Synthoria</span>}
       </div>
 
