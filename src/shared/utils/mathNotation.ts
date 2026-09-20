@@ -20,3 +20,32 @@ export function toAccentedMath(code: string): string | null {
   const symbol = variable.length > 1 ? `\\${variable}` : variable;
   return `\\${accent}{${symbol}}`;
 }
+
+/** Fragment de texte brut ou formule LaTeX (sans délimiteurs). */
+export type TextOrMath = { text: string } | { math: string };
+
+/**
+ * Indice « nu » écrit hors de toute formule : `Q_1`, `x_i`, `Q_{12}`.
+ * Une seule lettre, isolée (ni mot ni commande LaTeX avant), suivie d'un indice court :
+ * `file_name`, `x_max` ou `snake_case` ne correspondent donc pas.
+ */
+const BARE_SUBSCRIPT = /(?<![A-Za-z0-9_\\])([A-Za-z])_(\{[A-Za-z0-9]{1,6}\}|\d{1,2}|[A-Za-z])(?![A-Za-z0-9_])/g;
+
+/**
+ * Découpe un texte brut (sans `$`) en fragments texte / formule : le modèle écrit souvent
+ * « Q_1 » sans délimiteurs, ce qui s'affichait tel quel au lieu de Q₁.
+ */
+export function splitBareSubscripts(text: string): TextOrMath[] {
+  const parts: TextOrMath[] = [];
+  let last = 0;
+
+  for (const match of text.matchAll(BARE_SUBSCRIPT)) {
+    const index = match.index ?? 0;
+    if (index > last) parts.push({ text: text.slice(last, index) });
+    parts.push({ math: `${match[1]}_${match[2]}` });
+    last = index + match[0].length;
+  }
+
+  if (last < text.length) parts.push({ text: text.slice(last) });
+  return parts;
+}

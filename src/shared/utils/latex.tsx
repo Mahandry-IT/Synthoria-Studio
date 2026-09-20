@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
+import { splitBareSubscripts } from "./mathNotation";
 
 /** Segments mathématiques : `$$...$$` (display) puis `$...$` (inline). */
 const MATH_SEGMENT_SOURCE = String.raw`\$\$[\s\S]+?\$\$|\$[^$\n]+?\$`;
@@ -130,7 +131,14 @@ function parseBoldMarkdown(
           : document.createTextNode(escapeKatexText(part))
       );
     } else {
-      fragment.appendChild(document.createTextNode(escapeKatexText(part)));
+      // Texte brut : les indices écrits sans `$` (Q_1) sont rendus en formule
+      for (const piece of splitBareSubscripts(part)) {
+        fragment.appendChild(
+          "math" in piece
+            ? renderMath(piece.math, false)
+            : document.createTextNode(escapeKatexText(piece.text)),
+        );
+      }
     }
   }
 
