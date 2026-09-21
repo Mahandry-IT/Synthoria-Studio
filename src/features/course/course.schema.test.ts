@@ -159,3 +159,53 @@ describe("moreSectionsResponseSchema", () => {
     ).toBeNull();
   });
 });
+
+describe("courseResponseSchema — sous-sections par blocs", () => {
+  const base = {
+    mode: "question_only",
+    format: "full_course",
+    meta: { title: "T", subject: "S", language: "fr", generated_at: "2026-01-01T00:00:00Z" },
+    sources: [],
+    introduction: { quoi: "x" },
+    summary: "",
+  };
+  const legacySection = { id: "0", title: "S", quoi: "q", pourquoi: "p", comment: "c" };
+
+  it("parse les sous-sections et garde une section legacy valide", () => {
+    const parsed = courseResponseSchema.parse({
+      ...base,
+      sections: [
+        {
+          ...legacySection,
+          subsections: [{ title: "Quoi", blocks: [{ type: "diagram", diagram: { kind: "flowchart", mermaid: "A-->B" } }] }],
+        },
+        legacySection,
+      ],
+    });
+    expect(parsed.sections?.[0].subsections?.[0].blocks[0].diagram?.mermaid).toBe("A-->B");
+    expect(parsed.sections?.[1].subsections).toEqual([]);
+  });
+
+  it("ignore un visuel invalide et accepte un type de bloc inconnu", () => {
+    const parsed = courseResponseSchema.parse({
+      ...base,
+      sections: [
+        {
+          ...legacySection,
+          subsections: [
+            {
+              title: "Quoi",
+              blocks: [
+                { type: "diagram", diagram: { kind: "inconnu", mermaid: "A-->B" } },
+                { type: "hologram" },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const blocks = parsed.sections?.[0].subsections?.[0].blocks ?? [];
+    expect(blocks[0].diagram).toBeNull();
+    expect(blocks[1].type).toBe("hologram");
+  });
+});

@@ -56,8 +56,58 @@ const courseAnswerSchema = z.object({
   tables: z.array(courseTableSchema).optional().default([]),
 });
 
+const courseContentBlockSchema = z.object({
+  type: z.string(),
+  text: z.string().nullish(),
+  callout_variant: z.enum(["note", "warning", "tip"]).nullish().catch(null),
+  list_items: z.array(z.string()).nullish(),
+  list_ordered: z.boolean().nullish(),
+  table: courseTableSchema.nullish(),
+  formula: z.object({ latex: z.string(), description: z.string().nullish() }).nullish(),
+  code_language: z.string().nullish(),
+  code: z.string().nullish(),
+  worked_example: z
+    .object({
+      statement: z.string().optional().default(""),
+      steps: z.array(z.string()).optional().default([]),
+      result: z.string().optional().default(""),
+    })
+    .nullish(),
+  image_caption: z.string().nullish(),
+  pitfall: z
+    .object({
+      description: z.string(),
+      why_it_happens: z.string().optional().default(""),
+      how_to_avoid: z.string().optional().default(""),
+    })
+    .nullish(),
+  diagram: z
+    .object({
+      kind: z.enum(["flowchart", "sequence", "hierarchy", "cycle"]),
+      caption: z.string().optional().default(""),
+      mermaid: z.string(),
+    })
+    .nullish()
+    .catch(null), // un visuel invalide est ignoré, il ne doit pas invalider tout le cours
+  chart: z
+    .object({
+      kind: z.enum(["bar", "line", "pie"]),
+      caption: z.string().optional().default(""),
+      labels: z.array(z.string()),
+      series: z.array(z.object({ name: z.string(), values: z.array(z.number()) })),
+    })
+    .nullish()
+    .catch(null),
+});
+
+const courseSubsectionSchema = z.object({
+  title: z.string().optional().default(""),
+  blocks: z.array(courseContentBlockSchema).optional().default([]),
+});
+
 const courseSectionSchema = z.object({
   id: z.string().optional(),
+  subsections: z.array(courseSubsectionSchema).optional().default([]),
   title: z.string(),
   quoi: z.string().optional().default(""),
   pourquoi: z.string().optional().default(""),

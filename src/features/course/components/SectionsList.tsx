@@ -3,6 +3,7 @@
 import { Card } from "@/components/Card";
 import { AnswerBlock } from "./AnswerBlock";
 import { LatexText } from "@/shared/utils/latex";
+import { BlockRenderer } from "./blocks/BlockRenderer";
 import type { CourseSection } from "../course.types";
 
 interface SectionsListProps {
@@ -11,7 +12,8 @@ interface SectionsListProps {
 
 /**
  * Affiche la liste des sections du cours.
- * L'API retourne quoi/pourquoi/comment à plat dans chaque section.
+ * Rendu par blocs typés (`subsections`) quand l'API les fournit ; sinon rendu legacy
+ * quoi/pourquoi/comment (sessions historiques).
  */
 export function SectionsList({ sections }: SectionsListProps) {
   if (sections.length === 0) return null;
@@ -23,6 +25,7 @@ export function SectionsList({ sections }: SectionsListProps) {
       </h2>
       <div className="space-y-6">
         {sections.map((section, i) => {
+          const subsections = (section.subsections ?? []).filter((s) => s.blocks.length > 0);
           const hasContent = section.quoi || section.pourquoi || section.comment ||
             section.worked_example?.steps?.length || section.key_points?.length || section.tables?.length;
 
@@ -32,7 +35,19 @@ export function SectionsList({ sections }: SectionsListProps) {
                 <span className="mr-2">{i + 1}.</span>
                 <LatexText text={section.title.replace(/^\d+\.\s*/, '')} />
               </h3>
-              {hasContent ? (
+              {subsections.length > 0 ? (
+                <div className="space-y-4">
+                  {subsections.map((sub, j) => (
+                    <div key={j}>
+                      {sub.title && <h4 className="mb-1 text-sm font-medium text-gray-900">{sub.title}</h4>}
+                      <BlockRenderer blocks={sub.blocks} />
+                    </div>
+                  ))}
+                  {section.key_points && section.key_points.length > 0 && (
+                    <AnswerBlock answer={{ key_points: section.key_points }} />
+                  )}
+                </div>
+              ) : hasContent ? (
                 <AnswerBlock answer={{
                   quoi: section.quoi,
                   pourquoi: section.pourquoi,
