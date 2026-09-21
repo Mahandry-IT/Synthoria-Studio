@@ -83,8 +83,49 @@ export interface CourseMeta {
   generated_at?: string;
 }
 
+export interface CourseDiagram {
+  kind: "flowchart" | "sequence" | "hierarchy" | "cycle";
+  caption?: string;
+  mermaid: string;
+}
+
+export interface CourseChart {
+  kind: "bar" | "line" | "pie";
+  caption?: string;
+  labels: string[];
+  series: { name: string; values: number[] }[];
+}
+
+/**
+ * Bloc de contenu typé (contrat par blocs). `type` reste une chaîne : un type inconnu (backend plus
+ * récent que le front) est ignoré par `BlockRenderer` au lieu de casser la page.
+ */
+export interface CourseContentBlock {
+  type: string;
+  text?: string | null;
+  callout_variant?: "note" | "warning" | "tip" | null;
+  list_items?: string[] | null;
+  list_ordered?: boolean | null;
+  table?: CourseTable | null;
+  formula?: { latex: string; description?: string | null } | null;
+  code_language?: string | null;
+  code?: string | null;
+  worked_example?: { statement?: string; steps?: string[]; result?: string } | null;
+  image_caption?: string | null;
+  pitfall?: { description: string; why_it_happens?: string; how_to_avoid?: string } | null;
+  diagram?: CourseDiagram | null;
+  chart?: CourseChart | null;
+}
+
+export interface CourseSubsection {
+  title: string;
+  blocks: CourseContentBlock[];
+}
+
 export interface CourseSection {
   id?: string;
+  /** Contenu par blocs (référence). Absent des sessions historiques : rendu legacy quoi/pourquoi/comment. */
+  subsections?: CourseSubsection[];
   title: string;
   quoi?: string;
   pourquoi?: string;
