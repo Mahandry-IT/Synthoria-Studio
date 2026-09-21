@@ -1,5 +1,6 @@
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import { AutoResizeTextarea } from "@/components/AutoResizeTextarea";
+import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { SECTION_TYPE_LABELS, type EditableSection } from "../planEditing";
@@ -64,6 +65,11 @@ export function PlanSectionEditor({
               </option>
             ))}
           </select>
+          {section.mastery === "known" && (
+            <Badge variant="green" title="Pré-test réussi : cette section sera condensée dans le cours">
+              Déjà maîtrisée
+            </Badge>
+          )}
         </div>
         <div className="ml-auto flex shrink-0 items-center">
           <Button

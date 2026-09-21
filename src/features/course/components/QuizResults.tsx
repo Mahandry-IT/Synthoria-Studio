@@ -2,6 +2,7 @@
 
 import { LatexText } from "@/shared/utils/latex";
 import type { QuizQuestion, QuizUserAnswer } from "../course.types";
+import { formatSectionRefs } from "../quizSections";
 
 interface QuizResultsProps {
   questions: QuizQuestion[];
@@ -104,6 +105,10 @@ export function QuizResults({ questions, answers, score, totalPoints, onRestart 
                   <p className="text-sm text-gray-600 bg-white rounded-lg p-3 border border-gray-100">
                     💡 <LatexText text={question.explanation} />
                   </p>
+                )}
+
+                {formatSectionRefs(question.section_refs) && (
+                  <p className="text-xs text-gray-500">{formatSectionRefs(question.section_refs)}</p>
                 )}
               </div>
             </div>

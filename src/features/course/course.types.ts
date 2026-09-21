@@ -122,8 +122,25 @@ export interface CourseSubsection {
   blocks: CourseContentBlock[];
 }
 
+export interface FadedExample {
+  statement?: string;
+  given_steps?: string[];
+  hidden_steps?: string[];
+  result?: string;
+}
+
+export interface RecallPrompt {
+  prompt: string;
+  expected_key_points?: string[];
+}
+
 export interface CourseSection {
   id?: string;
+  /** Cycle pédagogique (défi → … → À toi → Vérifie → reformulation) ; absent des sessions historiques. */
+  challenge?: string;
+  faded_example?: FadedExample | null;
+  check_questions?: QuizQuestion[];
+  recall_prompt?: RecallPrompt | null;
   /** Contenu par blocs (référence). Absent des sessions historiques : rendu legacy quoi/pourquoi/comment. */
   subsections?: CourseSubsection[];
   title: string;
@@ -154,6 +171,10 @@ export interface QuizQuestion {
   /** Points alloués (calculé côté serveur, total = 20/20) */
   points: number;
   explanation?: string;
+  /** Retour par option (bonne réponse ou distracteur), dans l'ordre des options */
+  explanation_per_choice?: string[];
+  /** Sections (position 1-based) mobilisées par la question (quiz final) */
+  section_refs?: number[];
   /** 45s par défaut, 80s si la question implique un calcul */
   time_limit_seconds?: number | null;
 }
@@ -222,6 +243,14 @@ export interface PlannedSection {
   subtopics: string[];
   /** Position 1-based dans le cours */
   order: number;
+  /** « known » : déjà maîtrisée (pré-test réussi) → version condensée */
+  mastery?: "known" | null;
+}
+
+/** Question du pré-test diagnostique (une par section de développement). */
+export interface PretestItem {
+  section_title: string;
+  question: QuizQuestion;
 }
 
 export interface CoursePlanMeta {
@@ -237,7 +266,15 @@ export interface CoursePlan {
   mode: "file_question" | "question_only";
   meta: CoursePlanMeta;
   sections: PlannedSection[];
+  pretest?: PretestItem[];
   coverage_notes: string;
+}
+
+/** Réponse de l'évaluation d'une reformulation. */
+export interface RecallResponse {
+  verdict: "correct" | "partiel" | "incorrect";
+  feedback: string;
+  missing_points: string[];
 }
 
 /** Mêmes paramètres que la génération directe */

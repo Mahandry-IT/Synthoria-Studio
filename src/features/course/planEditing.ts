@@ -19,6 +19,8 @@ export interface EditableSection {
   title: string;
   objective: string;
   subtopicsText: string;
+  /** « known » : déjà maîtrisée (pré-test réussi) → le cours en génère une version condensée. */
+  mastery?: "known" | null;
 }
 
 export const SECTION_TYPE_LABELS: Record<PlannedSectionType, string> = {
@@ -45,6 +47,7 @@ export function toEditable(sections: PlannedSection[]): EditableSection[] {
       title: s.title,
       objective: s.objective,
       subtopicsText: s.subtopics.join("\n"),
+      mastery: s.mastery ?? null,
     }));
 }
 
@@ -131,6 +134,7 @@ export function toPlannedSections(sections: EditableSection[]): PlannedSection[]
     objective: s.objective.trim(),
     subtopics: splitSubtopics(s.subtopicsText),
     order: i + 1,
+    ...(s.mastery === "known" ? { mastery: "known" as const } : {}),
   }));
 }
 
