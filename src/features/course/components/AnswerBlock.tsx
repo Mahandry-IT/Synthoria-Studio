@@ -9,17 +9,38 @@ interface AnswerBlockProps {
 }
 
 /**
- * Affiche la réponse structurée d'une section : quoi, pourquoi, comment,
- * example worked, key points. Tous les champs sont optionnels.
+ * Réponse directe : résumé, visuel récapitulatif, points clés. Les anciennes
+ * réponses (quoi/pourquoi/comment/exemple) restent affichées telles quelles.
+ * Tous les champs sont optionnels.
  */
 export function AnswerBlock({ answer }: AnswerBlockProps) {
-  const hasContent = answer.quoi || answer.pourquoi || answer.comment ||
+  const hasContent = answer.summary || answer.blocks?.length || answer.quoi || answer.pourquoi || answer.comment ||
     answer.worked_example?.steps?.length || answer.key_points?.length || answer.tables?.length;
 
   if (!hasContent) return null;
 
   return (
     <div className="space-y-4 text-sm text-gray-700">
+      {answer.summary && <RichText text={answer.summary} className="text-base leading-relaxed text-gray-900" />}
+
+      {answer.blocks?.map((block, i) => (
+        <div key={i}>
+          {block.table && block.table.headers.length > 0 && (
+            <RichTable headers={block.table.headers} rows={block.table.rows} caption={block.table.caption} />
+          )}
+          {block.list_items && block.list_items.length > 0 && (
+            <ul className="list-disc list-inside space-y-1">
+              {block.list_items.map((item, j) => (
+                <li key={j}>
+                  <RichText text={item} />
+                </li>
+              ))}
+            </ul>
+          )}
+          {block.text && <RichText text={block.text} className="leading-relaxed" />}
+        </div>
+      ))}
+
       {answer.quoi && (
         <div>
           <h4 className="font-medium text-gray-900 mb-1">Quoi</h4>

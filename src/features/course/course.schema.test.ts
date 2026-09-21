@@ -111,6 +111,36 @@ describe("courseResponseSchema — tableaux et vidéos", () => {
   });
 });
 
+describe("courseAnswerSchema (via courseResponseSchema)", () => {
+  const base = {
+    mode: "question_only",
+    format: "focused_answer",
+    meta: { title: "T", subject: "S", language: "fr", generated_at: "2026-01-01T00:00:00Z" },
+    sources: [],
+    summary: "",
+  };
+
+  it("parse le nouveau format : résumé, points clés et bloc tableau", () => {
+    const parsed = courseResponseSchema.parse({
+      ...base,
+      answer: {
+        summary: "Réponse courte.",
+        key_points: ["a"],
+        blocks: [{ type: "table", table: { caption: "c", headers: ["h"], rows: [["x"]] }, ignored: 1 }],
+      },
+    });
+    expect(parsed.answer?.summary).toBe("Réponse courte.");
+    expect(parsed.answer?.blocks[0].table?.headers).toEqual(["h"]);
+  });
+
+  it("accepte l'ancien format (quoi/pourquoi/comment)", () => {
+    const parsed = courseResponseSchema.parse({ ...base, answer: { quoi: "q", pourquoi: "p", comment: "c" } });
+    expect(parsed.answer?.quoi).toBe("q");
+    expect(parsed.answer?.summary).toBe("");
+    expect(parsed.answer?.blocks).toEqual([]);
+  });
+});
+
 describe("moreSectionsResponseSchema", () => {
   const section = (type: string, title: string, order: number) => ({ type, title, objective: "", subtopics: ["a"], order });
 
