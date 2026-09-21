@@ -27,12 +27,30 @@ export interface WorkedExample {
   result?: string;
 }
 
+/** Tableau structuré renvoyé par le backend (rendu en vrai tableau, pas en texte aplati) */
+export interface CourseTable {
+  caption?: string;
+  headers: string[];
+  rows: string[][];
+}
+
+/** Vidéo YouTube vérifiée côté backend */
+export interface CourseVideo {
+  video_id: string;
+  url: string;
+  embed_url: string;
+  thumbnail_url: string;
+  title: string;
+  channel?: string;
+}
+
 export interface CourseAnswer {
   quoi?: string;
   pourquoi?: string;
   comment?: string;
   worked_example?: WorkedExample;
   key_points?: string[];
+  tables?: CourseTable[];
 }
 
 export interface CourseSource {
@@ -59,6 +77,7 @@ export interface CourseSection {
   comment?: string;
   worked_example?: WorkedExample;
   key_points?: string[];
+  tables?: CourseTable[];
   answer?: CourseAnswer;
 }
 
@@ -124,6 +143,8 @@ export interface CourseGenerationResponse {
   quiz?: QuizQuestion[] | null;
   summary?: string | null;
   next_steps?: string[] | null;
+  /** Vidéos YouTube expliquant le cours (absent sur les anciens cours) */
+  videos?: CourseVideo[] | null;
   /** Id de la session persistée côté backend (absent si la persistance a échoué ou sur un ancien cours) */
   session_id?: string | null;
   /** Job podcast lancé automatiquement par le backend après la génération, le cas échéant */

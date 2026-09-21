@@ -10,6 +10,7 @@ import { useQuizFlow } from "../hooks/useQuizFlow";
 import { SummaryBlock } from "./SummaryBlock";
 import { NextStepsList } from "./NextStepsList";
 import { AnswerBlock } from "./AnswerBlock";
+import { VideoCards } from "./VideoCards";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
 import { SessionPodcast } from "@/features/podcast/components/SessionPodcast";
@@ -57,6 +58,8 @@ export function CourseView({ data, sessionId: sessionIdProp }: CourseViewProps) 
       </div>
 
       <CourseMetaHeader meta={data.meta} />
+
+      {data.videos && data.videos.length > 0 && <VideoCards videos={data.videos} />}
 
       {sessionId && <SessionPodcast sessionId={sessionId} />}
 

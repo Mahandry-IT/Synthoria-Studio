@@ -24,7 +24,7 @@ export function SectionsList({ sections }: SectionsListProps) {
       <div className="space-y-6">
         {sections.map((section, i) => {
           const hasContent = section.quoi || section.pourquoi || section.comment ||
-            section.worked_example?.steps?.length || section.key_points?.length;
+            section.worked_example?.steps?.length || section.key_points?.length || section.tables?.length;
 
           return (
             <Card key={section.id ?? i} className="p-5">
@@ -39,6 +39,7 @@ export function SectionsList({ sections }: SectionsListProps) {
                   comment: section.comment,
                   worked_example: section.worked_example,
                   key_points: section.key_points,
+                  tables: section.tables,
                 }} />
               ) : section.answer ? (
                 <AnswerBlock answer={section.answer} />

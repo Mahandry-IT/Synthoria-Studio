@@ -77,10 +77,15 @@ function parseFlattenedList(text: string): string[] | null {
 
 // ─── Sub-components ──────────────────────────────────────
 
-function RichTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
+export function RichTable({ headers, rows, caption }: { headers: string[]; rows: string[][]; caption?: string }) {
   return (
     <div className="overflow-x-auto my-3 rounded-lg border border-gray-200">
       <table className="w-full text-sm border-collapse">
+        {caption && (
+          <caption className="caption-top px-3 py-2 text-left text-sm font-semibold text-gray-900 bg-white">
+            <RichText text={caption} />
+          </caption>
+        )}
         <thead>
           <tr className="bg-indigo-100">
             {headers.map((h, i) => (
