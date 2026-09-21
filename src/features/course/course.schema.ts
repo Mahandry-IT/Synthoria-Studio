@@ -37,7 +37,17 @@ const courseVideoSchema = z.object({
   channel: z.string().optional().default(""),
 });
 
+/** Bloc visuel de la réponse directe (sérialisation d'un ContentBlock ; champs inconnus ignorés). */
+const answerBlockSchema = z.object({
+  type: z.string().optional(),
+  text: z.string().nullish(),
+  list_items: z.array(z.string()).nullish(),
+  table: courseTableSchema.nullish(),
+});
+
 const courseAnswerSchema = z.object({
+  summary: z.string().optional().default(""),
+  blocks: z.array(answerBlockSchema).optional().default([]),
   quoi: z.string().optional().default(""),
   pourquoi: z.string().optional().default(""),
   comment: z.string().optional().default(""),

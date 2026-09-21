@@ -44,7 +44,21 @@ export interface CourseVideo {
   channel?: string;
 }
 
+/** Bloc de la réponse directe (ContentBlock sérialisé). */
+export interface AnswerContentBlock {
+  type?: string;
+  text?: string | null;
+  list_items?: string[] | null;
+  table?: CourseTable | null;
+}
+
+/**
+ * Réponse directe (`summary` + `key_points` + `blocks`). Les champs
+ * `quoi/pourquoi/comment/worked_example` sont l'ancien format (historique).
+ */
 export interface CourseAnswer {
+  summary?: string;
+  blocks?: AnswerContentBlock[];
   quoi?: string;
   pourquoi?: string;
   comment?: string;
