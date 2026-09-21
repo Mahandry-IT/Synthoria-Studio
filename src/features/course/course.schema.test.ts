@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { COURSE_PLAN_MAX_SECTIONS } from "@/shared/utils/constants";
-import { courseFromPlanRequestSchema, coursePlanSchema, courseResponseSchema } from "./course.schema";
+import {
+  courseFromPlanRequestSchema,
+  coursePlanSchema,
+  courseResponseSchema,
+  moreSectionsResponseSchema,
+} from "./course.schema";
 
 const section = (order: number, type = "development") => ({
   type,
@@ -103,5 +108,24 @@ describe("courseResponseSchema — tableaux et vidéos", () => {
     });
     expect(parsed.sections?.[0].tables?.[0].rows).toEqual([["1"]]);
     expect(parsed.videos?.[0].video_id).toBe("dQw4w9WgXcQ");
+  });
+});
+
+describe("moreSectionsResponseSchema", () => {
+  const section = (type: string, title: string, order: number) => ({ type, title, objective: "", subtopics: ["a"], order });
+
+  it("conserve next_steps après parsing", () => {
+    const parsed = moreSectionsResponseSchema.parse({
+      sections: [section("development", "N1", 3)],
+      next_steps: section("next_steps", "Suite", 2),
+    });
+    expect(parsed.next_steps?.title).toBe("Suite");
+  });
+
+  it("accepte l'absence ou la nullité de next_steps", () => {
+    expect(moreSectionsResponseSchema.parse({ sections: [section("development", "N1", 3)] }).next_steps).toBeUndefined();
+    expect(
+      moreSectionsResponseSchema.parse({ sections: [section("development", "N1", 3)], next_steps: null }).next_steps,
+    ).toBeNull();
   });
 });

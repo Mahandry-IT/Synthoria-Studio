@@ -6,6 +6,7 @@ import {
   insertSection,
   moveSection,
   removeSection,
+  replaceNextSteps,
   toAssistSections,
   toEditable,
   toPlannedSections,
@@ -171,5 +172,41 @@ describe("assistance IA", () => {
 
     expect(result).toHaveLength(COURSE_PLAN_MAX_SECTIONS);
     expect(result[result.length - 1].title).toBe("N1");
+  });
+});
+
+describe("replaceNextSteps", () => {
+  const fresh: PlannedSection = {
+    type: "next_steps",
+    title: "Suite",
+    objective: "Nouvel objectif",
+    subtopics: ["Nouvelle piste"],
+    order: 4,
+  };
+  const withOld = () => toEditable([...plan, { ...fresh, subtopics: ["Ancienne piste"], order: 4 }]);
+
+  it("remplace la section next_steps en conservant sa key et sa position", () => {
+    const sections = withOld();
+    const oldKey = sections[sections.length - 1].key;
+
+    const result = replaceNextSteps(sections, fresh);
+
+    expect(result).toHaveLength(sections.length);
+    expect(result[result.length - 1]).toMatchObject({
+      key: oldKey,
+      type: "next_steps",
+      objective: "Nouvel objectif",
+      subtopicsText: "Nouvelle piste",
+    });
+  });
+
+  it("ne change rien sans section next_steps dans le plan", () => {
+    const sections = toEditable(plan);
+    expect(replaceNextSteps(sections, fresh)).toEqual(sections);
+  });
+
+  it("ne change rien quand nextSteps est nul", () => {
+    const sections = withOld();
+    expect(replaceNextSteps(sections, null)).toBe(sections);
   });
 });

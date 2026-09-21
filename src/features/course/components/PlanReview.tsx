@@ -14,6 +14,7 @@ import {
   insertSection,
   moveSection,
   removeSection,
+  replaceNextSteps,
   toEditable,
   toAssistSections,
   toPlannedSections,
@@ -85,8 +86,8 @@ export function PlanReview({ plan, onValidate, onRegenerate, isGenerating }: Pla
     moreSections.mutate(
       { plan_id: plan.plan_id, sections: toAssistSections(sections) },
       {
-        onSuccess: (generated) => {
-          setSections((current) => insertGeneratedSections(current, generated));
+        onSuccess: ({ sections: generated, nextSteps }) => {
+          setSections((current) => replaceNextSteps(insertGeneratedSections(current, generated), nextSteps));
           toastSuccess("Nouvelles sections ajoutées après la dernière section de développement.");
         },
       },
