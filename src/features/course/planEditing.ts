@@ -165,3 +165,17 @@ export function insertGeneratedSections(
   const at = lastDevelopment === -1 ? sections.length : lastDevelopment + 1;
   return [...sections.slice(0, at), ...added, ...sections.slice(at)];
 }
+
+/**
+ * Remplace la section « Pour aller plus loin » par sa version actualisée : la `key` (donc la
+ * position) est conservée ; le titre, l'objectif et les pistes viennent du backend.
+ * Sans section `next_steps` dans le plan, ou avec `nextSteps` nul, le plan est inchangé.
+ */
+export function replaceNextSteps(
+  sections: EditableSection[],
+  nextSteps: PlannedSection | null,
+): EditableSection[] {
+  if (!nextSteps) return sections;
+  const [replacement] = toEditable([nextSteps]);
+  return sections.map((s) => (s.type === "next_steps" ? { ...replacement, key: s.key } : s));
+}

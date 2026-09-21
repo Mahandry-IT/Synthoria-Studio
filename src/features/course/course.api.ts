@@ -132,13 +132,19 @@ export async function refinePlanSection(payload: RefineSectionRequest): Promise<
   return parsed.data;
 }
 
+/** Nouvelles sections + « Pour aller plus loin » actualisée (null si le plan n'en avait pas). */
+export interface MoreSectionsResult {
+  sections: PlannedSection[];
+  nextSteps: PlannedSection | null;
+}
+
 /**
  * Génère de nouvelles sections de développement à partir de « Pour aller plus loin ».
  *
  * @throws {HttpError} en cas d'erreur HTTP (404 plan inconnu, 410 plan expiré, 422, 429, 502, 503)
  * @throws {Error} si la réponse ne correspond pas au schéma attendu
  */
-export async function generateMoreSections(payload: MoreSectionsRequest): Promise<PlannedSection[]> {
+export async function generateMoreSections(payload: MoreSectionsRequest): Promise<MoreSectionsResult> {
   const raw = await postJson<unknown>("/courses/plan/more-sections", payload, {
     timeout: PLAN_ASSIST_TIMEOUT_MS,
     noRetry: true,
@@ -150,7 +156,7 @@ export async function generateMoreSections(payload: MoreSectionsRequest): Promis
     throw new Error("Réponse invalide du moteur IA pour les nouvelles sections. Réessayez.");
   }
 
-  return parsed.data.sections;
+  return { sections: parsed.data.sections, nextSteps: parsed.data.next_steps ?? null };
 }
 
 /**

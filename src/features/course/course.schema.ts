@@ -191,6 +191,8 @@ export const pendingPlanDetailSchema = coursePlanSchema.extend({
 /** Réponse de POST /courses/plan/more-sections */
 export const moreSectionsResponseSchema = z.object({
   sections: z.array(plannedSectionSchema).min(1),
+  /** « Pour aller plus loin » actualisée (remplace l'ancienne) ; absente si le plan n'en avait pas. */
+  next_steps: plannedSectionSchema.nullish(),
 });
 
 /** Requête de POST /courses/generate/from-plan (mêmes règles que le backend) */
