@@ -21,28 +21,67 @@ export function toAccentedMath(code: string): string | null {
   return `\\${accent}{${symbol}}`;
 }
 
+// ─── Échappements LaTeX mangés par le JSON ───────────────────
+
+/**
+ * Caractères de contrôle produits quand le JSON du modèle contient `\frac`, `\times`, `\beta`… avec
+ * une SEULE barre oblique : le décodeur JSON lit `\f`, `\t`, `\b`, `\r`, `\v`, `\n` comme des
+ * échappements (saut de page, tabulation…) et la commande devient « <FF>rac{…} » (« rac{…} » à l'écran).
+ * On ne les rétablit que devant le nom d'une commande LaTeX connue, pour ne pas toucher au texte normal.
+ */
+const CONTROL_CHAR_REPAIRS: ReadonlyArray<readonly [RegExp, string]> = [
+  [/\f(?=rac|orall)/g, "\\f"],
+  [/\t(?=imes|ext|heta|ilde|riangle|au(?![a-z])|an(?![a-z]))/g, "\\t"],
+  [/\x08(?=eta|ar(?![a-z])|inom|egin|oldsymbol|igcup|igcap)/g, "\\b"],
+  [/\r(?=ho(?![a-z])|ight|angle)/g, "\\r"],
+  [/\x0B(?=ec|arepsilon|arphi|ee(?![a-z]))/g, "\\v"],
+  [/\n(?=eq(?![a-z])|abla)/g, "\\n"],
+];
+
+/**
+ * Rétablit la barre oblique des commandes LaTeX dont le début a été lu comme un échappement JSON.
+ * Idempotent : un texte déjà correct n'est pas modifié.
+ *
+ * @example repairLatexEscapes("\u000Crac{1}{2}") // String.raw`\frac{1}{2}`
+ */
+export function repairLatexEscapes(text: string): string {
+  return CONTROL_CHAR_REPAIRS.reduce((acc, [pattern, replacement]) => acc.replace(pattern, replacement), text);
+}
+
+// ─── Formules écrites sans délimiteurs `$` ───────────────────
+
 /** Fragment de texte brut ou formule LaTeX (sans délimiteurs). */
 export type TextOrMath = { text: string } | { math: string };
 
-/**
- * Indice « nu » écrit hors de toute formule : `Q_1`, `x_i`, `Q_{12}`.
- * Une seule lettre, isolée (ni mot ni commande LaTeX avant), suivie d'un indice court :
- * `file_name`, `x_max` ou `snake_case` ne correspondent donc pas.
- */
-const BARE_SUBSCRIPT = /(?<![A-Za-z0-9_\\])([A-Za-z])_(\{[A-Za-z0-9]{1,6}\}|\d{1,2}|[A-Za-z])(?![A-Za-z0-9_])/g;
+/** Groupe entre accolades, avec un niveau d'imbrication (`{x^{2} - 9}`). */
+const BRACED = String.raw`\{(?:[^{}]|\{[^{}]*\})*\}`;
 
 /**
- * Découpe un texte brut (sans `$`) en fragments texte / formule : le modèle écrit souvent
- * « Q_1 » sans délimiteurs, ce qui s'affichait tel quel au lieu de Q₁.
+ * Commande LaTeX à arguments, écrite hors de toute formule : `\frac{a}{b}`, `\sqrt{x}`, `\sqrt[3]{x}`,
+ * `\bar{x}`. Seules les commandes qui portent un sens visuel sont reconnues.
  */
-export function splitBareSubscripts(text: string): TextOrMath[] {
+const BARE_COMMAND = String.raw`\\(?:d?frac|tfrac|binom)${BRACED}${BRACED}|\\sqrt(?:\[[^\]]*\])?${BRACED}|\\(?:bar|hat|tilde|vec|overline)${BRACED}`;
+
+/**
+ * Indice « nu » : `Q_1`, `x_i`, `Q_{12}`. Une seule lettre, isolée (ni mot ni commande LaTeX avant),
+ * suivie d'un indice court : `file_name`, `x_max` ou `snake_case` ne correspondent donc pas.
+ */
+const BARE_SUBSCRIPT = String.raw`(?<![A-Za-z0-9_\\])[A-Za-z]_(?:\{[A-Za-z0-9]{1,6}\}|\d{1,2}|[A-Za-z])(?![A-Za-z0-9_])`;
+
+const BARE_MATH = new RegExp(`${BARE_COMMAND}|${BARE_SUBSCRIPT}`, "g");
+
+/**
+ * Découpe un texte brut (sans `$`) en fragments texte / formule. Le modèle oublie parfois les `$` :
+ * « Q_1 » ou « \frac{x-3}{x+2} » s'affichaient tels quels au lieu de Q₁ ou d'une vraie fraction.
+ */
+export function splitBareMath(text: string): TextOrMath[] {
   const parts: TextOrMath[] = [];
   let last = 0;
 
-  for (const match of text.matchAll(BARE_SUBSCRIPT)) {
+  for (const match of text.matchAll(BARE_MATH)) {
     const index = match.index ?? 0;
     if (index > last) parts.push({ text: text.slice(last, index) });
-    parts.push({ math: `${match[1]}_${match[2]}` });
+    parts.push({ math: match[0] });
     last = index + match[0].length;
   }
 
