@@ -28,6 +28,8 @@ import { useRefineSection } from "../hooks/useRefineSection";
 import { toastSuccess } from "@/shared/ui/toast";
 import type { CoursePlan, PlannedSection } from "../course.types";
 import { PlanSectionEditor } from "./PlanSectionEditor";
+import { PretestPanel } from "./PretestPanel";
+import { applyMastery, relevantPretest } from "../pretest";
 import { RefineSectionModal } from "./RefineSectionModal";
 
 interface PlanReviewProps {
@@ -119,6 +121,12 @@ export function PlanReview({ plan, onValidate, onRegenerate, isGenerating }: Pla
           </p>
         )}
       </Card>
+
+      <PretestPanel
+        pretest={relevantPretest(plan.pretest ?? [], sections)}
+        disabled={isLocked}
+        onApply={(mastered) => setSections((current) => applyMastery(current, mastered))}
+      />
 
       <div className="space-y-3">
         {sections.map((section, index) => (

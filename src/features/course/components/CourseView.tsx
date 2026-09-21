@@ -91,7 +91,11 @@ export function CourseView({ data, sessionId: sessionIdProp }: CourseViewProps) 
       )}
 
       {data.sections && data.sections.length > 0 && (
-        <SectionsList sections={data.sections} />
+        <SectionsList
+          sections={data.sections}
+          sessionId={sessionId}
+          courseKey={sessionId ?? data.meta?.title ?? "cours"}
+        />
       )}
 
       {data.common_pitfalls && data.common_pitfalls.length > 0 && (

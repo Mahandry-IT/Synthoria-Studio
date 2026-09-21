@@ -7,6 +7,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import QuizIcon from "@mui/icons-material/Quiz";
 import HistoryIcon from "@mui/icons-material/History";
+import StyleIcon from "@mui/icons-material/Style";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import CloseIcon from "@mui/icons-material/Close";
@@ -24,6 +25,7 @@ const navItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: <DashboardIcon /> },
   { label: "Upload", href: "/", icon: <CloudUploadIcon /> },
   { label: "Question", href: "/ask", icon: <QuizIcon /> },
+  { label: "Review", href: "/review", icon: <StyleIcon /> },
   { label: "History", href: "/history", icon: <HistoryIcon /> },
 ];
 

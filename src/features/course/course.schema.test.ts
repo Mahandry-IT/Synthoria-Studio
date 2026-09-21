@@ -5,6 +5,8 @@ import {
   coursePlanSchema,
   courseResponseSchema,
   moreSectionsResponseSchema,
+  recallRequestSchema,
+  recallResponseSchema,
 } from "./course.schema";
 
 const section = (order: number, type = "development") => ({
@@ -138,6 +140,73 @@ describe("courseAnswerSchema (via courseResponseSchema)", () => {
     expect(parsed.answer?.quoi).toBe("q");
     expect(parsed.answer?.summary).toBe("");
     expect(parsed.answer?.blocks).toEqual([]);
+  });
+});
+
+describe("cycle pédagogique (courseResponseSchema, coursePlanSchema)", () => {
+  const base = {
+    mode: "question_only",
+    format: "full_course",
+    meta: { title: "T", subject: "S", language: "fr", generated_at: "2026-01-01T00:00:00Z" },
+    sources: [],
+    introduction: { quoi: "x" },
+    summary: "",
+  };
+  const question = { question: "Q", options: ["A", "B"], correct_option_indices: [1], explanation_per_choice: ["non", "oui"] };
+
+  it("parse défi, exemple à trous, vérification et reformulation", () => {
+    const parsed = courseResponseSchema.parse({
+      ...base,
+      sections: [
+        {
+          id: "1",
+          title: "S",
+          quoi: "q",
+          pourquoi: "p",
+          comment: "c",
+          challenge: "Que se passe-t-il ?",
+          faded_example: { statement: "s", given_steps: ["1"], hidden_steps: ["2"], result: "r" },
+          check_questions: [question],
+          recall_prompt: { prompt: "Explique.", expected_key_points: ["a"] },
+        },
+      ],
+    });
+    const section = parsed.sections?.[0];
+    expect(section?.challenge).toBe("Que se passe-t-il ?");
+    expect(section?.faded_example?.hidden_steps).toEqual(["2"]);
+    expect(section?.check_questions[0].explanation_per_choice).toEqual(["non", "oui"]);
+    expect(section?.recall_prompt?.prompt).toBe("Explique.");
+  });
+
+  it("une section historique reste valide, sans cycle", () => {
+    const parsed = courseResponseSchema.parse({ ...base, sections: [{ id: "1", title: "S", quoi: "q" }] });
+    const section = parsed.sections?.[0];
+    expect(section?.challenge).toBe("");
+    expect(section?.check_questions).toEqual([]);
+    expect(section?.faded_example).toBeUndefined();
+  });
+
+  it("parse pré-test et mastery du plan, et un plan sans pré-test", () => {
+    const section = { type: "development", title: "Principe", objective: "", subtopics: [], order: 2 };
+    const plan = { plan_id: "p", expires_at: "x", mode: "question_only", meta: {}, sections: [{ ...section, mastery: "known" }] };
+
+    const withPretest = coursePlanSchema.parse({ ...plan, pretest: [{ section_title: "Principe", question }] });
+    expect(withPretest.pretest[0].question.correct_option_indices).toEqual([1]);
+    expect(withPretest.sections[0].mastery).toBe("known");
+    expect(coursePlanSchema.parse(plan).pretest).toEqual([]);
+  });
+});
+
+describe("recallResponseSchema", () => {
+  it("valide le verdict et refuse une valeur inconnue", () => {
+    expect(recallResponseSchema.parse({ verdict: "partiel", feedback: "ok" }).missing_points).toEqual([]);
+    expect(recallResponseSchema.safeParse({ verdict: "peut-être", feedback: "x" }).success).toBe(false);
+  });
+
+  it("recallRequestSchema borne la réponse", () => {
+    expect(recallRequestSchema.safeParse({ answer: "  " }).success).toBe(false);
+    expect(recallRequestSchema.safeParse({ answer: "x".repeat(1001) }).success).toBe(false);
+    expect(recallRequestSchema.parse({ answer: " ok " }).answer).toBe("ok");
   });
 });
 

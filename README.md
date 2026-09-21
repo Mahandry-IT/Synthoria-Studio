@@ -29,6 +29,19 @@ npm start
 | `/ask` | Question → plan (relu/édité) → cours → podcast |
 | `/history` | Historique des cours ; le détail propose le podcast du cours |
 
+## Format du cours et apprentissage actif
+
+Le cours est rendu **par blocs typés** (`subsections[].blocks[]`, `src/features/course/components/blocks/`) : tableaux, listes, formules, code, exemples pas à pas, encadrés, schémas **Mermaid** (chargés à la demande, mode strict, SVG nettoyé) et graphiques SVG (barres, courbes, secteurs). Un type de bloc inconnu est ignoré ; les sessions historiques gardent le rendu `quoi/pourquoi/comment`.
+
+Chaque section suit le cycle **Défi → Pourquoi → Quoi → Comment → À toi → Vérifie → Explique avec tes mots** (`components/learning/`) :
+- le défi verrouille l'explication jusqu'à une tentative (ou « je ne sais pas ») ;
+- l'exemple à trous révèle ses étapes une à une ;
+- « Vérifie » donne un retour immédiat option par option ;
+- « Explique avec tes mots » envoie la reformulation (≤ 1000 caractères) à `POST /courses/{session_id}/sections/{section_id}/recall` (via le rewrite `/api`), la section et les points attendus étant lus côté serveur ;
+- la progression par section est gardée en `sessionStorage`.
+
+À l'étape du plan, un **pré-test** facultatif marque les sections déjà maîtrisées (`mastery: "known"`) : le cours en génère une version condensée. La page **/review** et la carte « À réviser aujourd'hui » du dashboard proposent les flashcards issues des questions « Vérifie » (répétition espacée Leitner : J+1, J+3, J+7, J+21).
+
 ## Podcast
 
 Après la génération d'un cours, le backend crée un job de podcast (ou le front le demande via

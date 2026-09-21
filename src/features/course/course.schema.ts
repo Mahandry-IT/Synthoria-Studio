@@ -6,6 +6,7 @@ import {
   PLAN_SUBTOPIC_MAX_LENGTH,
   PLAN_SUBTOPICS_MAX_ITEMS,
   PLAN_TITLE_MAX_LENGTH,
+  RECALL_ANSWER_MAX_LENGTH,
 } from "@/shared/utils/constants";
 
 // ─── Schemas de réponse (validation défensive) ──────────────
@@ -105,8 +106,25 @@ const courseSubsectionSchema = z.object({
   blocks: z.array(courseContentBlockSchema).optional().default([]),
 });
 
+const fadedExampleSchema = z.object({
+  statement: z.string().optional().default(""),
+  given_steps: z.array(z.string()).optional().default([]),
+  hidden_steps: z.array(z.string()).optional().default([]),
+  result: z.string().optional().default(""),
+});
+
+const recallPromptSchema = z.object({
+  prompt: z.string(),
+  expected_key_points: z.array(z.string()).optional().default([]),
+});
+
 const courseSectionSchema = z.object({
   id: z.string().optional(),
+  /** Cycle pédagogique : tous optionnels (sessions historiques sans cycle) */
+  challenge: z.string().optional().default(""),
+  faded_example: fadedExampleSchema.nullish(),
+  check_questions: z.array(z.lazy(() => quizQuestionSchema)).optional().default([]),
+  recall_prompt: recallPromptSchema.nullish(),
   subsections: z.array(courseSubsectionSchema).optional().default([]),
   title: z.string(),
   quoi: z.string().optional().default(""),
@@ -135,6 +153,10 @@ const quizQuestionSchema = z.object({
   /** Points alloués (calculé côté serveur, total = 20/20) */
   points: z.number().min(0).default(1),
   explanation: z.string().optional().default(""),
+  /** Retour par option (bonne réponse ou distracteur), dans l'ordre des options */
+  explanation_per_choice: z.array(z.string()).optional().default([]),
+  /** Sections (position 1-based) mobilisées par la question (quiz final) */
+  section_refs: z.array(z.number()).optional().default([]),
   /** 45s par défaut, 80s si la question implique un calcul */
   time_limit_seconds: z.number().default(45),
 });
@@ -203,6 +225,14 @@ export const plannedSectionSchema = z.object({
     .max(PLAN_SUBTOPICS_MAX_ITEMS)
     .default([]),
   order: z.number().int().min(1),
+  /** « known » : section déjà maîtrisée (pré-test réussi) → version condensée */
+  mastery: z.literal("known").nullish(),
+});
+
+/** Question du pré-test diagnostique (une par section de développement). */
+export const pretestItemSchema = z.object({
+  section_title: z.string(),
+  question: z.lazy(() => quizQuestionSchema),
 });
 
 /** Réponse de POST /courses/plan */
@@ -216,6 +246,7 @@ export const coursePlanSchema = z.object({
     language: z.string().default("fr"),
   }),
   sections: z.array(plannedSectionSchema).min(1),
+  pretest: z.array(pretestItemSchema).optional().default([]),
   coverage_notes: z.string().default(""),
 });
 
@@ -265,4 +296,22 @@ export const courseFromPlanRequestSchema = z.object({
     .refine((sections) => sections.some((s) => s.type === "development"), {
       message: "Le plan doit contenir au moins une section de développement.",
     }),
+});
+
+// ─── Reformulation (« explique avec tes mots ») ─────────────
+
+/** Requête de POST /courses/{session_id}/sections/{section_id}/recall (mêmes bornes que le backend) */
+export const recallRequestSchema = z.object({
+  answer: z
+    .string()
+    .trim()
+    .min(1, "Écrivez votre explication avant de la soumettre.")
+    .max(RECALL_ANSWER_MAX_LENGTH, `Votre explication ne peut pas dépasser ${RECALL_ANSWER_MAX_LENGTH} caractères.`),
+});
+
+/** Réponse de POST .../recall */
+export const recallResponseSchema = z.object({
+  verdict: z.enum(["correct", "partiel", "incorrect"]),
+  feedback: z.string(),
+  missing_points: z.array(z.string()).optional().default([]),
 });

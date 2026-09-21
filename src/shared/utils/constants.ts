@@ -21,3 +21,6 @@ export const PLAN_TITLE_MAX_LENGTH = 200;
 export const PLAN_OBJECTIVE_MAX_LENGTH = 1000;
 export const PLAN_SUBTOPIC_MAX_LENGTH = 300;
 export const PLAN_SUBTOPICS_MAX_ITEMS = 20;
+
+/** Longueur maximale d'une reformulation « explique avec tes mots » (alignée sur le backend). */
+export const RECALL_ANSWER_MAX_LENGTH = 1000;

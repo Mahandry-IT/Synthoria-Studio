@@ -10,6 +10,7 @@ import type {
   PendingPlanDetail,
   PendingPlanItem,
   PlannedSection,
+  RecallResponse,
   RefineSectionRequest,
 } from "./course.types";
 import {
@@ -20,6 +21,8 @@ import {
   pendingPlanDetailSchema,
   pendingPlansResponseSchema,
   plannedSectionSchema,
+  recallRequestSchema,
+  recallResponseSchema,
 } from "./course.schema";
 
 /** La génération peut durer plusieurs minutes (lots de sections). */
@@ -192,5 +195,37 @@ export async function getPendingPlan(planId: string): Promise<PendingPlanDetail>
     throw new Error("Réponse invalide du serveur pour le plan.");
   }
 
+  return parsed.data;
+}
+
+/** Évaluation courte (un appel structuré). */
+const RECALL_TIMEOUT_MS = 60_000;
+
+/**
+ * Évalue la reformulation d'une section (« explique avec tes mots »). La section et ses points
+ * attendus sont lus côté serveur : seul le texte de l'apprenant est envoyé.
+ *
+ * @throws {Error} si la réponse est vide ou trop longue, ou si la réponse du serveur est invalide
+ * @throws {HttpError} 404 session/section inconnue, 422, 429 (trop d'évaluations), 502, 503
+ */
+export async function evaluateRecall(
+  sessionId: string,
+  sectionId: string,
+  answer: string,
+): Promise<RecallResponse> {
+  const request = recallRequestSchema.safeParse({ answer });
+  if (!request.success) throw new Error(request.error.issues[0]?.message ?? "Réponse invalide.");
+
+  const raw = await postJson<unknown>(
+    `/courses/${encodeURIComponent(sessionId)}/sections/${encodeURIComponent(sectionId)}/recall`,
+    request.data,
+    { timeout: RECALL_TIMEOUT_MS, noRetry: true },
+  );
+
+  const parsed = recallResponseSchema.safeParse(raw);
+  if (!parsed.success) {
+    console.error("Zod validation failed for recall:", parsed.error);
+    throw new Error("Réponse invalide du moteur IA pour l'évaluation. Réessayez.");
+  }
   return parsed.data;
 }
