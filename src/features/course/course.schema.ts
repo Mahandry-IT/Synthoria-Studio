@@ -22,12 +22,28 @@ const workedExampleSchema = z.object({
   result: z.string().optional().default(""),
 });
 
+const courseTableSchema = z.object({
+  caption: z.string().optional().default(""),
+  headers: z.array(z.string()),
+  rows: z.array(z.array(z.string())),
+});
+
+const courseVideoSchema = z.object({
+  video_id: z.string(),
+  url: z.string(),
+  embed_url: z.string(),
+  thumbnail_url: z.string(),
+  title: z.string().optional().default(""),
+  channel: z.string().optional().default(""),
+});
+
 const courseAnswerSchema = z.object({
   quoi: z.string().optional().default(""),
   pourquoi: z.string().optional().default(""),
   comment: z.string().optional().default(""),
   worked_example: workedExampleSchema.optional(),
   key_points: z.array(z.string()).optional().default([]),
+  tables: z.array(courseTableSchema).optional().default([]),
 });
 
 const courseSectionSchema = z.object({
@@ -38,6 +54,7 @@ const courseSectionSchema = z.object({
   comment: z.string().optional().default(""),
   worked_example: workedExampleSchema.optional(),
   key_points: z.array(z.string()).optional().default([]),
+  tables: z.array(courseTableSchema).optional().default([]),
 });
 
 const coursePitfallSchema = z.object({
@@ -90,6 +107,7 @@ export const courseResponseSchema = z.object({
   quiz: z.array(quizQuestionSchema).nullable().optional(),
   summary: z.string().nullable().optional(),
   next_steps: z.array(z.string()).nullable().optional(),
+  videos: z.array(courseVideoSchema).nullish(),
   // Absents des cours déjà en sessionStorage / historique : toujours optionnels
   session_id: z.string().nullish(),
   podcast_job_id: z.string().nullish(),

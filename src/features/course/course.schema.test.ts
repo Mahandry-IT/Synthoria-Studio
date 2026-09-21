@@ -78,3 +78,30 @@ describe("courseResponseSchema — session_id et podcast_job_id", () => {
     expect(result.data?.session_id).toBeNull();
   });
 });
+
+describe("courseResponseSchema — tableaux et vidéos", () => {
+  const base = {
+    mode: "question_only",
+    format: "focused_answer",
+    meta: { title: "T" },
+    sources: [],
+  };
+
+  it("accepte les anciens cours sans tables ni videos", () => {
+    const parsed = courseResponseSchema.parse({ ...base, sections: [{ title: "A" }] });
+    expect(parsed.sections?.[0].tables).toEqual([]);
+    expect(parsed.videos).toBeUndefined();
+  });
+
+  it("conserve les tableaux structurés et les vidéos", () => {
+    const parsed = courseResponseSchema.parse({
+      ...base,
+      sections: [{ title: "A", tables: [{ caption: "C", headers: ["a"], rows: [["1"]] }] }],
+      videos: [
+        { video_id: "dQw4w9WgXcQ", url: "u", embed_url: "e", thumbnail_url: "t", title: "V", channel: "Ch" },
+      ],
+    });
+    expect(parsed.sections?.[0].tables?.[0].rows).toEqual([["1"]]);
+    expect(parsed.videos?.[0].video_id).toBe("dQw4w9WgXcQ");
+  });
+});

@@ -1,7 +1,7 @@
 "use client";
 
 import { Card } from "@/components/Card";
-import { RichText } from "./RichText";
+import { RichText, RichTable } from "./RichText";
 import type { CourseAnswer } from "../course.types";
 
 interface AnswerBlockProps {
@@ -14,7 +14,7 @@ interface AnswerBlockProps {
  */
 export function AnswerBlock({ answer }: AnswerBlockProps) {
   const hasContent = answer.quoi || answer.pourquoi || answer.comment ||
-    answer.worked_example?.steps?.length || answer.key_points?.length;
+    answer.worked_example?.steps?.length || answer.key_points?.length || answer.tables?.length;
 
   if (!hasContent) return null;
 
@@ -40,6 +40,10 @@ export function AnswerBlock({ answer }: AnswerBlockProps) {
           <RichText text={answer.comment} className="leading-relaxed" />
         </div>
       )}
+
+      {answer.tables?.map((table, i) => (
+        <RichTable key={i} headers={table.headers} rows={table.rows} caption={table.caption} />
+      ))}
 
       {answer.worked_example && answer.worked_example.steps?.length > 0 && (
         <Card className="bg-gray-50 p-4">
