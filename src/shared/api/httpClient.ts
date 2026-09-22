@@ -98,6 +98,16 @@ export function getJson<T>(path: string, config?: AxiosRequestConfig): Promise<T
   return httpClient<T>(path, { method: "GET", ...config });
 }
 
+/** PUT JSON helper */
+export function putJson<T>(path: string, body: unknown, config?: AxiosRequestConfig & { noRetry?: boolean }): Promise<T> {
+  return httpClient<T>(path, {
+    method: "PUT",
+    data: body,
+    headers: { "Content-Type": "application/json" },
+    ...config,
+  });
+}
+
 /**
  * POST multipart helper (pour l'upload de fichiers).
  * Sans retry : l'ingestion n'est pas idempotente (un retry après un 5xx

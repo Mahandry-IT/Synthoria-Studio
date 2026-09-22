@@ -1,4 +1,4 @@
-import { getJson, postJson } from "@/shared/api/httpClient";
+import { getJson, postJson, putJson } from "@/shared/api/httpClient";
 import type { PaginatedResponse } from "@/shared/types/pagination";
 import type {
   CourseFromPlanRequest,
@@ -6,12 +6,14 @@ import type {
   CourseGenerationResponse,
   CoursePlan,
   CoursePlanRequest,
+  CourseSection,
   MoreSectionsRequest,
   PendingPlanDetail,
   PendingPlanItem,
   PlannedSection,
   RecallResponse,
   RefineSectionRequest,
+  SectionNoteResponse,
 } from "./course.types";
 import {
   courseFromPlanRequestSchema,
@@ -23,6 +25,9 @@ import {
   plannedSectionSchema,
   recallRequestSchema,
   recallResponseSchema,
+  regenerateSectionResponseSchema,
+  sectionNoteRequestSchema,
+  sectionNoteResponseSchema,
 } from "./course.schema";
 
 /** La génération peut durer plusieurs minutes (lots de sections). */
@@ -226,6 +231,56 @@ export async function evaluateRecall(
   if (!parsed.success) {
     console.error("Zod validation failed for recall:", parsed.error);
     throw new Error("Réponse invalide du moteur IA pour l'évaluation. Réessayez.");
+  }
+  return parsed.data;
+}
+
+/** Un appel structuré, comparable à la complétion d'une section de plan. */
+const REGENERATE_SECTION_TIMEOUT_MS = 120_000;
+
+/**
+ * Régénère le contenu d'une section marquée `incomplete` (échec temporaire à la génération),
+ * sans relancer tout le cours.
+ *
+ * @throws {HttpError} 404 session/section inconnue, 409 la section n'est pas incomplète,
+ *   429 (trop de régénérations), 502/503 échec du moteur IA
+ * @throws {Error} si la réponse du serveur est invalide
+ */
+export async function regenerateSection(sessionId: string, sectionId: string): Promise<CourseSection> {
+  const raw = await postJson<unknown>(
+    `/courses/${encodeURIComponent(sessionId)}/sections/${encodeURIComponent(sectionId)}/regenerate`,
+    {},
+    { timeout: REGENERATE_SECTION_TIMEOUT_MS, noRetry: true },
+  );
+
+  const parsed = regenerateSectionResponseSchema.safeParse(raw);
+  if (!parsed.success) {
+    console.error("Zod validation failed for regenerate section:", parsed.error);
+    throw new Error("Réponse invalide du moteur IA pour la régénération. Réessayez.");
+  }
+  return parsed.data;
+}
+
+/**
+ * Enregistre (ou efface, avec une chaîne vide) la note libre de l'apprenant sur une section.
+ *
+ * @throws {Error} si la note dépasse la longueur autorisée, ou si la réponse du serveur est invalide
+ * @throws {HttpError} 404 session/section inconnue, 429 (trop de notes enregistrées)
+ */
+export async function saveSectionNote(sessionId: string, sectionId: string, note: string): Promise<SectionNoteResponse> {
+  const request = sectionNoteRequestSchema.safeParse({ note });
+  if (!request.success) throw new Error(request.error.issues[0]?.message ?? "Note invalide.");
+
+  const raw = await putJson<unknown>(
+    `/courses/${encodeURIComponent(sessionId)}/sections/${encodeURIComponent(sectionId)}/note`,
+    request.data,
+    { noRetry: true },
+  );
+
+  const parsed = sectionNoteResponseSchema.safeParse(raw);
+  if (!parsed.success) {
+    console.error("Zod validation failed for section note:", parsed.error);
+    throw new Error("Réponse invalide du serveur pour la note. Réessayez.");
   }
   return parsed.data;
 }
