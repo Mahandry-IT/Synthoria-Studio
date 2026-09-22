@@ -4,6 +4,7 @@ import { useState } from "react";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { Card } from "@/components/Card";
 import type { CourseVideo } from "../course.types";
+import { formatVideoDuration } from "../videoFormat";
 
 interface VideoCardsProps {
   videos: CourseVideo[];
@@ -12,6 +13,7 @@ interface VideoCardsProps {
 /** Carte vidéo : miniature cliquable, remplacée par le lecteur YouTube au clic (rien n'est chargé avant). */
 function VideoCard({ video }: { video: CourseVideo }) {
   const [playing, setPlaying] = useState(false);
+  const duration = formatVideoDuration(video.duration_seconds);
 
   return (
     <Card className="overflow-hidden">
@@ -37,6 +39,11 @@ function VideoCard({ video }: { video: CourseVideo }) {
               <PlayCircleIcon sx={{ fontSize: 56 }} className="text-white drop-shadow" />
             </span>
           </button>
+        )}
+        {duration && !playing && (
+          <span className="absolute bottom-1.5 right-1.5 rounded bg-black/75 px-1.5 py-0.5 text-xs font-medium text-white">
+            {duration}
+          </span>
         )}
       </div>
       <div className="p-3">

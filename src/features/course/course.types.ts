@@ -34,7 +34,7 @@ export interface CourseTable {
   rows: string[][];
 }
 
-/** Vidéo YouTube vérifiée côté backend */
+/** Vidéo YouTube vérifiée côté backend (recherche réelle YouTube Data API, ou repli groundé) */
 export interface CourseVideo {
   video_id: string;
   url: string;
@@ -42,6 +42,12 @@ export interface CourseVideo {
   thumbnail_url: string;
   title: string;
   channel?: string;
+  duration_seconds?: number | null;
+  published_at?: string | null;
+  /** V2 (classement pédagogique) : absents tant que ranking est désactivé côté backend. */
+  category?: string | null;
+  level?: string | null;
+  relevance_reason?: string | null;
 }
 
 /** Bloc de la réponse directe (ContentBlock sérialisé). */
