@@ -111,6 +111,24 @@ describe("courseResponseSchema — tableaux et vidéos", () => {
     expect(parsed.sections?.[0].tables?.[0].rows).toEqual([["1"]]);
     expect(parsed.videos?.[0].video_id).toBe("dQw4w9WgXcQ");
   });
+
+  it("accepte les vidéos avec ou sans durée/date/classement (V1 sans clé Data API, V2 désactivé)", () => {
+    const withoutExtras = courseResponseSchema.parse({
+      ...base,
+      videos: [{ video_id: "dQw4w9WgXcQ", url: "u", embed_url: "e", thumbnail_url: "t", title: "V" }],
+    });
+    expect(withoutExtras.videos?.[0].duration_seconds).toBeUndefined();
+
+    const withExtras = courseResponseSchema.parse({
+      ...base,
+      videos: [{
+        video_id: "dQw4w9WgXcQ", url: "u", embed_url: "e", thumbnail_url: "t", title: "V",
+        duration_seconds: 754, published_at: "2024-01-01T00:00:00Z",
+        category: "cours", level: "debutant", relevance_reason: "Explique clairement le sujet.",
+      }],
+    });
+    expect(withExtras.videos?.[0]).toMatchObject({ duration_seconds: 754, category: "cours" });
+  });
 });
 
 describe("courseAnswerSchema (via courseResponseSchema)", () => {

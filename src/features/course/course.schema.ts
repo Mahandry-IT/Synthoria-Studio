@@ -36,6 +36,12 @@ const courseVideoSchema = z.object({
   thumbnail_url: z.string(),
   title: z.string().optional().default(""),
   channel: z.string().optional().default(""),
+  duration_seconds: z.number().nullish(),
+  published_at: z.string().nullish(),
+  // V2 (classement pédagogique) : absents tant que ranking est désactivé côté backend.
+  category: z.string().nullish(),
+  level: z.string().nullish(),
+  relevance_reason: z.string().nullish(),
 });
 
 /** Bloc visuel de la réponse directe (sérialisation d'un ContentBlock ; champs inconnus ignorés). */
