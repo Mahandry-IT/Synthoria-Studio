@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { CourseContentBlock } from "../../course.types";
 import { ChartBlock } from "./ChartBlock";
 import { DiagramBlock } from "./DiagramBlock";
+import { ImageBlock } from "./ImageBlock";
 import {
   Callout,
   CodeSnippetBlock,
@@ -42,6 +43,8 @@ export function renderBlock(block: CourseContentBlock): ReactNode {
       return block.diagram ? <DiagramBlock diagram={block.diagram} /> : null;
     case "chart":
       return block.chart ? <ChartBlock chart={block.chart} /> : null;
+    case "image":
+      return block.image ? <ImageBlock image={block.image} caption={block.image_caption} /> : null;
     default:
       return null;
   }

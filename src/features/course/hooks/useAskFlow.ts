@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { generateCourse, generateCourseFromPlan, generateCoursePlan } from "../course.api";
 import {
-  COURSE_STORAGE_KEY,
+  LAST_COURSE_ID_STORAGE_KEY,
   PENDING_PLAN_STORAGE_KEY,
   resolveAskPhase,
   type AskPhase,
@@ -16,22 +17,24 @@ import type {
   CoursePlanRequest,
   PlannedSection,
 } from "../course.types";
-import { usePodcastGeneration } from "@/features/podcast/hooks/usePodcastGeneration";
-import { toastError, toastSuccess } from "@/shared/ui/toast";
+import { useEnqueuePodcast } from "@/features/podcast/hooks/useEnqueuePodcast";
+import { toastError, toastSuccess, toastWarning } from "@/shared/ui/toast";
 import { useSessionStorageState } from "@/shared/hooks/useSessionStorageState";
+import { useOpenCourse } from "./useOpenCourse";
 
-/** Écran affiché : le formulaire de question, ou le résultat (plan à valider / cours). */
+/** Écran affiché : le formulaire de question, ou le plan à valider. */
 export type AskView = "form" | "result";
 
 interface UseAskFlowReturn {
   phase: AskPhase;
   view: AskView;
   pendingPlan: PendingPlan | null;
-  course: CourseGenerationResponse | null;
   /** Génération du plan en cours */
   isPlanning: boolean;
   /** Génération du cours complet en cours (depuis le plan ou en direct) */
   isGenerating: boolean;
+  /** Vérification du dernier cours avant d'ouvrir sa page */
+  isOpeningCourse: boolean;
   /** La génération du plan a échoué : la génération directe reste possible */
   planFailed: boolean;
   submitQuestion: (values: QuestionInputValues) => void;
@@ -42,32 +45,27 @@ interface UseAskFlowReturn {
   reset: () => void;
   /** Revient au formulaire sans perdre le plan ou le cours en cours */
   backToForm: () => void;
-  /** Retourne au plan ou au cours laissé en attente */
+  /** Retourne au plan laissé en attente */
   showResult: () => void;
-  /** Job podcast en cours de suivi (enchaîné après le cours), le cas échéant */
-  podcastJobId: string | null;
-  /** Relance du podcast (après un échec) en cours */
-  isPodcastRetrying: boolean;
-  /** Oublie le job podcast suivi (terminé, fermé ou introuvable) */
-  dismissPodcast: () => void;
-  /** Relance la génération du podcast d'une session */
-  retryPodcast: (sessionId: string) => void;
+  /** Ouvre la page du dernier cours généré, après avoir vérifié qu'il existe encore */
+  openLastCourse: () => void;
 }
 
 /**
  * Orchestre le flux de la page /ask : question → plan (revue/édition) → cours.
- * Plan en attente et cours sont persistés en sessionStorage pour survivre à un refresh.
+ * Le cours généré n'est pas gardé ici : on redirige vers sa page (/history/[id]) et seul son id
+ * est mémorisé (sessionStorage) pour « Revoir le cours ». Le plan en attente y est aussi persisté.
  * Un plan reste en attente tant que le cours n'a pas été généré : un échec de
  * génération (ou un plan expiré) permet de réessayer ou de régénérer le plan.
  */
 export function useAskFlow(): UseAskFlowReturn {
-  const [course, setCourse] = useSessionStorageState<CourseGenerationResponse>(COURSE_STORAGE_KEY, null);
+  const router = useRouter();
+  const [lastCourseId, setLastCourseId] = useSessionStorageState<string>(LAST_COURSE_ID_STORAGE_KEY, null);
   const [pendingPlan, setPendingPlan] = useSessionStorageState<PendingPlan>(PENDING_PLAN_STORAGE_KEY, null);
-  const podcast = usePodcastGeneration();
+  const enqueuePodcast = useEnqueuePodcast();
+  const openCourse = useOpenCourse(() => setLastCourseId(null));
   const [lastRequest, setLastRequest] = useState<CoursePlanRequest | null>(null);
-  const [view, setView] = useState<AskView>(() =>
-    resolveAskPhase(pendingPlan, course) === "question" ? "form" : "result",
-  );
+  const [view, setView] = useState<AskView>(() => (pendingPlan ? "result" : "form"));
 
   const planMutation = useMutation({
     mutationFn: generateCoursePlan,
@@ -80,13 +78,17 @@ export function useAskFlow(): UseAskFlowReturn {
   });
 
   const onCourseGenerated = (data: CourseGenerationResponse) => {
-    setCourse(data);
     setPendingPlan(null);
-    setView("result");
+    setView("form");
+    if (!data.session_id) {
+      toastWarning("Le cours a été généré mais n'a pas pu être enregistré : impossible de l'ouvrir.");
+      return;
+    }
+    setLastCourseId(data.session_id);
     toastSuccess("Cours généré avec succès !");
-    // Le podcast est un état parallèle : son échec ne remet jamais le cours en cause.
-    if (data.podcast_job_id) podcast.follow(data.podcast_job_id);
-    else if (data.session_id) podcast.start(data.session_id);
+    // Podcast parallèle, suivi sur la page du cours : sans job créé par le backend, on le lance ici.
+    if (!data.podcast_job_id) enqueuePodcast.mutate({ sessionId: data.session_id });
+    router.push(`/history/${data.session_id}`);
   };
 
   const fromPlanMutation = useMutation({
@@ -102,8 +104,7 @@ export function useAskFlow(): UseAskFlowReturn {
   });
 
   function reset() {
-    podcast.dismiss();
-    setCourse(null);
+    setLastCourseId(null);
     setPendingPlan(null);
     planMutation.reset();
     fromPlanMutation.reset();
@@ -139,12 +140,12 @@ export function useAskFlow(): UseAskFlowReturn {
   }
 
   return {
-    phase: resolveAskPhase(pendingPlan, course),
+    phase: resolveAskPhase(pendingPlan, lastCourseId),
     view,
     pendingPlan,
-    course,
     isPlanning: planMutation.isPending,
     isGenerating: fromPlanMutation.isPending || directMutation.isPending,
+    isOpeningCourse: openCourse.isPending,
     planFailed: planMutation.isError,
     submitQuestion,
     validatePlan,
@@ -153,9 +154,8 @@ export function useAskFlow(): UseAskFlowReturn {
     reset,
     backToForm: () => setView("form"),
     showResult: () => setView("result"),
-    podcastJobId: podcast.jobId,
-    isPodcastRetrying: podcast.isEnqueuing,
-    dismissPodcast: podcast.dismiss,
-    retryPodcast: (sessionId) => podcast.start(sessionId, { force: true }),
+    openLastCourse: () => {
+      if (lastCourseId) openCourse.mutate(lastCourseId);
+    },
   };
 }

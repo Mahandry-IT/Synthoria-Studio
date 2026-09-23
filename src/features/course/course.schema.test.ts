@@ -346,4 +346,53 @@ describe("courseResponseSchema — sous-sections par blocs", () => {
     expect(blocks[0].diagram).toBeNull();
     expect(blocks[1].type).toBe("hologram");
   });
+
+  it("parse un bloc image ré-hébergé avec attribution", () => {
+    const parsed = courseResponseSchema.parse({
+      ...base,
+      sections: [
+        {
+          ...legacySection,
+          subsections: [
+            {
+              title: "Quoi",
+              blocks: [
+                {
+                  type: "image",
+                  image_caption: "Une figure",
+                  image: {
+                    asset_id: "a1b2",
+                    url: "/media/a1b2",
+                    alt: "texte alternatif",
+                    width: 800,
+                    height: 600,
+                    attribution: { author: "Jane Doe", license: "CC BY-SA 4.0", license_url: "https://example.org" },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const block = parsed.sections?.[0].subsections?.[0].blocks[0];
+    expect(block?.image?.asset_id).toBe("a1b2");
+    expect(block?.image?.url).toBe("/media/a1b2");
+    expect(block?.image?.attribution?.license).toBe("CC BY-SA 4.0");
+  });
+
+  it("un bloc image invalide est ignoré (image: null) sans invalider le cours", () => {
+    const parsed = courseResponseSchema.parse({
+      ...base,
+      sections: [
+        {
+          ...legacySection,
+          subsections: [
+            { title: "Quoi", blocks: [{ type: "image", image: { asset_id: "x" } }] },
+          ],
+        },
+      ],
+    });
+    expect(parsed.sections?.[0].subsections?.[0].blocks[0].image).toBeNull();
+  });
 });

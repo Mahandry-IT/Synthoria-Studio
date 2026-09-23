@@ -57,6 +57,45 @@ describe("BlockRenderer", () => {
     expect(out.match(/<div>/g)).toHaveLength(1); // seul le bloc texte valide est rendu
     expect(out).not.toContain("<table");
   });
+
+  it("rend une image ré-hébergée via /api/media, jamais de hotlink", () => {
+    const out = html([
+      {
+        type: "image",
+        image_caption: "Un schéma",
+        image: { asset_id: "abc-123", url: "/media/abc-123", alt: "texte alternatif", width: 800, height: 600 },
+      },
+    ]);
+
+    expect(out).toContain('src="/api/media/abc-123"');
+    expect(out).toContain('alt="texte alternatif"');
+    expect(out).toContain("Un schéma");
+    expect(out).not.toContain("http"); // jamais d'URL externe directe
+  });
+
+  it("affiche l'attribution obligatoire pour une image sous licence CC", () => {
+    const out = html([
+      {
+        type: "image",
+        image: {
+          asset_id: "xyz",
+          url: "/media/xyz",
+          width: 400,
+          height: 300,
+          attribution: { author: "Jane Doe", license: "CC BY-SA 4.0", license_url: "https://example.org/license" },
+        },
+      },
+    ]);
+
+    expect(out).toContain("Jane Doe");
+    expect(out).toContain("CC BY-SA 4.0");
+    expect(out).toContain('href="https://example.org/license"');
+  });
+
+  it("un bloc image sans image résolue ne rend rien (jamais de bloc image cassé)", () => {
+    const out = html([{ type: "image", image_caption: "Légende orpheline" }]);
+    expect(out).toBe("");
+  });
 });
 
 describe("chartGeometry", () => {

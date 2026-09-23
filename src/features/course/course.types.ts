@@ -102,6 +102,24 @@ export interface CourseChart {
   series: { name: string; values: number[] }[];
 }
 
+/** Attribution obligatoire pour les licences CC BY / CC BY-SA (jamais affichée sans elle). */
+export interface CourseImageAttribution {
+  author?: string | null;
+  license?: string | null;
+  license_url?: string | null;
+}
+
+/** Image ré-hébergée : `url` pointe toujours vers GET /media/{asset_id}, jamais de hotlink. */
+export interface CourseImage {
+  asset_id: string;
+  url: string;
+  alt?: string;
+  caption?: string;
+  width: number;
+  height: number;
+  attribution?: CourseImageAttribution | null;
+}
+
 /**
  * Bloc de contenu typé (contrat par blocs). `type` reste une chaîne : un type inconnu (backend plus
  * récent que le front) est ignoré par `BlockRenderer` au lieu de casser la page.
@@ -118,6 +136,7 @@ export interface CourseContentBlock {
   code?: string | null;
   worked_example?: { statement?: string; steps?: string[]; result?: string } | null;
   image_caption?: string | null;
+  image?: CourseImage | null;
   pitfall?: { description: string; why_it_happens?: string; how_to_avoid?: string } | null;
   diagram?: CourseDiagram | null;
   chart?: CourseChart | null;

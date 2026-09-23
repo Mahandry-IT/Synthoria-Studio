@@ -11,7 +11,7 @@ import { FadedExample } from "./learning/FadedExample";
 import { RecallBox } from "./learning/RecallBox";
 import { RegenerateSectionButton } from "./learning/RegenerateSectionButton";
 import { SectionCheck } from "./learning/SectionCheck";
-import { SectionNoteBox } from "./learning/SectionNoteBox";
+import { SectionNoteButton } from "./learning/SectionNoteButton";
 import { useSectionProgress } from "../hooks/useSectionProgress";
 import { isExplanationVisible, isTrackable, sectionKey } from "../sectionProgress";
 import type { CourseSection } from "../course.types";
@@ -109,7 +109,20 @@ export function SectionsList({ sections, sessionId, courseKey }: SectionsListPro
                   <span className="mr-2">{i + 1}.</span>
                   <LatexText text={section.title.replace(/^\d+\.\s*/, "")} />
                 </h3>
-                {done && <Badge variant="green">Terminée</Badge>}
+                <div className="flex items-center gap-2">
+                  {done && <Badge variant="green">Terminée</Badge>}
+                  {sessionId && section.id && !section.incomplete && (
+                    <SectionNoteButton
+                      sessionId={sessionId}
+                      sectionId={section.id}
+                      sectionTitle={section.title}
+                      initialNote={section.note}
+                      onSaved={(note) =>
+                        setOverrides((current) => ({ ...current, [id]: { ...current[id], note } }))
+                      }
+                    />
+                  )}
+                </div>
               </div>
 
               {section.incomplete ? (
@@ -137,16 +150,6 @@ export function SectionsList({ sections, sessionId, courseKey }: SectionsListPro
                       <SectionCheck questions={checks} onComplete={() => complete(id)} />
                       {sessionId && section.id && section.recall_prompt && (
                         <RecallBox sessionId={sessionId} sectionId={section.id} prompt={section.recall_prompt} />
-                      )}
-                      {sessionId && section.id && (
-                        <SectionNoteBox
-                          sessionId={sessionId}
-                          sectionId={section.id}
-                          initialNote={section.note}
-                          onSaved={(note) =>
-                            setOverrides((current) => ({ ...current, [id]: { ...current[id], note } }))
-                          }
-                        />
                       )}
                     </>
                   )}
