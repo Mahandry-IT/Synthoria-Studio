@@ -5,13 +5,13 @@ import {
   PLAN_SUBTOPICS_MAX_ITEMS,
   PLAN_TITLE_MAX_LENGTH,
 } from "@/shared/utils/constants";
+import { subtopicsFromMarkdown, subtopicsToMarkdown } from "@/shared/utils/markdown";
 import type { PlannedSection, PlannedSectionType } from "./course.types";
 
 /**
  * Section de plan en cours d'édition.
- * `key` est un identifiant client stable (clé React) ; les sous-thèmes sont
- * édités comme texte brut (une ligne = un sous-thème) pour ne pas perdre les
- * retours à la ligne pendant la saisie.
+ * `key` est un identifiant client stable (clé React) ; objectif et sous-thèmes sont
+ * du Markdown (éditeur riche), les sous-thèmes en liste à puces (une puce = un sous-thème).
  */
 export interface EditableSection {
   key: string;
@@ -34,8 +34,7 @@ export const SECTION_TYPE_LABELS: Record<PlannedSectionType, string> = {
 let keySequence = 0;
 const nextKey = (): string => `plan-section-${++keySequence}`;
 
-const splitSubtopics = (text: string): string[] =>
-  text.split("\n").map((line) => line.trim()).filter(Boolean);
+const splitSubtopics = subtopicsFromMarkdown;
 
 /** Convertit le plan reçu du backend en sections éditables. */
 export function toEditable(sections: PlannedSection[]): EditableSection[] {
@@ -46,7 +45,7 @@ export function toEditable(sections: PlannedSection[]): EditableSection[] {
       type: s.type,
       title: s.title,
       objective: s.objective,
-      subtopicsText: s.subtopics.join("\n"),
+      subtopicsText: subtopicsToMarkdown(s.subtopics),
       mastery: s.mastery ?? null,
     }));
 }
@@ -151,7 +150,7 @@ export function toSectionPatch(refined: PlannedSection): Partial<Omit<EditableSe
   return {
     title: refined.title,
     objective: refined.objective,
-    subtopicsText: refined.subtopics.join("\n"),
+    subtopicsText: subtopicsToMarkdown(refined.subtopics),
   };
 }
 

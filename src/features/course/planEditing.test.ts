@@ -30,7 +30,7 @@ describe("toEditable", () => {
 
     expect(titles(sections)).toEqual(["Introduction", "Principe", "Résumé"]);
     expect(new Set(sections.map((s) => s.key)).size).toBe(3);
-    expect(sections[1].subtopicsText).toBe("flux\nrapport");
+    expect(sections[1].subtopicsText).toBe("- flux\n- rapport");
   });
 });
 
@@ -133,7 +133,7 @@ describe("assistance IA", () => {
       order: 1,
     });
 
-    expect(patch).toEqual({ title: "Titre", objective: "Obj", subtopicsText: "a\nb" });
+    expect(patch).toEqual({ title: "Titre", objective: "Obj", subtopicsText: "- a\n- b" });
   });
 
   it("insertGeneratedSections place les nouvelles sections après la dernière section de développement", () => {
@@ -196,7 +196,7 @@ describe("replaceNextSteps", () => {
       key: oldKey,
       type: "next_steps",
       objective: "Nouvel objectif",
-      subtopicsText: "Nouvelle piste",
+      subtopicsText: "- Nouvelle piste",
     });
   });
 

@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { Button } from "@/components/Button";
+import { RichTextEditor } from "@/components/editor/RichTextEditor";
 import { FileList } from "@/features/ingestion/components/FileList";
 import { COURSE_QUESTION_MAX_LENGTH } from "@/shared/utils/constants";
 import { questionInputSchema } from "../course.schema";
@@ -21,7 +22,8 @@ interface QuestionInputProps {
 }
 
 /**
- * Champ de question avec sélecteur de fichiers optionnel et compteur de caractères.
+ * Champ de question (éditeur riche, Markdown) avec sélecteur de fichiers optionnel et compteur
+ * de caractères (Markdown compris : c'est ce que le backend reçoit et limite).
  * Valide la question via Zod avant envoi.
  *
  * - Pas de `filename` → Mode 3 (recherche web)
@@ -60,22 +62,16 @@ export function QuestionInput({ onSubmit, isPending }: QuestionInputProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="question-input" className="block text-sm font-medium text-gray-700 mb-1">
-          Votre question
-        </label>
-        <textarea
+        <p className="block text-sm font-medium text-gray-700 mb-1">Votre question</p>
+        <RichTextEditor
           id="question-input"
-          rows={4}
+          ariaLabel="Votre question"
           value={question}
-          onChange={(e) => setQuestion(e.target.value)}
+          onChange={setQuestion}
           placeholder="Posez votre question ici…"
           disabled={isPending}
-          className={[
-            "w-full rounded-lg border px-3 py-2 text-sm resize-none",
-            "placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500",
-            "disabled:opacity-50",
-            isOverLimit ? "border-red-300 focus:ring-red-500" : "border-gray-300",
-          ].join(" ")}
+          invalid={isOverLimit}
+          minRows={4}
         />
         <div className="mt-1 flex items-center justify-between text-xs">
           <span className={isOverLimit ? "text-red-600 font-medium" : "text-gray-400"}>
