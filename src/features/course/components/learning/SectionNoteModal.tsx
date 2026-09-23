@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import StickyNote2OutlinedIcon from "@mui/icons-material/StickyNote2Outlined";
-import { AutoResizeTextarea } from "@/components/AutoResizeTextarea";
 import { Button } from "@/components/Button";
+import { RichTextEditor } from "@/components/editor/RichTextEditor";
 import { SECTION_NOTE_MAX_LENGTH } from "@/shared/utils/constants";
 import { useSaveSectionNote } from "../../hooks/useSaveSectionNote";
 
@@ -32,6 +32,8 @@ export function SectionNoteModal({
   const [note, setNote] = useState(initialNote);
   const save = useSaveSectionNote();
   const dirty = note !== initialNote;
+  // Limite sur le Markdown (ce que le backend reçoit) : l'éditeur riche n'a pas de maxLength
+  const isOverLimit = note.length > SECTION_NOTE_MAX_LENGTH;
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -53,7 +55,7 @@ export function SectionNoteModal({
         onClick={(e) => e.stopPropagation()}
         onSubmit={(e) => {
           e.preventDefault();
-          if (!dirty) return;
+          if (!dirty || isOverLimit) return;
           save.mutate(
             { sessionId, sectionId, note },
             {
@@ -80,20 +82,18 @@ export function SectionNoteModal({
           </div>
         </div>
 
-        <label htmlFor={`note-${sectionId}`} className="mt-4 block text-xs font-medium text-gray-600">
-          Note personnelle
-        </label>
-        <AutoResizeTextarea
+        <p className="mt-4 mb-1 block text-xs font-medium text-gray-600">Note personnelle</p>
+        <RichTextEditor
           id={`note-${sectionId}`}
+          ariaLabel="Note personnelle"
           autoFocus
-          rows={4}
-          maxLength={SECTION_NOTE_MAX_LENGTH}
+          minRows={4}
           value={note}
-          onChange={(e) => setNote(e.target.value)}
+          onChange={setNote}
           placeholder="Pense-bête, idées à creuser…"
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          invalid={isOverLimit}
         />
-        <p className="mt-1 text-right text-xs text-gray-400">
+        <p className={`mt-1 text-right text-xs ${isOverLimit ? "font-medium text-red-600" : "text-gray-400"}`}>
           {note.length}/{SECTION_NOTE_MAX_LENGTH}
         </p>
 
@@ -101,7 +101,7 @@ export function SectionNoteModal({
           <Button type="button" variant="secondary" onClick={onClose}>
             Annuler
           </Button>
-          <Button type="submit" loading={save.isPending} disabled={!dirty}>
+          <Button type="submit" loading={save.isPending} disabled={!dirty || isOverLimit}>
             Enregistrer
           </Button>
         </div>

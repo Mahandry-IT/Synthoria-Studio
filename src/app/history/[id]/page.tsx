@@ -6,6 +6,7 @@ import { CourseView } from "@/features/course/components/CourseView";
 import { Skeleton } from "@/components/Skeleton";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
+import { RichTextView } from "@/components/editor/RichTextView";
 import { HttpError } from "@/shared/api/httpClient";
 
 /**
@@ -64,7 +65,9 @@ export default function HistoryDetailPage({
           </Badge>
           <span className="text-sm text-gray-500">{date}</span>
         </div>
-        <p className="mt-2 text-sm text-gray-700">{data.question}</p>
+        <div className="mt-2">
+          <RichTextView markdown={data.question} className="text-sm text-gray-700" />
+        </div>
         {data.filenames.length > 0 && (
           <p className="mt-1 text-xs text-gray-400">
             Fichiers : {data.filenames.join(", ")}

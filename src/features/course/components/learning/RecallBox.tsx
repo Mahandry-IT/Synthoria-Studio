@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/Button";
+import { RichTextEditor } from "@/components/editor/RichTextEditor";
 import { RECALL_ANSWER_MAX_LENGTH } from "@/shared/utils/constants";
 import type { RecallPrompt, RecallResponse } from "../../course.types";
 import { useRecallFeedback } from "../../hooks/useRecallFeedback";
@@ -25,28 +26,29 @@ export function RecallBox({ sessionId, sectionId, prompt }: RecallBoxProps) {
   const recall = useRecallFeedback();
   const result = recall.data;
   const style = result ? VERDICT_STYLES[result.verdict] : null;
+  // Limite sur le Markdown (ce que le backend reçoit) : l'éditeur riche n'a pas de maxLength
+  const isOverLimit = answer.length > RECALL_ANSWER_MAX_LENGTH;
 
   return (
     <div className="space-y-3 rounded-lg border border-gray-200 p-4 text-sm">
       <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Explique avec tes mots</p>
       <RichText text={prompt.prompt} className="font-medium text-gray-900" />
-      <textarea
-        aria-label="Votre explication"
+      <RichTextEditor
+        ariaLabel="Votre explication"
         value={answer}
-        onChange={(e) => setAnswer(e.target.value)}
-        rows={4}
-        maxLength={RECALL_ANSWER_MAX_LENGTH}
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        onChange={setAnswer}
+        minRows={4}
+        invalid={isOverLimit}
       />
       <div className="flex items-center justify-between gap-3">
-        <span className="text-xs text-gray-400">
+        <span className={`text-xs ${isOverLimit ? "font-medium text-red-600" : "text-gray-400"}`}>
           {answer.length}/{RECALL_ANSWER_MAX_LENGTH}
         </span>
         <Button
           type="button"
           size="sm"
           loading={recall.isPending}
-          disabled={answer.trim().length === 0}
+          disabled={answer.trim().length === 0 || isOverLimit}
           onClick={() => recall.mutate({ sessionId, sectionId, answer })}
         >
           Évaluer mon explication

@@ -3,6 +3,8 @@ import { AutoResizeTextarea } from "@/components/AutoResizeTextarea";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
+import { RichTextEditor } from "@/components/editor/RichTextEditor";
+import { INLINE_TOOLS } from "@/components/editor/richTextTools";
 import { SECTION_TYPE_LABELS, type EditableSection } from "../planEditing";
 import type { PlannedSectionType } from "../course.types";
 import { PlanIconButton } from "./PlanIconButton";
@@ -118,30 +120,31 @@ export function PlanSectionEditor({
           />
         </div>
         <div>
-          <label htmlFor={`${id}-objective`} className="mb-1 block text-xs font-medium text-gray-600">
-            Objectif
-          </label>
-          <AutoResizeTextarea
+          <p className="mb-1 block text-xs font-medium text-gray-600">Objectif</p>
+          <RichTextEditor
             id={`${id}-objective`}
-            rows={2}
+            ariaLabel={`Objectif de la section ${position}`}
             value={section.objective}
             disabled={disabled}
-            onChange={(e) => onChange({ objective: e.target.value })}
+            onChange={(objective) => onChange({ objective })}
             placeholder="Ce que l'apprenant doit savoir à l'issue de la section"
-            className={FIELD_CLASSES}
+            tools={INLINE_TOOLS}
+            minRows={1}
           />
         </div>
         <div>
-          <label htmlFor={`${id}-subtopics`} className="mb-1 block text-xs font-medium text-gray-600">
-            Sous-thèmes <span className="font-normal text-gray-400">(un par ligne)</span>
-          </label>
-          <AutoResizeTextarea
+          <p className="mb-1 block text-xs font-medium text-gray-600">
+            Sous-thèmes <span className="font-normal text-gray-400">(une puce par sous-thème)</span>
+          </p>
+          <RichTextEditor
             id={`${id}-subtopics`}
-            rows={3}
+            ariaLabel={`Sous-thèmes de la section ${position}`}
             value={section.subtopicsText}
             disabled={disabled}
-            onChange={(e) => onChange({ subtopicsText: e.target.value })}
-            className={FIELD_CLASSES}
+            onChange={(subtopicsText) => onChange({ subtopicsText })}
+            tools={INLINE_TOOLS}
+            bulletList
+            minRows={3}
           />
         </div>
       </div>

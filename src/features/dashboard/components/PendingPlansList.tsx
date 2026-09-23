@@ -9,6 +9,7 @@ import { Card } from "@/components/Card";
 import { ErrorState } from "@/components/ErrorState";
 import { Pagination } from "@/components/Pagination";
 import { useNow } from "@/shared/hooks/useNow";
+import { markdownToPlain } from "@/shared/utils/markdown";
 import { activePlans, formatCountdown, isExpiringSoon } from "../dashboard.logic";
 import { usePendingPlans } from "../hooks/usePendingPlans";
 import { useResumePlan } from "../hooks/useResumePlan";
@@ -67,7 +68,7 @@ export function PendingPlansList() {
               <li key={plan.plan_id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
                 <div className="min-w-0 flex-1 basis-48">
                   <p className="line-clamp-1 text-sm font-medium text-gray-900">{plan.title || "Plan sans titre"}</p>
-                  <p className="line-clamp-2 text-xs text-gray-500">{plan.question}</p>
+                  <p className="line-clamp-2 text-xs text-gray-500">{markdownToPlain(plan.question)}</p>
                   <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
                     <Badge variant="gray">
                       {plan.sections_count} section{plan.sections_count > 1 ? "s" : ""}
@@ -84,7 +85,7 @@ export function PendingPlansList() {
                   variant="outline"
                   loading={isResuming}
                   disabled={resume.isPending}
-                  aria-label={`Reprendre le plan ${plan.title || plan.question}`}
+                  aria-label={`Reprendre le plan ${plan.title || markdownToPlain(plan.question)}`}
                   onClick={() => resume.mutate(plan.plan_id)}
                 >
                   Reprendre

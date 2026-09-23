@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Badge } from "@/components/Badge";
+import { markdownToPlain } from "@/shared/utils/markdown";
 import type { CourseHistoryItem } from "../history.types";
 
 interface HistoryItemProps {
@@ -21,7 +22,7 @@ export function HistoryItem({ item }: HistoryItemProps) {
       className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-gray-50"
     >
       <div className="flex-1 truncate">
-        <span className="text-gray-900">{item.question}</span>
+        <span className="text-gray-900">{markdownToPlain(item.question)}</span>
         <span className="ml-2 text-xs text-gray-400">{time}</span>
       </div>
       <Badge variant={item.mode === "file_question" ? "indigo" : "green"}>
