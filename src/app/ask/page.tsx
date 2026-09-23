@@ -4,9 +4,7 @@ import { useEffect } from "react";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import { QuestionInput } from "@/features/course/components/QuestionInput";
-import { CourseView } from "@/features/course/components/CourseView";
 import { PlanReview } from "@/features/course/components/PlanReview";
-import { PodcastProgress } from "@/features/podcast/components/PodcastProgress";
 import { LoadingModal } from "@/components/LoadingModal";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
@@ -15,15 +13,15 @@ import { useAskFlow } from "@/features/course/hooks/useAskFlow";
 /**
  * Page de question + génération de cours en deux temps :
  * question → plan (relu/édité par l'utilisateur) → cours complet.
- * Le formulaire et le résultat (plan ou cours) sont deux écrans distincts :
- * on peut revenir au formulaire, le plan/cours en cours est alors conservé.
+ * Le formulaire et le plan à valider sont deux écrans distincts : on peut revenir au formulaire,
+ * le plan est alors conservé. Une fois généré, le cours s'ouvre sur sa propre page (/history/[id]).
  */
 export default function AskPage() {
   const flow = useAskFlow();
-  const isBusy = flow.isPlanning || flow.isGenerating;
-  const showResult = flow.view === "result" && flow.phase !== "question";
+  const isBusy = flow.isPlanning || flow.isGenerating || flow.isOpeningCourse;
+  const showResult = flow.view === "result" && flow.phase === "plan_review";
 
-  // Modals d'attente, communs aux deux écrans : plan → cours → podcast
+  // Modals d'attente, communs aux deux écrans : plan → cours
   const loadingModals = (
     <>
       <LoadingModal
@@ -38,14 +36,6 @@ export default function AskPage() {
         title="Génération du cours"
         message="Les sections sont rédigées par lots, cela peut prendre plusieurs minutes. Merci de patienter…"
       />
-      {flow.podcastJobId && (
-        <PodcastProgress
-          jobId={flow.podcastJobId}
-          onDismiss={flow.dismissPodcast}
-          onRetry={flow.retryPodcast}
-          isRetrying={flow.isPodcastRetrying}
-        />
-      )}
     </>
   );
 
@@ -67,7 +57,7 @@ export default function AskPage() {
         </Button>
       </div>
 
-      {flow.phase === "plan_review" && flow.pendingPlan && !flow.isPlanning && (
+      {flow.pendingPlan && !flow.isPlanning && (
         <PlanReview
           key={flow.pendingPlan.plan.plan_id}
           plan={flow.pendingPlan.plan}
@@ -75,10 +65,6 @@ export default function AskPage() {
           onRegenerate={flow.regeneratePlan}
           isGenerating={flow.isGenerating}
         />
-      )}
-
-      {flow.phase === "course" && flow.course && (
-        <CourseView data={flow.course} />
       )}
     </div>
   );
@@ -104,8 +90,9 @@ export default function AskPage() {
           <Button
             type="button"
             variant="secondary"
-            onClick={flow.showResult}
+            onClick={flow.phase === "plan_review" ? flow.showResult : flow.openLastCourse}
             disabled={isBusy}
+            loading={flow.isOpeningCourse}
           >
             {flow.phase === "plan_review"
               ? "Reprendre le plan"

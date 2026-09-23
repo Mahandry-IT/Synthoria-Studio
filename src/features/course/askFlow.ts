@@ -1,7 +1,8 @@
-import type { CourseGenerationResponse, CoursePlan, CoursePlanRequest } from "./course.types";
+import type { CoursePlan, CoursePlanRequest } from "./course.types";
 
 /** Clés de sessionStorage de l'état de /ask (partagées avec le dashboard pour « Reprendre le plan »). */
-export const COURSE_STORAGE_KEY = "synthoria:last-course";
+/** Seul l'id du dernier cours est conservé : le cours lui-même est relu depuis sa page (/history/[id]). */
+export const LAST_COURSE_ID_STORAGE_KEY = "synthoria:last-course-id";
 export const PENDING_PLAN_STORAGE_KEY = "synthoria:pending-plan";
 
 /** Phases de la page /ask : question → revue du plan → cours. */
@@ -19,10 +20,10 @@ export interface PendingPlan {
  */
 export function resolveAskPhase(
   pendingPlan: PendingPlan | null,
-  course: CourseGenerationResponse | null,
+  lastCourseId: string | null,
 ): AskPhase {
   if (pendingPlan) return "plan_review";
-  if (course) return "course";
+  if (lastCourseId) return "course";
   return "question";
 }
 
