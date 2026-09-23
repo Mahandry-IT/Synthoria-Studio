@@ -30,6 +30,24 @@ const courseTableSchema = z.object({
   rows: z.array(z.array(z.string())),
 });
 
+/** Attribution obligatoire pour les licences CC BY / CC BY-SA (jamais affichée sans elle). */
+const courseImageAttributionSchema = z.object({
+  author: z.string().nullish(),
+  license: z.string().nullish(),
+  license_url: z.string().nullish(),
+});
+
+/** Image ré-hébergée : `url` pointe toujours vers GET /media/{asset_id}, jamais de hotlink. */
+const courseImageSchema = z.object({
+  asset_id: z.string(),
+  url: z.string(),
+  alt: z.string().optional().default(""),
+  caption: z.string().optional().default(""),
+  width: z.number(),
+  height: z.number(),
+  attribution: courseImageAttributionSchema.nullish(),
+});
+
 const courseVideoSchema = z.object({
   video_id: z.string(),
   url: z.string(),
@@ -82,6 +100,7 @@ const courseContentBlockSchema = z.object({
     })
     .nullish(),
   image_caption: z.string().nullish(),
+  image: courseImageSchema.nullish().catch(null), // image non résolue ou invalide : bloc sans visuel, jamais cassant
   pitfall: z
     .object({
       description: z.string(),
