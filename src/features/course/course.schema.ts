@@ -7,6 +7,7 @@ import {
   PLAN_SUBTOPICS_MAX_ITEMS,
   PLAN_TITLE_MAX_LENGTH,
   RECALL_ANSWER_MAX_LENGTH,
+  SECTION_NOTE_MAX_LENGTH,
 } from "@/shared/utils/constants";
 
 // ─── Schemas de réponse (validation défensive) ──────────────
@@ -139,6 +140,8 @@ const courseSectionSchema = z.object({
   worked_example: workedExampleSchema.optional(),
   key_points: z.array(z.string()).optional().default([]),
   tables: z.array(courseTableSchema).optional().default([]),
+  incomplete: z.boolean().optional().default(false),
+  note: z.string().optional().default(""),
 });
 
 const coursePitfallSchema = z.object({
@@ -320,4 +323,25 @@ export const recallResponseSchema = z.object({
   verdict: z.enum(["correct", "partiel", "incorrect"]),
   feedback: z.string(),
   missing_points: z.array(z.string()).optional().default([]),
+});
+
+// ─── Régénération d'une section incomplète ───────────────────
+
+/** Réponse de POST .../regenerate : la section mise à jour (mêmes règles que dans le cours). */
+export const regenerateSectionResponseSchema = courseSectionSchema;
+
+// ─── Note libre sur une section ───────────────────────────────
+
+/** Requête de PUT .../note (mêmes bornes que le backend ; vide = note effacée) */
+export const sectionNoteRequestSchema = z.object({
+  note: z
+    .string()
+    .trim()
+    .max(SECTION_NOTE_MAX_LENGTH, `La note ne peut pas dépasser ${SECTION_NOTE_MAX_LENGTH} caractères.`),
+});
+
+/** Réponse de PUT .../note */
+export const sectionNoteResponseSchema = z.object({
+  note: z.string(),
+  updated_at: z.string(),
 });

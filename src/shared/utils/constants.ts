@@ -24,3 +24,6 @@ export const PLAN_SUBTOPICS_MAX_ITEMS = 20;
 
 /** Longueur maximale d'une reformulation « explique avec tes mots » (alignée sur le backend). */
 export const RECALL_ANSWER_MAX_LENGTH = 1000;
+
+/** Longueur maximale d'une note libre sur une section (alignée sur le backend). */
+export const SECTION_NOTE_MAX_LENGTH = 2000;

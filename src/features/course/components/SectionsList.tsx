@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
 import { AnswerBlock } from "./AnswerBlock";
@@ -8,7 +9,9 @@ import { BlockRenderer } from "./blocks/BlockRenderer";
 import { ChallengeCard } from "./learning/ChallengeCard";
 import { FadedExample } from "./learning/FadedExample";
 import { RecallBox } from "./learning/RecallBox";
+import { RegenerateSectionButton } from "./learning/RegenerateSectionButton";
 import { SectionCheck } from "./learning/SectionCheck";
+import { SectionNoteBox } from "./learning/SectionNoteBox";
 import { useSectionProgress } from "../hooks/useSectionProgress";
 import { isExplanationVisible, isTrackable, sectionKey } from "../sectionProgress";
 import type { CourseSection } from "../course.types";
@@ -69,6 +72,9 @@ function SectionExplanation({ section }: { section: CourseSection }) {
  */
 export function SectionsList({ sections, sessionId, courseKey }: SectionsListProps) {
   const { progress, unlock, complete } = useSectionProgress(courseKey);
+  // Régénération et notes : appliquées en local par-dessus les sections reçues (comme la progression),
+  // sans dépendre d'un état mutable détenu par le parent (page Ask ou historique).
+  const [overrides, setOverrides] = useState<Record<string, Partial<CourseSection>>>({});
 
   if (sections.length === 0) return null;
 
@@ -88,8 +94,9 @@ export function SectionsList({ sections, sessionId, courseKey }: SectionsListPro
         )}
       </div>
       <div className="space-y-6">
-        {sections.map((section, i) => {
-          const id = sectionKey(section.id, i);
+        {sections.map((rawSection, i) => {
+          const id = sectionKey(rawSection.id, i);
+          const section = { ...rawSection, ...overrides[id] };
           const hasChallenge = Boolean(section.challenge);
           const visible = isExplanationVisible(progress, id, hasChallenge);
           const checks = section.check_questions ?? [];
@@ -105,22 +112,46 @@ export function SectionsList({ sections, sessionId, courseKey }: SectionsListPro
                 {done && <Badge variant="green">Terminée</Badge>}
               </div>
 
-              <div className="space-y-4">
-                {hasChallenge && !visible && (
-                  <ChallengeCard challenge={section.challenge ?? ""} onUnlock={() => unlock(id)} />
-                )}
+              {section.incomplete ? (
+                sessionId && section.id ? (
+                  <RegenerateSectionButton
+                    sessionId={sessionId}
+                    sectionId={section.id}
+                    onRegenerated={(regenerated) =>
+                      setOverrides((current) => ({ ...current, [id]: regenerated }))
+                    }
+                  />
+                ) : (
+                  <SectionExplanation section={section} />
+                )
+              ) : (
+                <div className="space-y-4">
+                  {hasChallenge && !visible && (
+                    <ChallengeCard challenge={section.challenge ?? ""} onUnlock={() => unlock(id)} />
+                  )}
 
-                {visible && (
-                  <>
-                    <SectionExplanation section={section} />
-                    {section.faded_example && <FadedExample example={section.faded_example} />}
-                    <SectionCheck questions={checks} onComplete={() => complete(id)} />
-                    {sessionId && section.id && section.recall_prompt && (
-                      <RecallBox sessionId={sessionId} sectionId={section.id} prompt={section.recall_prompt} />
-                    )}
-                  </>
-                )}
-              </div>
+                  {visible && (
+                    <>
+                      <SectionExplanation section={section} />
+                      {section.faded_example && <FadedExample example={section.faded_example} />}
+                      <SectionCheck questions={checks} onComplete={() => complete(id)} />
+                      {sessionId && section.id && section.recall_prompt && (
+                        <RecallBox sessionId={sessionId} sectionId={section.id} prompt={section.recall_prompt} />
+                      )}
+                      {sessionId && section.id && (
+                        <SectionNoteBox
+                          sessionId={sessionId}
+                          sectionId={section.id}
+                          initialNote={section.note}
+                          onSaved={(note) =>
+                            setOverrides((current) => ({ ...current, [id]: { ...current[id], note } }))
+                          }
+                        />
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
             </Card>
           );
         })}

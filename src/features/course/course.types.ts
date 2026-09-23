@@ -157,6 +157,10 @@ export interface CourseSection {
   key_points?: string[];
   tables?: CourseTable[];
   answer?: CourseAnswer;
+  /** Génération de cette section échouée (erreur temporaire) : seule une section incomplète peut être régénérée. */
+  incomplete?: boolean;
+  /** Note libre de l'apprenant sur cette section (pense-bête, idées) ; jamais générée par le modèle. */
+  note?: string;
 }
 
 export interface CoursePitfall {
@@ -281,6 +285,12 @@ export interface RecallResponse {
   verdict: "correct" | "partiel" | "incorrect";
   feedback: string;
   missing_points: string[];
+}
+
+/** Réponse de PUT .../note */
+export interface SectionNoteResponse {
+  note: string;
+  updated_at: string;
 }
 
 /** Mêmes paramètres que la génération directe */

@@ -7,6 +7,9 @@ import {
   moreSectionsResponseSchema,
   recallRequestSchema,
   recallResponseSchema,
+  regenerateSectionResponseSchema,
+  sectionNoteRequestSchema,
+  sectionNoteResponseSchema,
 } from "./course.schema";
 
 const section = (order: number, type = "development") => ({
@@ -225,6 +228,54 @@ describe("recallResponseSchema", () => {
     expect(recallRequestSchema.safeParse({ answer: "  " }).success).toBe(false);
     expect(recallRequestSchema.safeParse({ answer: "x".repeat(1001) }).success).toBe(false);
     expect(recallRequestSchema.parse({ answer: " ok " }).answer).toBe("ok");
+  });
+});
+
+describe("régénération et notes de section", () => {
+  const worked_example = { statement: "", steps: [], result: "" };
+
+  it("regenerateSectionResponseSchema parse une CourseSection régénérée", () => {
+    const parsed = regenerateSectionResponseSchema.parse({
+      id: "0", title: "T", quoi: "q", pourquoi: "p", comment: "c", worked_example, incomplete: false,
+    });
+    expect(parsed.incomplete).toBe(false);
+    expect(parsed.note).toBe("");
+  });
+
+  it("courseSectionSchema (via courseResponseSchema) donne des défauts sûrs à incomplete et note", () => {
+    const parsed = courseResponseSchema.parse({
+      mode: "question_only", format: "full_course", introduction: { quoi: "x" },
+      meta: { title: "T", subject: "S", language: "fr", generated_at: "2026-01-01T00:00:00Z" },
+      sources: [], summary: "",
+      sections: [{ id: "0", title: "T", quoi: "q", pourquoi: "p", comment: "c", worked_example }],
+    });
+    expect(parsed.sections?.[0].incomplete).toBe(false);
+    expect(parsed.sections?.[0].note).toBe("");
+  });
+
+  it("courseSectionSchema accepte incomplete=true et une note existante", () => {
+    const parsed = courseResponseSchema.parse({
+      mode: "question_only", format: "full_course", introduction: { quoi: "x" },
+      meta: { title: "T", subject: "S", language: "fr", generated_at: "2026-01-01T00:00:00Z" },
+      sources: [], summary: "",
+      sections: [{
+        id: "0", title: "T", quoi: "", pourquoi: "", comment: "", worked_example,
+        incomplete: true, note: "Revoir cette partie.",
+      }],
+    });
+    expect(parsed.sections?.[0].incomplete).toBe(true);
+    expect(parsed.sections?.[0].note).toBe("Revoir cette partie.");
+  });
+
+  it("sectionNoteRequestSchema borne la note et accepte une chaîne vide (efface la note)", () => {
+    expect(sectionNoteRequestSchema.safeParse({ note: "x".repeat(2001) }).success).toBe(false);
+    expect(sectionNoteRequestSchema.parse({ note: "" }).note).toBe("");
+    expect(sectionNoteRequestSchema.parse({ note: "  Revoir  " }).note).toBe("Revoir");
+  });
+
+  it("sectionNoteResponseSchema parse note et updated_at", () => {
+    const parsed = sectionNoteResponseSchema.parse({ note: "x", updated_at: "2026-01-01T00:00:00Z" });
+    expect(parsed).toEqual({ note: "x", updated_at: "2026-01-01T00:00:00Z" });
   });
 });
 
