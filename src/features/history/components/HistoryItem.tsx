@@ -1,9 +1,13 @@
+"use client";
+
 import Link from "next/link";
+import { useDraggable } from "@dnd-kit/core";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import DriveFileMoveOutlinedIcon from "@mui/icons-material/DriveFileMoveOutlined";
 import { Badge } from "@/components/Badge";
 import { markdownToPlain } from "@/shared/utils/markdown";
 import { DEFAULT_FOLDER, DEFAULT_SUBFOLDER } from "../history.constants";
+import type { DragData } from "../history.dnd";
 import type { CourseHistoryItem } from "../history.types";
 
 interface HistoryItemProps {
@@ -28,9 +32,18 @@ export function HistoryItem({ item, onDeleteClick, onMoveClick, showFolder = fal
     hour: "2-digit",
     minute: "2-digit",
   });
+  const dragData: DragData = { item };
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: item.id, data: dragData });
 
   return (
-    <div className="group flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-gray-50">
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      className={`group flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-gray-50 ${
+        isDragging ? "opacity-40" : ""
+      }`}
+    >
       <Link href={`/history/${item.id}`} className="flex min-w-0 flex-1 items-center justify-between gap-3">
         <div className="flex-1 truncate">
           <span className="text-gray-900">{markdownToPlain(item.question)}</span>
@@ -47,6 +60,7 @@ export function HistoryItem({ item, onDeleteClick, onMoveClick, showFolder = fal
         type="button"
         aria-label="Déplacer vers un dossier"
         title="Déplacer vers un dossier"
+        onPointerDown={(e) => e.stopPropagation()}
         onClick={() => onMoveClick(item)}
         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
       >
@@ -56,6 +70,7 @@ export function HistoryItem({ item, onDeleteClick, onMoveClick, showFolder = fal
         type="button"
         aria-label="Supprimer ce cours"
         title="Supprimer ce cours"
+        onPointerDown={(e) => e.stopPropagation()}
         onClick={() => onDeleteClick(item.id)}
         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
       >
