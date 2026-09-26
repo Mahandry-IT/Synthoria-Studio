@@ -1,4 +1,4 @@
-import { getJson, postJson, putJson } from "@/shared/api/httpClient";
+import { deleteJson, getJson, postJson, putJson } from "@/shared/api/httpClient";
 import type { PaginatedResponse } from "@/shared/types/pagination";
 import type {
   CourseFromPlanRequest,
@@ -14,6 +14,7 @@ import type {
   RecallResponse,
   RefineSectionRequest,
   SectionNoteResponse,
+  VideoNoteResponse,
 } from "./course.types";
 import {
   courseFromPlanRequestSchema,
@@ -28,6 +29,8 @@ import {
   regenerateSectionResponseSchema,
   sectionNoteRequestSchema,
   sectionNoteResponseSchema,
+  videoNoteRequestSchema,
+  videoNoteResponseSchema,
 } from "./course.schema";
 
 /** La génération peut durer plusieurs minutes (lots de sections). */
@@ -283,4 +286,37 @@ export async function saveSectionNote(sessionId: string, sectionId: string, note
     throw new Error("Réponse invalide du serveur pour la note. Réessayez.");
   }
   return parsed.data;
+}
+
+/**
+ * Enregistre (ou efface, avec une chaîne vide) la note libre de l'apprenant sur une vidéo.
+ *
+ * @throws {Error} si la note dépasse la longueur autorisée, ou si la réponse du serveur est invalide
+ * @throws {HttpError} 404 session/vidéo inconnue, 429 (trop de notes enregistrées)
+ */
+export async function saveVideoNote(sessionId: string, videoId: string, note: string): Promise<VideoNoteResponse> {
+  const request = videoNoteRequestSchema.safeParse({ note });
+  if (!request.success) throw new Error(request.error.issues[0]?.message ?? "Note invalide.");
+
+  const raw = await putJson<unknown>(
+    `/courses/${encodeURIComponent(sessionId)}/videos/${encodeURIComponent(videoId)}/note`,
+    request.data,
+    { noRetry: true },
+  );
+
+  const parsed = videoNoteResponseSchema.safeParse(raw);
+  if (!parsed.success) {
+    console.error("Zod validation failed for video note:", parsed.error);
+    throw new Error("Réponse invalide du serveur pour la note. Réessayez.");
+  }
+  return parsed.data;
+}
+
+/**
+ * Supprime un plan proposé (dashboard).
+ *
+ * @throws {HttpError} 404 plan inconnu
+ */
+export async function deletePlan(planId: string): Promise<void> {
+  await deleteJson<void>(`/courses/plans/${encodeURIComponent(planId)}`);
 }

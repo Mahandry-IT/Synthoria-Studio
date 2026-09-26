@@ -7,13 +7,24 @@ import { Card } from "@/components/Card";
 import type { CourseVideo } from "../course.types";
 import { formatVideoDuration } from "../videoFormat";
 import { CATEGORY_LABELS, groupByCategory, LEVEL_LABELS } from "../videoGrouping";
+import { VideoNoteButton } from "./learning/VideoNoteButton";
 
 interface VideoCardsProps {
   videos: CourseVideo[];
+  /** Id de la session persistée : requis pour la note personnelle (absent → pas de bouton note). */
+  sessionId?: string | null;
 }
 
 /** Carte vidéo : miniature cliquable, remplacée par le lecteur YouTube au clic (rien n'est chargé avant). */
-function VideoCard({ video }: { video: CourseVideo }) {
+function VideoCard({
+  video,
+  sessionId,
+  onNoteSaved,
+}: {
+  video: CourseVideo;
+  sessionId?: string | null;
+  onNoteSaved: (videoId: string, note: string) => void;
+}) {
   const [playing, setPlaying] = useState(false);
   const duration = formatVideoDuration(video.duration_seconds);
 
@@ -58,14 +69,25 @@ function VideoCard({ video }: { video: CourseVideo }) {
           </div>
         )}
         {video.relevance_reason && <p className="mt-1.5 text-xs italic text-gray-500">{video.relevance_reason}</p>}
-        <a
-          href={video.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-1 inline-block text-xs text-indigo-600 hover:underline"
-        >
-          Ouvrir sur YouTube
-        </a>
+        <div className="mt-1 flex items-center justify-between gap-2">
+          <a
+            href={video.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block text-xs text-indigo-600 hover:underline"
+          >
+            Ouvrir sur YouTube
+          </a>
+          {sessionId && (
+            <VideoNoteButton
+              sessionId={sessionId}
+              videoId={video.video_id}
+              videoTitle={video.title}
+              initialNote={video.note}
+              onSaved={(note) => onNoteSaved(video.video_id, note)}
+            />
+          )}
+        </div>
       </div>
     </Card>
   );
@@ -75,9 +97,17 @@ function VideoCard({ video }: { video: CourseVideo }) {
  * Vidéos YouTube expliquant le cours, affichées au-dessus du podcast.
  * Regroupées par catégorie pédagogique (V2) dès que ≥ 2 catégories sont présentes.
  */
-export function VideoCards({ videos }: VideoCardsProps) {
+export function VideoCards({ videos, sessionId }: VideoCardsProps) {
+  // Notes personnelles : appliquées en local par-dessus les vidéos reçues (comme SectionsList),
+  // sans dépendre d'un état mutable détenu par le parent (page Ask ou historique).
+  const [overrides, setOverrides] = useState<Record<string, string>>({});
+
   if (videos.length === 0) return null;
   const groups = groupByCategory(videos);
+
+  const handleNoteSaved = (videoId: string, note: string) => {
+    setOverrides((current) => ({ ...current, [videoId]: note }));
+  };
 
   return (
     <section aria-labelledby="videos-heading">
@@ -94,7 +124,14 @@ export function VideoCards({ videos }: VideoCardsProps) {
             )}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {group.videos.map((video) => (
-                <VideoCard key={video.video_id} video={video} />
+                <VideoCard
+                  key={video.video_id}
+                  video={
+                    video.video_id in overrides ? { ...video, note: overrides[video.video_id] } : video
+                  }
+                  sessionId={sessionId}
+                  onNoteSaved={handleNoteSaved}
+                />
               ))}
             </div>
           </div>

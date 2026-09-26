@@ -8,6 +8,7 @@ import {
   PLAN_TITLE_MAX_LENGTH,
   RECALL_ANSWER_MAX_LENGTH,
   SECTION_NOTE_MAX_LENGTH,
+  VIDEO_NOTE_MAX_LENGTH,
 } from "@/shared/utils/constants";
 
 // ─── Schemas de réponse (validation défensive) ──────────────
@@ -61,6 +62,7 @@ const courseVideoSchema = z.object({
   category: z.string().nullish(),
   level: z.string().nullish(),
   relevance_reason: z.string().nullish(),
+  note: z.string().optional().default(""),
 });
 
 /** Bloc visuel de la réponse directe (sérialisation d'un ContentBlock ; champs inconnus ignorés). */
@@ -361,6 +363,22 @@ export const sectionNoteRequestSchema = z.object({
 
 /** Réponse de PUT .../note */
 export const sectionNoteResponseSchema = z.object({
+  note: z.string(),
+  updated_at: z.string(),
+});
+
+// ─── Note libre sur une vidéo ─────────────────────────────────
+
+/** Requête de PUT .../videos/{id}/note (mêmes bornes que le backend ; vide = note effacée) */
+export const videoNoteRequestSchema = z.object({
+  note: z
+    .string()
+    .trim()
+    .max(VIDEO_NOTE_MAX_LENGTH, `La note ne peut pas dépasser ${VIDEO_NOTE_MAX_LENGTH} caractères.`),
+});
+
+/** Réponse de PUT .../videos/{id}/note */
+export const videoNoteResponseSchema = z.object({
   note: z.string(),
   updated_at: z.string(),
 });

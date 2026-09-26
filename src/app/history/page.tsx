@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useCourseHistory } from "@/features/history/hooks/useCourseHistory";
+import { useDeleteCourse } from "@/features/history/hooks/useDeleteCourse";
 import { HistoryTimeline } from "@/features/history/components/HistoryTimeline";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Pagination } from "@/components/Pagination";
 import { Skeleton } from "@/components/Skeleton";
 import { Card } from "@/components/Card";
@@ -14,7 +16,9 @@ const PAGE_SIZE = 10;
  */
 export default function HistoryPage() {
   const [page, setPage] = useState(1);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const { data, isLoading } = useCourseHistory(page, PAGE_SIZE);
+  const deleteCourse = useDeleteCourse();
 
   return (
     <div className="space-y-6">
@@ -45,13 +49,23 @@ export default function HistoryPage() {
 
       {!isLoading && data && data.data.length > 0 && (
         <>
-          <HistoryTimeline items={data.data} />
+          <HistoryTimeline items={data.data} onDeleteClick={setConfirmingId} />
           <Pagination
             page={data.meta.page}
             totalPages={data.meta.totalPages}
             onPageChange={setPage}
           />
         </>
+      )}
+
+      {confirmingId && (
+        <ConfirmDialog
+          title="Supprimer ce cours ?"
+          description="Ce cours et son contenu associé (podcast, notes, révisions) seront définitivement supprimés."
+          loading={deleteCourse.isPending}
+          onConfirm={() => deleteCourse.mutate(confirmingId, { onSuccess: () => setConfirmingId(null) })}
+          onClose={() => setConfirmingId(null)}
+        />
       )}
     </div>
   );

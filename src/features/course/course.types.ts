@@ -48,6 +48,8 @@ export interface CourseVideo {
   category?: string | null;
   level?: string | null;
   relevance_reason?: string | null;
+  /** Note libre de l'apprenant sur cette vidéo (pense-bête, idées) ; jamais générée par le modèle. */
+  note?: string;
 }
 
 /** Bloc de la réponse directe (ContentBlock sérialisé). */
@@ -306,8 +308,14 @@ export interface RecallResponse {
   missing_points: string[];
 }
 
-/** Réponse de PUT .../note */
+/** Réponse de PUT .../sections/{id}/note */
 export interface SectionNoteResponse {
+  note: string;
+  updated_at: string;
+}
+
+/** Réponse de PUT .../videos/{id}/note */
+export interface VideoNoteResponse {
   note: string;
   updated_at: string;
 }
