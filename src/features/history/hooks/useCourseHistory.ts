@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { getCourseHistory } from "../history.api";
+import type { CourseFolderFilter } from "../history.types";
 
 interface UseCourseHistoryReturn {
   data: Awaited<ReturnType<typeof getCourseHistory>> | null;
@@ -10,15 +11,16 @@ interface UseCourseHistoryReturn {
 }
 
 /**
- * Query React Query pour la liste paginée de l'historique des cours.
+ * Query React Query pour la liste paginée de l'historique des cours, filtrable par dossier.
  */
 export function useCourseHistory(
   page: number = 1,
   limit: number = 10,
+  filter?: CourseFolderFilter,
 ): UseCourseHistoryReturn {
   const query = useQuery({
-    queryKey: ["course-history", page, limit],
-    queryFn: () => getCourseHistory(page, limit),
+    queryKey: ["course-history", page, limit, filter?.folder ?? null, filter?.subfolder ?? null],
+    queryFn: () => getCourseHistory(page, limit, filter),
     staleTime: 30_000,
   });
 
