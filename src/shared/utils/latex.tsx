@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
-import { repairDoubleScripts, repairLatexEscapes, splitBareMath } from "./mathNotation";
+import { repairDoubleScripts, repairDoubledBackslash, repairLatexEscapes, splitBareMath } from "./mathNotation";
 
 /** Segments mathématiques : `$$...$$` (display) puis `$...$` (inline). */
 const MATH_SEGMENT_SOURCE = String.raw`\$\$[\s\S]+?\$\$|\$[^$\n]+?\$`;
@@ -210,7 +210,7 @@ export function LatexText({
   /** Traite un texte sans `$` comme une formule s'il en a l'allure (choix de QCM). */
   autoMath?: boolean;
 }) {
-  const repaired = repairDoubleScripts(repairLatexEscapes(rawText));
+  const repaired = repairDoubleScripts(repairDoubledBackslash(repairLatexEscapes(rawText)));
   const text = autoMath ? ensureMathDelimiters(repaired) : repaired;
   const ref = useRef<HTMLSpanElement>(null);
 

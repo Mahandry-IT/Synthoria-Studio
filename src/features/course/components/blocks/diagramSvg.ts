@@ -1,4 +1,29 @@
 /**
+ * Retire les directives de style de la source Mermaid (`style ...`, `classDef ...`, `class ...`,
+ * et le raccourci `:::nomDeClasse` accroché à un nœud) avant de la passer à Mermaid.
+ *
+ * Deux raisons, l'une bloquante et l'autre défensive :
+ * - Nommer une classe/un nœud « style » (ex. `:::style` suivi d'une vraie directive `style ...`)
+ *   fait buter le parseur Mermaid dessus (« got STYLE » au lieu du token attendu) : tout le
+ *   diagramme échoue et s'affiche en texte brut. Reproduit et confirmé avec un rendu réel.
+ * - Ces directives sont le seul endroit où la source d'un diagramme (texte du modèle, non fiable)
+ *   peut injecter des valeurs CSS arbitraires dans le `<style>` que Mermaid émet — `<style>` est
+ *   déjà laissé passer par notre sanitizer (voir `sanitizeSvg` plus bas) en s'appuyant sur DOMPurify
+ *   pour le contenu *généré par Mermaid lui-même* ; ça ne couvre pas des valeurs que la source du
+ *   diagramme viendrait injecter via ces directives. Les retirer ferme cet interstice sans rien
+ *   perdre : la consigne donnée au modèle est déjà de ne jamais utiliser de directives de style.
+ *
+ * @example stripStyleDirectives("flowchart TD\nA-->B\nstyle A fill:#f00") // "flowchart TD\nA-->B"
+ */
+export function stripStyleDirectives(source: string): string {
+  return source
+    .replace(/(^|[;\n])\s*(style|classDef|class)\s[^;\n]*/g, "$1")
+    .replace(/:::[A-Za-z0-9_-]+(,[A-Za-z0-9_-]+)*/g, "")
+    .replace(/;\s*;/g, ";")
+    .trim();
+}
+
+/**
  * Éléments SVG jamais acceptés dans un schéma généré par un LLM (contenu non fiable).
  *
  * `style` et `foreignobject` sont volontairement absents : `DiagramBlock` appelle Mermaid avec
