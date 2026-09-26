@@ -1,10 +1,31 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Autocomplete from "@mui/material/Autocomplete";
+import TextField from "@mui/material/TextField";
 import { Modal } from "@/components/Modal";
 import { Button } from "@/components/Button";
 import { DEFAULT_FOLDER, DEFAULT_SUBFOLDER } from "../history.constants";
 import type { CourseFolder, CourseHistoryItem } from "../history.types";
+
+/** Style du champ MUI pour matcher les inputs Tailwind du reste de l'app (rounded-lg, border-gray-300, focus indigo). */
+const fieldSx = {
+  "& .MuiOutlinedInput-root": {
+    borderRadius: "0.5rem",
+    fontSize: "0.875rem",
+    backgroundColor: "#fff",
+    "& fieldset": { borderColor: "#d1d5db" },
+    "&:hover fieldset": { borderColor: "#d1d5db" },
+    "&.Mui-focused fieldset": { borderColor: "#6366f1", borderWidth: "1px" },
+  },
+  "& .MuiOutlinedInput-input": { padding: "0.5rem 0.75rem" },
+} as const;
+
+/** Trouve, parmi une liste de noms, celui qui correspond à `value` sans tenir compte de la casse. */
+function findCaseInsensitive(names: string[], value: string): string | undefined {
+  const target = value.trim().toLowerCase();
+  return names.find((name) => name.toLowerCase() === target);
+}
 
 interface MoveCourseDialogProps {
   item: CourseHistoryItem;
@@ -23,10 +44,16 @@ export function MoveCourseDialog({ item, folders, loading = false, onConfirm, on
   const [folder, setFolder] = useState(item.folder);
   const [subfolder, setSubfolder] = useState(item.subfolder === DEFAULT_SUBFOLDER ? "" : item.subfolder);
 
-  const subfolderOptions = useMemo(() => {
-    const match = folders.find((f) => f.name === folder.trim());
-    return match?.subfolders.map((s) => s.name).filter((name) => name !== DEFAULT_SUBFOLDER) ?? [];
-  }, [folders, folder]);
+  const folderNames = useMemo(() => folders.map((f) => f.name), [folders]);
+
+  const matchedFolder = useMemo(
+    () => folders.find((f) => f.name.toLowerCase() === folder.trim().toLowerCase()),
+    [folders, folder],
+  );
+  const subfolderOptions = useMemo(
+    () => matchedFolder?.subfolders.map((s) => s.name).filter((name) => name !== DEFAULT_SUBFOLDER) ?? [],
+    [matchedFolder],
+  );
 
   const trimmedFolder = folder.trim();
   const canSubmit = trimmedFolder.length > 0 && !loading;
@@ -45,38 +72,44 @@ export function MoveCourseDialog({ item, folders, loading = false, onConfirm, on
           <label htmlFor="move-course-folder" className="mb-1 block text-xs font-medium text-gray-600">
             Dossier
           </label>
-          <input
-            id="move-course-folder"
-            list="move-course-folder-options"
-            value={folder}
-            onChange={(e) => setFolder(e.target.value)}
-            placeholder={DEFAULT_FOLDER}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          <Autocomplete
+            freeSolo
+            options={folderNames}
+            inputValue={folder}
+            onInputChange={(_, value) => setFolder(value)}
+            onBlur={() => {
+              const match = findCaseInsensitive(folderNames, folder);
+              if (match) setFolder(match);
+            }}
+            renderInput={(params) => (
+              <TextField {...params} id="move-course-folder" placeholder={DEFAULT_FOLDER} size="small" sx={fieldSx} />
+            )}
           />
-          <datalist id="move-course-folder-options">
-            {folders.map((f) => (
-              <option key={f.name} value={f.name} />
-            ))}
-          </datalist>
         </div>
 
         <div>
           <label htmlFor="move-course-subfolder" className="mb-1 block text-xs font-medium text-gray-600">
             Sous-dossier (optionnel)
           </label>
-          <input
-            id="move-course-subfolder"
-            list="move-course-subfolder-options"
-            value={subfolder}
-            onChange={(e) => setSubfolder(e.target.value)}
-            placeholder={DEFAULT_SUBFOLDER}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          <Autocomplete
+            freeSolo
+            options={subfolderOptions}
+            inputValue={subfolder}
+            onInputChange={(_, value) => setSubfolder(value)}
+            onBlur={() => {
+              const match = findCaseInsensitive(subfolderOptions, subfolder);
+              if (match) setSubfolder(match);
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                id="move-course-subfolder"
+                placeholder={DEFAULT_SUBFOLDER}
+                size="small"
+                sx={fieldSx}
+              />
+            )}
           />
-          <datalist id="move-course-subfolder-options">
-            {subfolderOptions.map((name) => (
-              <option key={name} value={name} />
-            ))}
-          </datalist>
         </div>
       </div>
 

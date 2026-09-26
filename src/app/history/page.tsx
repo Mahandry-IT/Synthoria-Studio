@@ -1,6 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
 import { useCourseHistory } from "@/features/history/hooks/useCourseHistory";
 import { useDeleteCourse } from "@/features/history/hooks/useDeleteCourse";
 import { useCourseFolders } from "@/features/history/hooks/useCourseFolders";
@@ -14,6 +24,10 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Pagination } from "@/components/Pagination";
 import { Skeleton } from "@/components/Skeleton";
 import { Card } from "@/components/Card";
+import { DEFAULT_FOLDER, DEFAULT_SUBFOLDER } from "@/features/history/history.constants";
+import type { DragData, DropTarget } from "@/features/history/history.dnd";
+import { innermostPointerWithin } from "@/features/history/history.dnd";
+import { markdownToPlain } from "@/shared/utils/markdown";
 import type { CourseFolderFilter, CourseHistoryItem } from "@/features/history/history.types";
 
 const PAGE_SIZE = 10;
@@ -29,6 +43,7 @@ export default function HistoryPage() {
   const [movingItem, setMovingItem] = useState<CourseHistoryItem | null>(null);
   const [deletingFolder, setDeletingFolder] = useState<string | null>(null);
   const [deletingSubfolder, setDeletingSubfolder] = useState<{ folder: string; subfolder: string } | null>(null);
+  const [draggedItem, setDraggedItem] = useState<CourseHistoryItem | null>(null);
 
   const { data, isLoading } = useCourseHistory(page, PAGE_SIZE, filter ?? undefined);
   const { data: folders } = useCourseFolders();
@@ -37,9 +52,34 @@ export default function HistoryPage() {
   const deleteFolder = useDeleteFolder();
   const deleteSubfolder = useDeleteSubfolder();
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+  );
+
   function handleSelect(next: CourseFolderFilter | null) {
     setFilter(next);
     setPage(1);
+  }
+
+  function handleDragStart(event: DragStartEvent) {
+    setDraggedItem((event.active.data.current as DragData | undefined)?.item ?? null);
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    setDraggedItem(null);
+    const { active, over } = event;
+    if (!over) return; // déposé hors du panneau de dossiers : glisser annulé, aucun effet
+
+    const dragged = (active.data.current as DragData | undefined)?.item;
+    const target = over.data.current as DropTarget | undefined;
+    if (!dragged || !target) return;
+
+    const targetFolder = target.kind === "default" ? DEFAULT_FOLDER : target.folder;
+    const targetSubfolder = target.kind === "subfolder" ? target.subfolder : DEFAULT_SUBFOLDER;
+    if (dragged.folder === targetFolder && dragged.subfolder === targetSubfolder) return;
+
+    moveCourse.mutate({ sessionId: dragged.id, folder: targetFolder, subfolder: targetSubfolder });
   }
 
   return (
@@ -53,50 +93,65 @@ export default function HistoryPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]">
-        <Card className="h-fit p-3">
-          <FolderNav
-            filter={filter}
-            onSelect={handleSelect}
-            onDeleteFolder={setDeletingFolder}
-            onDeleteSubfolder={(folder, subfolder) => setDeletingSubfolder({ folder, subfolder })}
-          />
-        </Card>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={innermostPointerWithin}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]">
+          <Card className="h-fit p-3">
+            <FolderNav
+              filter={filter}
+              onSelect={handleSelect}
+              onDeleteFolder={setDeletingFolder}
+              onDeleteSubfolder={(folder, subfolder) => setDeletingSubfolder({ folder, subfolder })}
+            />
+          </Card>
 
-        <div className="min-w-0 space-y-6">
-          {isLoading && (
-            <div className="space-y-4">
-              <Skeleton lines={2} />
-              <Skeleton lines={4} />
-              <Skeleton lines={3} />
+          <div className="min-w-0 space-y-6">
+            {isLoading && (
+              <div className="space-y-4">
+                <Skeleton lines={2} />
+                <Skeleton lines={4} />
+                <Skeleton lines={3} />
+              </div>
+            )}
+
+            {!isLoading && data && data.data.length === 0 && (
+              <Card className="p-8 text-center">
+                <p className="text-sm text-gray-500">
+                  {filter ? "Aucun cours dans ce dossier." : "Aucun cours généré pour le moment."}
+                </p>
+              </Card>
+            )}
+
+            {!isLoading && data && data.data.length > 0 && (
+              <>
+                <HistoryTimeline
+                  items={data.data}
+                  onDeleteClick={setConfirmingId}
+                  onMoveClick={setMovingItem}
+                  showFolder={filter === null}
+                />
+                <Pagination
+                  page={data.meta.page}
+                  totalPages={data.meta.totalPages}
+                  onPageChange={setPage}
+                />
+              </>
+            )}
+          </div>
+        </div>
+
+        <DragOverlay>
+          {draggedItem && (
+            <div className="max-w-xs truncate rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-lg">
+              {markdownToPlain(draggedItem.question)}
             </div>
           )}
-
-          {!isLoading && data && data.data.length === 0 && (
-            <Card className="p-8 text-center">
-              <p className="text-sm text-gray-500">
-                {filter ? "Aucun cours dans ce dossier." : "Aucun cours généré pour le moment."}
-              </p>
-            </Card>
-          )}
-
-          {!isLoading && data && data.data.length > 0 && (
-            <>
-              <HistoryTimeline
-                items={data.data}
-                onDeleteClick={setConfirmingId}
-                onMoveClick={setMovingItem}
-                showFolder={filter === null}
-              />
-              <Pagination
-                page={data.meta.page}
-                totalPages={data.meta.totalPages}
-                onPageChange={setPage}
-              />
-            </>
-          )}
-        </div>
-      </div>
+        </DragOverlay>
+      </DndContext>
 
       {confirmingId && (
         <ConfirmDialog
