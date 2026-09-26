@@ -48,6 +48,18 @@ export function repairLatexEscapes(text: string): string {
   return CONTROL_CHAR_REPAIRS.reduce((acc, [pattern, replacement]) => acc.replace(pattern, replacement), text);
 }
 
+/**
+ * `x^^*` : caret dupliqué par erreur devant un exposant (idem pour `_`). KaTeX rejette ce
+ * « double exposant » et affiche toute la formule en rouge (source brute) au lieu de la rendre.
+ * On ne fusionne que des carets/underscores strictement adjacents, jamais un exposant imbriqué
+ * valide comme `x^{a^b}` (le `{a` entre les deux `^` les empêche d'être adjacents).
+ *
+ * @example repairDoubleScripts("x^^*") // "x^*"
+ */
+export function repairDoubleScripts(text: string): string {
+  return text.replace(/\^{2,}/g, "^").replace(/_{2,}/g, "_");
+}
+
 // ─── Formules écrites sans délimiteurs `$` ───────────────────
 
 /** Fragment de texte brut ou formule LaTeX (sans délimiteurs). */
