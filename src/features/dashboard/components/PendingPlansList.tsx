@@ -3,14 +3,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import ChecklistIcon from "@mui/icons-material/Checklist";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ErrorState } from "@/components/ErrorState";
 import { Pagination } from "@/components/Pagination";
 import { useNow } from "@/shared/hooks/useNow";
 import { markdownToPlain } from "@/shared/utils/markdown";
 import { activePlans, formatCountdown, isExpiringSoon } from "../dashboard.logic";
+import { useDeletePlan } from "../hooks/useDeletePlan";
 import { usePendingPlans } from "../hooks/usePendingPlans";
 import { useResumePlan } from "../hooks/useResumePlan";
 import { DashboardCardSkeleton } from "./DashboardCardSkeleton";
@@ -23,8 +26,10 @@ const PAGE_SIZE = 5;
  */
 export function PendingPlansList() {
   const [page, setPage] = useState(1);
+  const [confirmingPlanId, setConfirmingPlanId] = useState<string | null>(null);
   const { data, isLoading, error, refetch } = usePendingPlans(page, PAGE_SIZE);
   const resume = useResumePlan();
+  const deletePlanMutation = useDeletePlan();
   const now = useNow(30_000);
 
   if (isLoading) return <DashboardCardSkeleton label="plans en cours" />;
@@ -79,17 +84,28 @@ export function PendingPlansList() {
                     </span>
                   </p>
                 </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  loading={isResuming}
-                  disabled={resume.isPending}
-                  aria-label={`Reprendre le plan ${plan.title || markdownToPlain(plan.question)}`}
-                  onClick={() => resume.mutate(plan.plan_id)}
-                >
-                  Reprendre
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    loading={isResuming}
+                    disabled={resume.isPending}
+                    aria-label={`Reprendre le plan ${plan.title || markdownToPlain(plan.question)}`}
+                    onClick={() => resume.mutate(plan.plan_id)}
+                  >
+                    Reprendre
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="danger"
+                    aria-label={`Supprimer le plan ${plan.title || markdownToPlain(plan.question)}`}
+                    onClick={() => setConfirmingPlanId(plan.plan_id)}
+                  >
+                    <DeleteOutlineIcon fontSize="small" />
+                  </Button>
+                </div>
               </li>
             );
           })}
@@ -97,6 +113,18 @@ export function PendingPlansList() {
       )}
 
       <Pagination page={page} totalPages={data?.meta.totalPages ?? 1} onPageChange={setPage} />
+
+      {confirmingPlanId && (
+        <ConfirmDialog
+          title="Supprimer ce plan ?"
+          description="Ce plan sera définitivement supprimé."
+          loading={deletePlanMutation.isPending}
+          onConfirm={() =>
+            deletePlanMutation.mutate(confirmingPlanId, { onSuccess: () => setConfirmingPlanId(null) })
+          }
+          onClose={() => setConfirmingPlanId(null)}
+        />
+      )}
     </Card>
   );
 }

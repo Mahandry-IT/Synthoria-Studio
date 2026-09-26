@@ -27,3 +27,6 @@ export const RECALL_ANSWER_MAX_LENGTH = 1000;
 
 /** Longueur maximale d'une note libre sur une section (alignée sur le backend). */
 export const SECTION_NOTE_MAX_LENGTH = 2000;
+
+/** Longueur maximale d'une note libre sur une vidéo (alignée sur le backend). */
+export const VIDEO_NOTE_MAX_LENGTH = 2000;

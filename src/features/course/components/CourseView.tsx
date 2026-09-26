@@ -59,7 +59,7 @@ export function CourseView({ data, sessionId: sessionIdProp }: CourseViewProps) 
 
       <CourseMetaHeader meta={data.meta} />
 
-      {data.videos && data.videos.length > 0 && <VideoCards videos={data.videos} />}
+      {data.videos && data.videos.length > 0 && <VideoCards videos={data.videos} sessionId={sessionId} />}
 
       {sessionId && <SessionPodcast sessionId={sessionId} />}
 

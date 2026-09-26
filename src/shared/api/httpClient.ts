@@ -109,6 +109,14 @@ export function putJson<T>(path: string, body: unknown, config?: AxiosRequestCon
 }
 
 /**
+ * DELETE helper. Sans retry : une suppression n'est pas sûre à rejouer après un 5xx ambigu
+ * (le 1er appel a pu aboutir côté serveur ; un retry renverrait alors un 404 trompeur).
+ */
+export function deleteJson<T = void>(path: string, config?: AxiosRequestConfig & { noRetry?: boolean }): Promise<T> {
+  return httpClient<T>(path, { method: "DELETE", noRetry: true, ...config });
+}
+
+/**
  * POST multipart helper (pour l'upload de fichiers).
  * Sans retry : l'ingestion n'est pas idempotente (un retry après un 5xx
  * renverrait « File already uploaded » si le 1er appel a abouti côté serveur).

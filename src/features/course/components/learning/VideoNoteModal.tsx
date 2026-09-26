@@ -5,45 +5,45 @@ import StickyNote2OutlinedIcon from "@mui/icons-material/StickyNote2Outlined";
 import { Button } from "@/components/Button";
 import { Modal } from "@/components/Modal";
 import { RichTextEditor } from "@/components/editor/RichTextEditor";
-import { SECTION_NOTE_MAX_LENGTH } from "@/shared/utils/constants";
-import { useSaveSectionNote } from "../../hooks/useSaveSectionNote";
+import { VIDEO_NOTE_MAX_LENGTH } from "@/shared/utils/constants";
+import { useSaveVideoNote } from "../../hooks/useSaveVideoNote";
 
-interface SectionNoteModalProps {
+interface VideoNoteModalProps {
   sessionId: string;
-  sectionId: string;
-  /** Titre de la section (rappel dans le modal). */
-  sectionTitle: string;
+  videoId: string;
+  /** Titre de la vidéo (rappel dans le modal). */
+  videoTitle: string;
   initialNote?: string;
   onSaved: (note: string) => void;
   onClose: () => void;
 }
 
 /**
- * Modal d'édition de la note personnelle d'une section (pense-bête, idées).
+ * Modal d'édition de la note personnelle d'une vidéo (pense-bête, idées).
  * Monté à la demande ; Échap ou clic sur le voile le ferme. Se ferme après enregistrement.
  */
-export function SectionNoteModal({
+export function VideoNoteModal({
   sessionId,
-  sectionId,
-  sectionTitle,
+  videoId,
+  videoTitle,
   initialNote = "",
   onSaved,
   onClose,
-}: SectionNoteModalProps) {
+}: VideoNoteModalProps) {
   const [note, setNote] = useState(initialNote);
-  const save = useSaveSectionNote();
+  const save = useSaveVideoNote();
   const dirty = note !== initialNote;
   // Limite sur le Markdown (ce que le backend reçoit) : l'éditeur riche n'a pas de maxLength
-  const isOverLimit = note.length > SECTION_NOTE_MAX_LENGTH;
+  const isOverLimit = note.length > VIDEO_NOTE_MAX_LENGTH;
 
   return (
-    <Modal onClose={onClose} labelledBy={`note-modal-title-${sectionId}`} size="lg">
+    <Modal onClose={onClose} labelledBy={`video-note-modal-title-${videoId}`} size="lg">
       <form
         onSubmit={(e) => {
           e.preventDefault();
           if (!dirty || isOverLimit) return;
           save.mutate(
-            { sessionId, sectionId, note },
+            { sessionId, videoId, note },
             {
               onSuccess: (res) => {
                 onSaved(res.note);
@@ -58,18 +58,18 @@ export function SectionNoteModal({
             <StickyNote2OutlinedIcon fontSize="small" />
           </span>
           <div className="min-w-0">
-            <h2 id={`note-modal-title-${sectionId}`} className="text-base font-semibold text-gray-900">
+            <h2 id={`video-note-modal-title-${videoId}`} className="text-base font-semibold text-gray-900">
               {initialNote ? "Modifier ma note" : "Ajouter une note"}
             </h2>
-            <p className="mt-0.5 truncate text-sm text-gray-500" title={sectionTitle}>
-              {sectionTitle || "Section sans titre"}
+            <p className="mt-0.5 truncate text-sm text-gray-500" title={videoTitle}>
+              {videoTitle || "Vidéo sans titre"}
             </p>
           </div>
         </div>
 
         <p className="mt-4 mb-1 block text-xs font-medium text-gray-600">Note personnelle</p>
         <RichTextEditor
-          id={`note-${sectionId}`}
+          id={`video-note-${videoId}`}
           ariaLabel="Note personnelle"
           autoFocus
           minRows={8}
@@ -79,7 +79,7 @@ export function SectionNoteModal({
           invalid={isOverLimit}
         />
         <p className={`mt-1 text-right text-xs ${isOverLimit ? "font-medium text-red-600" : "text-gray-400"}`}>
-          {note.length}/{SECTION_NOTE_MAX_LENGTH}
+          {note.length}/{VIDEO_NOTE_MAX_LENGTH}
         </p>
 
         <div className="mt-4 flex justify-end gap-2">
