@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
+import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { ErrorState } from "@/components/ErrorState";
@@ -11,6 +12,13 @@ import { RichText } from "@/features/course/components/RichText";
 import { boxLabel, splitBack, summarizeReview } from "../review.logic";
 import type { ReviewResult } from "../review.schema";
 import { DUE_CARDS_KEY, useDueCards, useRecordReview } from "../hooks/useReview";
+
+/** Couleur du badge de boîte : amber (à revoir bientôt) → gray (en cours) → green (maîtrisée). */
+function boxBadgeVariant(box: number): "amber" | "gray" | "green" {
+  if (box <= 0) return "amber";
+  if (box >= 3) return "green";
+  return "gray";
+}
 
 /**
  * Session de révision : une carte à la fois (question → « Voir la réponse » → « Je savais » / « À revoir »).
@@ -74,38 +82,62 @@ export function ReviewSession() {
     );
 
   return (
-    <Card className="space-y-4 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
-        <span>
-          Carte {index + 1}/{cards.length}
-        </span>
-        <span>
-          {card.course_title ? `${card.course_title} · ` : ""}
-          {boxLabel(card.box)}
-        </span>
+    <Card className="space-y-5 p-6">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-xs font-medium text-gray-500">
+          <span>
+            Carte {index + 1}/{cards.length}
+          </span>
+          <span>{Math.round((index / cards.length) * 100)} %</span>
+        </div>
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+          <div
+            className="h-full rounded-full bg-indigo-600 transition-all duration-300"
+            style={{ width: `${(index / cards.length) * 100}%` }}
+          />
+        </div>
       </div>
 
-      <RichText text={card.front} className="text-base font-medium text-gray-900" />
+      <div className="flex flex-wrap items-center gap-1.5">
+        {card.course_title && <Badge variant="indigo">{card.course_title}</Badge>}
+        <Badge variant={boxBadgeVariant(card.box)}>{boxLabel(card.box)}</Badge>
+      </div>
+
+      <div>
+        <RichText text={card.front} className="text-base font-medium leading-relaxed text-gray-900" />
+      </div>
 
       {!revealed ? (
-        <Button type="button" onClick={() => setRevealed(true)}>
+        <Button type="button" className="w-full sm:w-auto" onClick={() => setRevealed(true)}>
           Voir la réponse
         </Button>
       ) : (
-        <>
-          <div className="rounded-lg bg-indigo-50 p-4 text-sm text-indigo-900">
+        <div className="space-y-4">
+          <div className="rounded-xl bg-indigo-50 p-4 text-sm text-indigo-900">
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-indigo-500">Réponse</p>
             <RichText text={answer} className="font-semibold" />
             {explanation && <RichText text={explanation} className="mt-2 opacity-80" />}
           </div>
           <div className="flex flex-wrap gap-3">
-            <Button type="button" loading={record.isPending} onClick={() => answerCard("correct")}>
+            <Button
+              type="button"
+              className="flex-1"
+              loading={record.isPending}
+              onClick={() => answerCard("correct")}
+            >
               Je savais
             </Button>
-            <Button type="button" variant="outline" loading={record.isPending} onClick={() => answerCard("incorrect")}>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              loading={record.isPending}
+              onClick={() => answerCard("incorrect")}
+            >
               À revoir
             </Button>
           </div>
-        </>
+        </div>
       )}
     </Card>
   );
