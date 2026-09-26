@@ -1,5 +1,19 @@
-/** Éléments SVG jamais acceptés dans un schéma généré par un LLM (contenu non fiable). */
-const FORBIDDEN_TAGS = new Set(["script", "foreignobject", "iframe", "object", "embed", "style", "link", "a"]);
+/**
+ * Éléments SVG jamais acceptés dans un schéma généré par un LLM (contenu non fiable).
+ *
+ * `style` et `foreignobject` sont volontairement absents : `DiagramBlock` appelle Mermaid avec
+ * `securityLevel: "strict"`, ce qui fait passer tout le SVG rendu par DOMPurify *avant* qu'on le
+ * reçoive (voir `mermaid.core.mjs`, `renderDiagram` → `DOMPurify.sanitize(code2, { ADD_TAGS:
+ * ["foreignobject"], HTML_INTEGRATION_POINTS: { foreignobject: true } })`) — la configuration
+ * officiellement documentée par DOMPurify pour assainir du HTML dans un `foreignObject` SVG (le
+ * contenu y est nettoyé comme du HTML, pas laissé tel quel). `style` fait déjà partie de la liste
+ * blanche SVG par défaut de DOMPurify (du CSS, ça n'exécute pas de JavaScript).
+ * Les bloquer ici en plus cassait TOUT rendu Mermaid : `style` porte tout le remplissage/contour
+ * des formes (sans lui, remplissage SVG par défaut = noir, qui recouvre le texte) et
+ * `foreignobject` porte le texte de chaque libellé (sans lui, aucun texte, sur aucun diagramme).
+ * On garde ce filtre pour les vecteurs que DOMPurify ne laisserait jamais passer de toute façon.
+ */
+const FORBIDDEN_TAGS = new Set(["script", "iframe", "object", "embed", "link", "a"]);
 
 /**
  * Nettoie un SVG produit par Mermaid avant insertion dans le DOM : retire les balises actives,
