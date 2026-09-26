@@ -1,5 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { repairLatexEscapes, splitBareMath, toAccentedMath } from "./mathNotation";
+import { repairLatexEscapes, splitBareMath, stripMathDelimiters, toAccentedMath } from "./mathNotation";
+
+describe("stripMathDelimiters", () => {
+  const shapley = String.raw`\phi_i(v) = \sum_{S \subseteq N \setminus \{i\}} \frac{|S|!(|N| - |S| - 1)!}{|N|!} \Big( v(S \cup \{i\}) - v(S) \Big)`;
+
+  it.each([
+    ["$$…$$", `$$${shapley}$$`],
+    ["$…$", `$${shapley}$`],
+    ["\\[…\\]", String.raw`\[` + shapley + String.raw`\]`],
+    ["\\(…\\)", String.raw`\(` + shapley + String.raw`\)`],
+    ["ouverture seule", `$$ ${shapley}`],
+    ["sans délimiteurs", `  ${shapley} `],
+  ])("retire les délimiteurs (%s)", (_label, latex) => {
+    expect(stripMathDelimiters(latex)).toBe(shapley);
+  });
+});
 
 describe("toAccentedMath", () => {
   it.each([

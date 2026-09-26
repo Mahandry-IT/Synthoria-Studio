@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card } from "@/components/Card";
 import { CodeBlock } from "@/components/code/CodeBlock";
 import { LatexText } from "@/shared/utils/latex";
+import { stripMathDelimiters } from "@/shared/utils/mathNotation";
 import { RichTable, RichText } from "../RichText";
 import type { CourseContentBlock } from "../../course.types";
 
@@ -33,7 +34,7 @@ export function ListBlock({ items, ordered }: { items: string[]; ordered?: boole
 export function FormulaBlock({ formula }: { formula: NonNullable<CourseContentBlock["formula"]> }) {
   return (
     <div className="my-3 overflow-x-auto rounded-lg bg-gray-50 px-4 py-3 text-center">
-      <LatexText text={`$$${formula.latex}$$`} />
+      <LatexText text={`$$${stripMathDelimiters(formula.latex)}$$`} />
       {formula.description && <p className="mt-1 text-xs text-gray-500">{formula.description}</p>}
     </div>
   );

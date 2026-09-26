@@ -88,3 +88,16 @@ export function splitBareMath(text: string): TextOrMath[] {
   if (last < text.length) parts.push({ text: text.slice(last) });
   return parts;
 }
+
+/**
+ * Formule sans ses délimiteurs (`$$…$$`, `$…$`, `\[…\]`, `\(…\)`), même s'il n'en reste qu'un côté.
+ * Le modèle en ajoute parfois au LaTeX d'un bloc formule : ré-enveloppée dans `$$…$$`, la formule
+ * gardait un `$` interne, erreur KaTeX (source affichée en rouge).
+ */
+export function stripMathDelimiters(latex: string): string {
+  return latex
+    .trim()
+    .replace(/^(?:\$+|\\[[(])\s*/, "")
+    .replace(/\s*(?:\$+|\\[\])])$/, "")
+    .trim();
+}
