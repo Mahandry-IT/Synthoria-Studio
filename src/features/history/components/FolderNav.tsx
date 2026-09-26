@@ -5,8 +5,12 @@ import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import { useCourseFolders } from "../hooks/useCourseFolders";
 import { DEFAULT_FOLDER, DEFAULT_SUBFOLDER } from "../history.constants";
+import { useLocalStorageState } from "@/shared/hooks/useLocalStorageState";
 import type { DropTarget } from "../history.dnd";
 import type { CourseFolder, CourseFolderFilter, CourseSubfolderSummary } from "../history.types";
+
+/** Clé localStorage : liste des noms de dossiers repliés (absent = tout déplié par défaut). */
+const COLLAPSED_STORAGE_KEY = "history-collapsed-folders";
 
 /** Highlight sobre (même famille que l'état « dossier actif ») pendant le survol d'un glisser. */
 const DROP_ACTIVE_CLASS = "bg-indigo-50 ring-1 ring-indigo-400";
@@ -70,6 +74,8 @@ function FolderRow({
   folder,
   isActive,
   filter,
+  isExpanded,
+  onToggle,
   onSelect,
   onDeleteFolder,
   onDeleteSubfolder,
@@ -77,12 +83,15 @@ function FolderRow({
   folder: CourseFolder;
   isActive: boolean;
   filter: CourseFolderFilter | null;
+  isExpanded: boolean;
+  onToggle: () => void;
   onSelect: (filter: CourseFolderFilter | null) => void;
   onDeleteFolder: (name: string) => void;
   onDeleteSubfolder: (folder: string, subfolder: string) => void;
 }) {
   const target: DropTarget = { kind: "folder", folder: folder.name };
   const { setNodeRef, isOver } = useDroppable({ id: `folder-${folder.name}`, data: target });
+  const hasSubfolders = folder.subfolders.length > 0;
 
   return (
     <div className="group">
@@ -92,6 +101,30 @@ function FolderRow({
           isOver ? DROP_ACTIVE_CLASS : ""
         }`}
       >
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center">
+          {hasSubfolders && (
+            <button
+              type="button"
+              onClick={onToggle}
+              aria-expanded={isExpanded}
+              aria-label={isExpanded ? `Réduire le dossier ${folder.name}` : `Déplier le dossier ${folder.name}`}
+              className="flex h-6 w-6 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            >
+              <svg
+                className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+          )}
+        </span>
         <button
           type="button"
           onClick={() => onSelect({ folder: folder.name })}
@@ -116,7 +149,7 @@ function FolderRow({
         )}
       </div>
 
-      {folder.subfolders.length > 0 && (
+      {hasSubfolders && isExpanded && (
         <div className="ml-5 space-y-0.5 border-l border-gray-100 pl-2">
           {folder.subfolders.map((s) => (
             <SubfolderRow
@@ -135,17 +168,29 @@ function FolderRow({
 }
 
 /**
- * Arborescence des dossiers de cours (2 niveaux fixes, jamais plus profond). Toujours dépliée :
- * le nombre de dossiers/sous-dossiers reste modeste, pas besoin d'un mécanisme de repli.
+ * Arborescence des dossiers de cours (2 niveaux fixes, jamais plus profond). Chaque dossier est
+ * repliable individuellement (état persisté en localStorage) ; déplié par défaut.
  *
  * Sert aussi de zone de dépôt pour le glisser-déposer d'une carte de cours (`HistoryItem`) : chaque
  * dossier/sous-dossier est une zone `useDroppable` distincte, et le `<nav>` lui-même est la zone de
- * repli (dépôt hors d'un dossier/sous-dossier précis -> dossier/sous-dossier par défaut).
+ * repli (dépôt hors d'un dossier/sous-dossier précis -> dossier/sous-dossier par défaut). Replier un
+ * dossier démonte ses zones de dépôt de sous-dossiers ; y déposer un cours le range alors dans son
+ * sous-dossier par défaut, comme un dépôt sur un dossier sans sous-dossier visé.
  */
 export function FolderNav({ filter, onSelect, onDeleteFolder, onDeleteSubfolder }: FolderNavProps) {
   const { data: folders, isLoading } = useCourseFolders();
   const defaultTarget: DropTarget = { kind: "default" };
   const { setNodeRef: setNavRef } = useDroppable({ id: "folder-nav-default", data: defaultTarget });
+
+  const [collapsed, setCollapsed] = useLocalStorageState<string[]>(COLLAPSED_STORAGE_KEY, []);
+  const collapsedSet = new Set(collapsed ?? []);
+  const isExpanded = (name: string) => !collapsedSet.has(name);
+  const toggle = (name: string) => {
+    const next = new Set(collapsedSet);
+    if (next.has(name)) next.delete(name);
+    else next.add(name);
+    setCollapsed([...next]);
+  };
 
   return (
     <nav ref={setNavRef} aria-label="Dossiers de cours" className="space-y-0.5">
@@ -164,6 +209,8 @@ export function FolderNav({ filter, onSelect, onDeleteFolder, onDeleteSubfolder 
       {folders.map((f) => (
         <FolderRow
           key={f.name}
+          isExpanded={isExpanded(f.name)}
+          onToggle={() => toggle(f.name)}
           folder={f}
           isActive={filter?.folder === f.name && !filter.subfolder}
           filter={filter}
