@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { repairDoubleScripts, repairLatexEscapes, splitBareMath, stripMathDelimiters, toAccentedMath } from "./mathNotation";
+import {
+  repairDoubledBackslash,
+  repairDoubleScripts,
+  repairLatexEscapes,
+  splitBareMath,
+  stripMathDelimiters,
+  toAccentedMath,
+} from "./mathNotation";
 
 describe("stripMathDelimiters", () => {
   const shapley = String.raw`\phi_i(v) = \sum_{S \subseteq N \setminus \{i\}} \frac{|S|!(|N| - |S| - 1)!}{|N|!} \Big( v(S \cup \{i\}) - v(S) \Big)`;
@@ -95,6 +102,26 @@ describe("repairDoubleScripts", () => {
 
   it("ne touche pas au texte normal", () => {
     expect(repairDoubleScripts(String.raw`\frac{1}{2}`)).toBe(String.raw`\frac{1}{2}`);
+  });
+});
+
+describe("repairDoubledBackslash", () => {
+  it.each([
+    [String.raw`\\bigcap_{k=1}^\\infty E^k`, String.raw`\bigcap_{k=1}^\infty E^k`],
+    [String.raw`\\{c, d\} \\not\\subseteq E`, String.raw`\{c, d\} \not\subseteq E`],
+    [String.raw`\\mathcal{P}_1`, String.raw`\mathcal{P}_1`],
+    [String.raw`\\\\bigcap`, String.raw`\bigcap`],
+  ])("répare l'antislash doublé (%s)", (broken, fixed) => {
+    expect(repairDoubledBackslash(broken)).toBe(fixed);
+  });
+
+  it("ne touche pas à un vrai saut de ligne LaTeX (tableau/matrice)", () => {
+    const matrix = String.raw`\begin{matrix} a & b \\ c & d \end{matrix}`;
+    expect(repairDoubledBackslash(matrix)).toBe(matrix);
+  });
+
+  it("ne touche pas au texte normal", () => {
+    expect(repairDoubledBackslash(String.raw`\frac{1}{2}`)).toBe(String.raw`\frac{1}{2}`);
   });
 });
 

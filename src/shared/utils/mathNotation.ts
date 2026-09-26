@@ -60,6 +60,20 @@ export function repairDoubleScripts(text: string): string {
   return text.replace(/\^{2,}/g, "^").replace(/_{2,}/g, "_");
 }
 
+/**
+ * `\\bigcap`, `\\{`, `\\infty` : antislash doublé par erreur devant une commande LaTeX ou une
+ * accolade échappée (le modèle sur-échappe parfois son propre backslash). KaTeX lit `\\` comme la
+ * commande de saut de ligne, jamais comme un antislash littéral, donc `\\bigcap` échoue au lieu de
+ * produire `\bigcap` (et pire, `^\\infty` échoue carrément : un saut de ligne n'est pas une valeur
+ * d'exposant). Un vrai `\\` de saut de ligne (tableau, matrice) n'est jamais immédiatement suivi
+ * d'une lettre ou d'une accolade — on ne fusionne donc que ce cas précis, jamais `a & b \\ c & d`.
+ *
+ * @example repairDoubledBackslash("\\\\bigcap_{k=1}^\\\\infty") // String.raw`\bigcap_{k=1}^\infty`
+ */
+export function repairDoubledBackslash(text: string): string {
+  return text.replace(/\\{2,}(?=[A-Za-z{}])/g, "\\");
+}
+
 // ─── Formules écrites sans délimiteurs `$` ───────────────────
 
 /** Fragment de texte brut ou formule LaTeX (sans délimiteurs). */
