@@ -5,13 +5,16 @@ import type { CourseHistoryItem } from "../history.types";
 interface HistoryTimelineProps {
   items: CourseHistoryItem[];
   onDeleteClick: (id: string) => void;
+  onMoveClick: (item: CourseHistoryItem) => void;
+  /** Affiche le badge de dossier sur chaque ligne — vue « Tous les cours » (pas de filtre actif). */
+  showFolder?: boolean;
 }
 
 /**
  * Timeline regroupée par date puis par tranche horaire.
  * Chaque groupe de date est enroulé par défaut (<details>).
  */
-export function HistoryTimeline({ items, onDeleteClick }: HistoryTimelineProps) {
+export function HistoryTimeline({ items, onDeleteClick, onMoveClick, showFolder = false }: HistoryTimelineProps) {
   const groups = groupHistoryByDateAndHour(items);
 
   return (
@@ -37,7 +40,13 @@ export function HistoryTimeline({ items, onDeleteClick }: HistoryTimelineProps) 
                 </h4>
                 <div className="space-y-0.5">
                   {bucket.items.map((item) => (
-                    <HistoryItem key={item.id} item={item} onDeleteClick={onDeleteClick} />
+                    <HistoryItem
+                      key={item.id}
+                      item={item}
+                      onDeleteClick={onDeleteClick}
+                      onMoveClick={onMoveClick}
+                      showFolder={showFolder}
+                    />
                   ))}
                 </div>
               </div>
