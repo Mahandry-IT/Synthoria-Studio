@@ -56,7 +56,7 @@ export function ReviewSession() {
           {summary.correct}/{summary.total} cartes sues ({summary.percent} %). Les cartes ratées reviennent demain.
         </p>
         <Link
-          href="/dashboard"
+          href="/"
           onClick={() => queryClient.invalidateQueries({ queryKey: [DUE_CARDS_KEY] })}
           className="inline-block text-sm font-medium text-indigo-600 hover:underline"
         >

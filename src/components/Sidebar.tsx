@@ -22,8 +22,8 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: "Dashboard", href: "/dashboard", icon: <DashboardIcon /> },
-  { label: "Upload", href: "/", icon: <CloudUploadIcon /> },
+  { label: "Dashboard", href: "/", icon: <DashboardIcon /> },
+  { label: "Upload", href: "/upload", icon: <CloudUploadIcon /> },
   { label: "Question", href: "/ask", icon: <QuizIcon /> },
   { label: "Review", href: "/review", icon: <StyleIcon /> },
   { label: "History", href: "/history", icon: <HistoryIcon /> },
