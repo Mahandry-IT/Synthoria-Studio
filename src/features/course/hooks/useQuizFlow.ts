@@ -14,17 +14,23 @@ export interface UseQuizFlowReturn {
   answer: (indices: number[]) => void;
   next: () => void;
   restart: () => void;
+  /** Arrête le quiz en cours (anti-triche : sortie du plein écran, changement d'onglet, perte de focus). No-op si le quiz n'est pas actif. */
+  abort: (reason: string) => void;
+  /** Raison de l'arrêt (phase `"aborted"`), sinon `null`. */
+  abortReason: string | null;
   isActive: boolean;
 }
 
 /**
- * Machine à états pour le flux QCM : intro → in_progress → results.
+ * Machine à états pour le flux QCM : intro → in_progress → results (ou aborted, si le quiz est
+ * interrompu — anti-triche plein écran, voir useFullscreenAntiCheat).
  * Gère la phase, l'index courant, les réponses et le score.
  */
 export function useQuizFlow(questions: QuizQuestion[]): UseQuizFlowReturn {
   const [phase, setPhase] = useState<QuizPhase>("intro");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<QuizUserAnswer[]>([]);
+  const [abortReason, setAbortReason] = useState<string | null>(null);
 
   const total = questions.length;
 
@@ -70,6 +76,13 @@ export function useQuizFlow(questions: QuizQuestion[]): UseQuizFlowReturn {
     setPhase("intro");
     setCurrentIndex(0);
     setAnswers([]);
+    setAbortReason(null);
+  }, []);
+
+  /** Idempotent : n'a d'effet que si le quiz est en cours (un 2e événement de triche est un no-op). */
+  const abort = useCallback((reason: string) => {
+    setPhase((p) => (p === "in_progress" ? "aborted" : p));
+    setAbortReason(reason);
   }, []);
 
   // Score = nombre de questions correctes
@@ -104,6 +117,8 @@ export function useQuizFlow(questions: QuizQuestion[]): UseQuizFlowReturn {
     answer,
     next,
     restart,
+    abort,
+    abortReason,
     isActive,
   };
 }

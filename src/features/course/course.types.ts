@@ -212,7 +212,7 @@ export interface QuizQuestion {
 
 // ─── Quiz flow types ───────────────────────────────────────
 
-export type QuizPhase = "intro" | "in_progress" | "results";
+export type QuizPhase = "intro" | "in_progress" | "results" | "aborted";
 
 export interface QuizUserAnswer {
   questionIndex: number;
