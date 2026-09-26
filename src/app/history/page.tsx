@@ -63,7 +63,7 @@ export default function HistoryPage() {
           />
         </Card>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           {isLoading && (
             <div className="space-y-4">
               <Skeleton lines={2} />
