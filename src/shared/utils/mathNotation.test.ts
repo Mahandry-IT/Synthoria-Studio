@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { repairLatexEscapes, splitBareMath, stripMathDelimiters, toAccentedMath } from "./mathNotation";
+import { repairDoubleScripts, repairLatexEscapes, splitBareMath, stripMathDelimiters, toAccentedMath } from "./mathNotation";
 
 describe("stripMathDelimiters", () => {
   const shapley = String.raw`\phi_i(v) = \sum_{S \subseteq N \setminus \{i\}} \frac{|S|!(|N| - |S| - 1)!}{|N|!} \Big( v(S \cup \{i\}) - v(S) \Big)`;
@@ -76,6 +76,25 @@ describe("repairLatexEscapes", () => {
   it("est idempotent", () => {
     const once = repairLatexEscapes("\u000Crac{1}{2}");
     expect(repairLatexEscapes(once)).toBe(once);
+  });
+});
+
+describe("repairDoubleScripts", () => {
+  it.each([
+    [String.raw`x^^*`, String.raw`x^*`],
+    [String.raw`f_i(x^^*)`, String.raw`f_i(x^*)`],
+    [String.raw`x___i`, String.raw`x_i`],
+    [String.raw`x^^^*`, String.raw`x^*`],
+  ])("fusionne les exposants/indices dupliqués (%s)", (broken, fixed) => {
+    expect(repairDoubleScripts(broken)).toBe(fixed);
+  });
+
+  it("ne touche pas à un exposant imbriqué valide", () => {
+    expect(repairDoubleScripts(String.raw`x^{a^b}`)).toBe(String.raw`x^{a^b}`);
+  });
+
+  it("ne touche pas au texte normal", () => {
+    expect(repairDoubleScripts(String.raw`\frac{1}{2}`)).toBe(String.raw`\frac{1}{2}`);
   });
 });
 
