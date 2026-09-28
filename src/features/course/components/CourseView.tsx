@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { CourseMetaHeader } from "./CourseMetaHeader";
 import { SourcesList } from "./SourcesList";
 import { SectionsList } from "./SectionsList";
@@ -11,10 +11,11 @@ import { SummaryBlock } from "./SummaryBlock";
 import { NextStepsList } from "./NextStepsList";
 import { AnswerBlock } from "./AnswerBlock";
 import { VideoCards } from "./VideoCards";
+import { AddCourseContentButton } from "./learning/AddCourseContentButton";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
 import { SessionPodcast } from "@/features/podcast/components/SessionPodcast";
-import type { CourseGenerationResponse } from "../course.types";
+import type { AddCourseSectionsResponse, CourseGenerationResponse, CourseSection } from "../course.types";
 
 interface CourseViewProps {
   data: CourseGenerationResponse;
@@ -35,6 +36,23 @@ export function CourseView({ data, sessionId: sessionIdProp }: CourseViewProps) 
   const isMode2 = data.mode === "file_question";
   const quiz = data.quiz ?? [];
   const quizFlow = useQuizFlow(quiz);
+
+  // Sections/next_steps ajoutées après coup (bouton « Ajouter du contenu ») : appliquées en local
+  // par-dessus les données reçues, comme les overrides de SectionsList, sans dépendre d'un état
+  // mutable détenu par le parent (page Ask ou historique).
+  const [added, setAdded] = useState<{ sections: CourseSection[]; nextSteps: string[] | null }>({
+    sections: [],
+    nextSteps: null,
+  });
+  const sections = [...(data.sections ?? []), ...added.sections];
+  const nextSteps = added.nextSteps ?? data.next_steps ?? [];
+
+  function handleContentAdded(result: AddCourseSectionsResponse) {
+    setAdded((current) => ({
+      sections: [...current.sections, ...result.sections],
+      nextSteps: result.next_steps,
+    }));
+  }
 
   const quizOnOwnPage = quizFlow.phase !== "intro";
 
@@ -90,9 +108,9 @@ export function CourseView({ data, sessionId: sessionIdProp }: CourseViewProps) 
         </Card>
       )}
 
-      {data.sections && data.sections.length > 0 && (
+      {sections.length > 0 && (
         <SectionsList
-          sections={data.sections}
+          sections={sections}
           sessionId={sessionId}
           courseKey={sessionId ?? data.meta?.title ?? "cours"}
         />
@@ -106,8 +124,16 @@ export function CourseView({ data, sessionId: sessionIdProp }: CourseViewProps) 
 
       {data.summary && <SummaryBlock summary={data.summary} />}
 
-      {data.next_steps && data.next_steps.length > 0 && (
-        <NextStepsList steps={data.next_steps} />
+      {nextSteps.length > 0 && <NextStepsList steps={nextSteps} />}
+
+      {sessionId && (
+        <div className="flex justify-center">
+          <AddCourseContentButton
+            sessionId={sessionId}
+            hasNextSteps={nextSteps.length > 0}
+            onAdded={handleContentAdded}
+          />
+        </div>
       )}
     </div>
   );

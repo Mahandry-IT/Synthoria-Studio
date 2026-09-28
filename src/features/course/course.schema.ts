@@ -351,6 +351,14 @@ export const recallResponseSchema = z.object({
 /** Réponse de POST .../regenerate : la section mise à jour (mêmes règles que dans le cours). */
 export const regenerateSectionResponseSchema = courseSectionSchema;
 
+// ─── Ajout de contenu à un cours déjà généré ──────────────────
+
+/** Réponse de POST /courses/{session_id}/sections */
+export const addCourseSectionsResponseSchema = z.object({
+  sections: z.array(courseSectionSchema),
+  next_steps: z.array(z.string()).optional().default([]),
+});
+
 // ─── Note libre sur une section ───────────────────────────────
 
 /** Requête de PUT .../note (mêmes bornes que le backend ; vide = note effacée) */
