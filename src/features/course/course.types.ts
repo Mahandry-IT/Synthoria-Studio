@@ -363,6 +363,16 @@ export interface MoreSectionsRequest {
   sections: PlannedSection[];
 }
 
+/** Réponse de POST /courses/{session_id}/sections : nouvelles sections ajoutées à un cours déjà généré */
+export interface AddCourseSectionsResponse {
+  sections: CourseSection[];
+  /**
+   * Valeur finale de `next_steps` après l'opération (pistes consommées retirées si les nouvelles
+   * sections en sont issues, inchangée sinon) : remplace l'ancienne valeur.
+   */
+  next_steps: string[];
+}
+
 // ─── Error types ────────────────────────────────────────────
 
 export const ERROR_MESSAGES: Record<number, string> = {

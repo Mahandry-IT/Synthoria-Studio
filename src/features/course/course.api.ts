@@ -1,6 +1,7 @@
 import { deleteJson, getJson, postJson, putJson } from "@/shared/api/httpClient";
 import type { PaginatedResponse } from "@/shared/types/pagination";
 import type {
+  AddCourseSectionsResponse,
   CourseFromPlanRequest,
   CourseGenerationRequest,
   CourseGenerationResponse,
@@ -17,6 +18,7 @@ import type {
   VideoNoteResponse,
 } from "./course.types";
 import {
+  addCourseSectionsResponseSchema,
   courseFromPlanRequestSchema,
   coursePlanSchema,
   courseResponseSchema,
@@ -260,6 +262,30 @@ export async function regenerateSection(sessionId: string, sectionId: string): P
   if (!parsed.success) {
     console.error("Zod validation failed for regenerate section:", parsed.error);
     throw new Error("Réponse invalide du moteur IA pour la régénération. Réessayez.");
+  }
+  return parsed.data;
+}
+
+/**
+ * Ajoute une ou plusieurs sections à un cours déjà généré.
+ *
+ * `instructions` vide : le contenu vient de « Prochaines étapes » si le cours en a, sinon de
+ * nouveaux sujets proposés par le modèle à partir du cours existant.
+ *
+ * @throws {HttpError} 404 session inconnue, 429 (trop de demandes), 502/503 échec du moteur IA
+ * @throws {Error} si la réponse du serveur est invalide
+ */
+export async function addCourseSections(sessionId: string, instructions: string): Promise<AddCourseSectionsResponse> {
+  const raw = await postJson<unknown>(
+    `/courses/${encodeURIComponent(sessionId)}/sections`,
+    { instructions },
+    { timeout: REGENERATE_SECTION_TIMEOUT_MS, noRetry: true },
+  );
+
+  const parsed = addCourseSectionsResponseSchema.safeParse(raw);
+  if (!parsed.success) {
+    console.error("Zod validation failed for add course sections:", parsed.error);
+    throw new Error("Réponse invalide du moteur IA pour l'ajout de contenu. Réessayez.");
   }
   return parsed.data;
 }
