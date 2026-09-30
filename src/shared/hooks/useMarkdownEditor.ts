@@ -5,6 +5,7 @@ import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "@tiptap/markdown";
 import { Placeholder } from "@tiptap/extensions";
+import { mathExtensions } from "@/components/editor/mathExtensions";
 import { normalizeEditorMarkdown } from "@/shared/utils/markdown";
 
 interface UseMarkdownEditorOptions {
@@ -46,6 +47,7 @@ export function useMarkdownEditor({
     extensions: [
       StarterKit.configure({ heading: false, blockquote: false, horizontalRule: false, link: false, underline: false }),
       Markdown,
+      ...mathExtensions,
       Placeholder.configure({ placeholder: placeholder ?? "" }),
     ],
     content: value || (bulletList ? "- " : ""),

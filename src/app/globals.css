@@ -154,3 +154,20 @@
   color: #9ca3af;
   pointer-events: none;
 }
+
+/* Formules LaTeX (KaTeX) des saisies riches : en bloc, défilement horizontal si trop large */
+.rich-text div[data-type="block-math"] {
+  overflow-x: auto;
+  text-align: center;
+}
+
+.rich-text .tiptap-mathematics-render--editable {
+  cursor: text;
+}
+
+.rich-text .inline-math-error,
+.rich-text .block-math-error {
+  color: #b91c1c;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8125rem;
+}

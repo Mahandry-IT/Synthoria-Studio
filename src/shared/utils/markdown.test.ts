@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MarkdownManager } from "@tiptap/markdown";
 import StarterKit from "@tiptap/starter-kit";
+import { mathExtensions } from "@/components/editor/mathExtensions";
 import {
   markdownToPlain,
   normalizeEditorMarkdown,
@@ -9,14 +10,20 @@ import {
 } from "./markdown";
 
 // Même chaîne que l'éditeur : Markdown → document Tiptap → Markdown, puis normalisation
-const manager = new MarkdownManager({ extensions: [StarterKit] });
+const manager = new MarkdownManager({ extensions: [StarterKit, ...mathExtensions] });
 const roundTrip = (markdown: string) => normalizeEditorMarkdown(manager.serialize(manager.parse(markdown)));
 
 describe("normalizeEditorMarkdown (aller-retour éditeur)", () => {
   it.each([
     "**gras**, *italique*, ~~barré~~ et `code`",
-    "Formule $a_b + c_d$ et $$x_{n+1}$$",
+    "Formule $a_b + c_d$ et $a_b$",
+    "$$\nx_{n+1}\n$$",
     String.raw`$\frac{a}{b}$ et $\alpha_1$`,
+    String.raw`$\begin{pmatrix} a & b \\ c & d \end{pmatrix}$`,
+    String.raw`$$
+\sum_{i=1}^{n} \frac{1}{i}
+$$`,
+    "- énergie $E = mc^2$\n- **note** $a_b$",
     "x_1 et snake_case",
     "a < b > c & d",
     "- un\n- **deux**",
