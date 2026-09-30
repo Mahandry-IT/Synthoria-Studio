@@ -19,7 +19,7 @@ import { useAskFlow } from "@/features/course/hooks/useAskFlow";
 export default function AskPage() {
   const flow = useAskFlow();
   const isBusy = flow.isPlanning || flow.isGenerating || flow.isOpeningCourse;
-  const showResult = flow.view === "result" && flow.phase === "plan_review";
+  const showResult = flow.view === "result" && (flow.phase === "plan_review" || flow.isLoadingPlan);
 
   // Modals d'attente, communs aux deux écrans : plan → cours
   const loadingModals = (
@@ -56,6 +56,8 @@ export default function AskPage() {
           ← Retour au formulaire
         </Button>
       </div>
+
+      {flow.isLoadingPlan && <p className="text-sm text-gray-500">Chargement du plan…</p>}
 
       {flow.pendingPlan && !flow.isPlanning && (
         <PlanReview

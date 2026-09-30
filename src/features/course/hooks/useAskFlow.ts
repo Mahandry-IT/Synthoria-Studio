@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { generateCourse, generateCourseFromPlan, generateCoursePlan } from "../course.api";
+import { generateCourse, generateCourseFromPlan, generateCoursePlan, getPendingPlan } from "../course.api";
 import {
   LAST_COURSE_ID_STORAGE_KEY,
   PENDING_PLAN_STORAGE_KEY,
   resolveAskPhase,
+  toPendingPlan,
   type AskPhase,
   type PendingPlan,
 } from "../askFlow";
@@ -29,6 +30,8 @@ interface UseAskFlowReturn {
   phase: AskPhase;
   view: AskView;
   pendingPlan: PendingPlan | null;
+  /** Relecture du plan en attente côté backend en cours */
+  isLoadingPlan: boolean;
   /** Génération du plan en cours */
   isPlanning: boolean;
   /** Génération du cours complet en cours (depuis le plan ou en direct) */
@@ -54,23 +57,42 @@ interface UseAskFlowReturn {
 /**
  * Orchestre le flux de la page /ask : question → plan (revue/édition) → cours.
  * Le cours généré n'est pas gardé ici : on redirige vers sa page (/history/[id]) et seul son id
- * est mémorisé (sessionStorage) pour « Revoir le cours ». Le plan en attente y est aussi persisté.
- * Un plan reste en attente tant que le cours n'a pas été généré : un échec de
+ * est mémorisé (sessionStorage) pour « Revoir le cours ». Du plan en attente, seul l'id est mémorisé :
+ * le plan est relu côté backend (source de vérité), donc un plan supprimé depuis le dashboard
+ * n'est plus proposé. Un plan reste en attente tant que le cours n'a pas été généré : un échec de
  * génération (ou un plan expiré) permet de réessayer ou de régénérer le plan.
  */
 export function useAskFlow(): UseAskFlowReturn {
   const router = useRouter();
   const [lastCourseId, setLastCourseId] = useSessionStorageState<string>(LAST_COURSE_ID_STORAGE_KEY, null);
-  const [pendingPlan, setPendingPlan] = useSessionStorageState<PendingPlan>(PENDING_PLAN_STORAGE_KEY, null);
+  const [pendingPlanId, setPendingPlanId] = useSessionStorageState<string>(PENDING_PLAN_STORAGE_KEY, null);
+  const queryClient = useQueryClient();
+  const planQuery = useQuery({
+    queryKey: ["pending-plan", pendingPlanId],
+    queryFn: async () => toPendingPlan(await getPendingPlan(pendingPlanId as string)),
+    enabled: pendingPlanId !== null,
+    retry: false,
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+  });
+  const pendingPlan: PendingPlan | null = pendingPlanId !== null ? (planQuery.data ?? null) : null;
   const enqueuePodcast = useEnqueuePodcast();
   const openCourse = useOpenCourse(() => setLastCourseId(null));
   const [lastRequest, setLastRequest] = useState<CoursePlanRequest | null>(null);
-  const [view, setView] = useState<AskView>(() => (pendingPlan ? "result" : "form"));
+  const [view, setView] = useState<AskView>(() => (pendingPlanId ? "result" : "form"));
+
+  // Plan expiré ou supprimé : on l'oublie (la phase retombe sur le formulaire)
+  useEffect(() => {
+    if (!planQuery.isError) return;
+    toastError(planQuery.error);
+    setPendingPlanId(null);
+  }, [planQuery.isError, planQuery.error, setPendingPlanId]);
 
   const planMutation = useMutation({
     mutationFn: generateCoursePlan,
     onSuccess: (plan, request) => {
-      setPendingPlan({ request, plan });
+      queryClient.setQueryData(["pending-plan", plan.plan_id], { request, plan });
+      setPendingPlanId(plan.plan_id);
       setView("result");
       toastSuccess("Plan généré. Relisez-le, modifiez-le si besoin, puis validez.");
     },
@@ -78,7 +100,7 @@ export function useAskFlow(): UseAskFlowReturn {
   });
 
   const onCourseGenerated = (data: CourseGenerationResponse) => {
-    setPendingPlan(null);
+    setPendingPlanId(null);
     setView("form");
     if (!data.session_id) {
       toastWarning("Le cours a été généré mais n'a pas pu être enregistré : impossible de l'ouvrir.");
@@ -105,7 +127,7 @@ export function useAskFlow(): UseAskFlowReturn {
 
   function reset() {
     setLastCourseId(null);
-    setPendingPlan(null);
+    setPendingPlanId(null);
     planMutation.reset();
     fromPlanMutation.reset();
     directMutation.reset();
@@ -143,6 +165,7 @@ export function useAskFlow(): UseAskFlowReturn {
     phase: resolveAskPhase(pendingPlan, lastCourseId),
     view,
     pendingPlan,
+    isLoadingPlan: planQuery.isLoading,
     isPlanning: planMutation.isPending,
     isGenerating: fromPlanMutation.isPending || directMutation.isPending,
     isOpeningCourse: openCourse.isPending,
