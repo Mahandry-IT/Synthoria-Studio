@@ -60,7 +60,7 @@ export function QuizQuestionStep({
     fieldsetRef.current?.focus();
   }, [index]);
 
-  // Timer countdown — reset à chaque nouvelle question
+  // Timer countdown — l'état repart de zéro à chaque question (le parent remonte le composant via `key`)
   useEffect(() => {
     if (!isActive || timeLeft == null || timeLeft <= 0) return;
 
@@ -85,13 +85,6 @@ export function QuizQuestionStep({
       onNext([]);
     }
   });
-
-  // Reset state quand la question change
-  useEffect(() => {
-    setSelected(new Set());
-    setTimeLeft(question.time_limit_seconds ?? null);
-    expiredRef.current = false;
-  }, [question, index]);
 
   const handleChange = useCallback((optionIndex: number) => {
     setSelected((prev) => {
