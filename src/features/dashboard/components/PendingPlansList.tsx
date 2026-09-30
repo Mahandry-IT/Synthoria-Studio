@@ -28,7 +28,7 @@ export function PendingPlansList() {
   const [page, setPage] = useState(1);
   const [confirmingPlanId, setConfirmingPlanId] = useState<string | null>(null);
   const { data, isLoading, error, refetch } = usePendingPlans(page, PAGE_SIZE);
-  const resume = useResumePlan();
+  const { resume } = useResumePlan();
   const deletePlanMutation = useDeletePlan();
   const now = useNow(30_000);
 
@@ -67,7 +67,6 @@ export function PendingPlansList() {
         <ul className="divide-y divide-gray-100">
           {plans.map((plan) => {
             const soon = isExpiringSoon(plan.expires_at, now);
-            const isResuming = resume.isPending && resume.variables === plan.plan_id;
 
             return (
               <li key={plan.plan_id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
@@ -89,10 +88,8 @@ export function PendingPlansList() {
                     type="button"
                     size="sm"
                     variant="outline"
-                    loading={isResuming}
-                    disabled={resume.isPending}
                     aria-label={`Reprendre le plan ${plan.title || markdownToPlain(plan.question)}`}
-                    onClick={() => resume.mutate(plan.plan_id)}
+                    onClick={() => resume(plan.plan_id)}
                   >
                     Reprendre
                   </Button>

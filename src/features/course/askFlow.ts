@@ -1,6 +1,7 @@
 import type { CoursePlan, CoursePlanRequest } from "./course.types";
 
 /** Clés de sessionStorage de l'état de /ask (partagées avec le dashboard pour « Reprendre le plan »). */
+/** Seul l'id du plan en attente est conservé : le plan est relu depuis le backend, source de vérité. */
 /** Seul l'id du dernier cours est conservé : le cours lui-même est relu depuis sa page (/history/[id]). */
 export const LAST_COURSE_ID_STORAGE_KEY = "synthoria:last-course-id";
 export const PENDING_PLAN_STORAGE_KEY = "synthoria:pending-plan";
@@ -38,14 +39,24 @@ export function toPendingPlan(detail: CoursePlan & { question: string; filenames
 }
 
 /**
- * Dépose un plan à reprendre dans le sessionStorage : /ask l'y lit à son montage et ouvre la
- * revue du plan. No-op silencieux si le stockage est indisponible (mode privé).
+ * Mémorise l'id du plan à reprendre dans le sessionStorage : /ask le relit côté backend à son
+ * montage et ouvre la revue du plan. No-op silencieux si le stockage est indisponible (mode privé).
  */
-export function storePendingPlan(pending: PendingPlan): boolean {
+export function storePendingPlanId(planId: string): boolean {
   try {
-    sessionStorage.setItem(PENDING_PLAN_STORAGE_KEY, JSON.stringify(pending));
+    sessionStorage.setItem(PENDING_PLAN_STORAGE_KEY, JSON.stringify(planId));
     return true;
   } catch {
     return false;
+  }
+}
+
+/** Oublie le plan en attente s'il s'agit de `planId` (plan supprimé depuis le dashboard). */
+export function forgetPendingPlanId(planId: string): void {
+  try {
+    const stored = sessionStorage.getItem(PENDING_PLAN_STORAGE_KEY);
+    if (stored !== null && JSON.parse(stored) === planId) sessionStorage.removeItem(PENDING_PLAN_STORAGE_KEY);
+  } catch {
+    // stockage indisponible : rien à oublier
   }
 }

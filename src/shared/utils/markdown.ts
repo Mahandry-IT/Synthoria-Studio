@@ -13,12 +13,13 @@ const LIST_MARKER = /^\s*(?:[-*+]|\d+[.)])(?:\s+|$)/;
  * Corrige la sérialisation de l'éditeur pour qu'elle reste fidèle à la saisie :
  * - entités HTML (`&lt;`…) décodées : « a < b » doit arriver tel quel au modèle ;
  * - `\_` inutile retiré après une lettre/un chiffre (x_1, snake_case : jamais une emphase)
- *   et, avec `\\` et `\*`, dans les formules `$...$` que l'échappement casserait (\frac…).
+ *   et, avec `\*`, dans les formules `$...$` restées en texte. Les formules de l'éditeur sont des
+ *   nœuds sérialisés tels quels : leur `\\` (saut de ligne d'une matrice) doit rester intact.
  */
 export function normalizeEditorMarkdown(markdown: string): string {
   return markdown
     .replace(ENTITY_PATTERN, (entity) => ENTITIES[entity] ?? entity)
-    .replace(MATH_SEGMENT, (segment) => segment.replace(/\\([_*\\])/g, "$1"))
+    .replace(MATH_SEGMENT, (segment) => segment.replace(/\\([_*])/g, "$1"))
     .replace(/(?<=[\p{L}\p{N}])\\_/gu, "_")
     .trim();
 }

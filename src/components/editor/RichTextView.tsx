@@ -4,6 +4,7 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "@tiptap/markdown";
 import { markdownToPlain } from "@/shared/utils/markdown";
+import { mathExtensions } from "./mathExtensions";
 
 interface RichTextViewProps {
   /** Markdown issu d'un éditeur riche (question, note…). */
@@ -17,7 +18,7 @@ export function RichTextView({ markdown, className = "" }: RichTextViewProps) {
     {
       immediatelyRender: false,
       editable: false,
-      extensions: [StarterKit, Markdown],
+      extensions: [StarterKit, Markdown, ...mathExtensions],
       content: markdown,
       contentType: "markdown",
       editorProps: { attributes: { class: `rich-text ${className}` } },
