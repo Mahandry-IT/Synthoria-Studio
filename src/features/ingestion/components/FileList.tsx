@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useAllFiles } from "../hooks/useAllFiles";
 import { Skeleton } from "@/components/Skeleton";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
@@ -26,12 +26,11 @@ interface FileListProps {
  * Récupère tous les fichiers au montage, filtre et pagine côté client.
  */
 export function FileList({ onSelect, selected = [], multi = false, search = "", onDelete }: FileListProps) {
-  const [page, setPage] = useState(1);
+  // La page appartient à une recherche : quand elle change, on repart de la page 1 sans effet
+  const [pageState, setPageState] = useState({ search, page: 1 });
+  const page = pageState.search === search ? pageState.page : 1;
+  const setPage = (next: number) => setPageState({ search, page: next });
   const { data: allFiles, isLoading, error } = useAllFiles();
-
-  useEffect(() => {
-    setPage(1);
-  }, [search]);
 
   const filteredData = useMemo(() => {
     if (!allFiles.length && !isLoading) return [];
