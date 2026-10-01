@@ -3,6 +3,8 @@
 import { useState, useMemo, useEffect } from "react";
 import { useAllFiles } from "../hooks/useAllFiles";
 import { Skeleton } from "@/components/Skeleton";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import { Button } from "@/components/Button";
 import { Pagination } from "@/components/Pagination";
 
 const PAGE_SIZE = 10;
@@ -15,13 +17,15 @@ interface FileListProps {
   multi?: boolean;
   /** Terme de recherche pour filtrer les fichiers par nom */
   search?: string;
+  /** Si fourni, chaque ligne affiche un bouton de suppression (la confirmation est à la charge de l'appelant) */
+  onDelete?: (filename: string) => void;
 }
 
 /**
  * Liste paginée des fichiers PDF ingestés avec support de sélection et recherche.
  * Récupère tous les fichiers au montage, filtre et pagine côté client.
  */
-export function FileList({ onSelect, selected = [], multi = false, search = "" }: FileListProps) {
+export function FileList({ onSelect, selected = [], multi = false, search = "", onDelete }: FileListProps) {
   const [page, setPage] = useState(1);
   const { data: allFiles, isLoading, error } = useAllFiles();
 
@@ -114,6 +118,20 @@ export function FileList({ onSelect, selected = [], multi = false, search = "" }
                   <svg className="h-5 w-5 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
+                )}
+                {onDelete && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="danger"
+                    aria-label={`Supprimer le fichier ${file.filename}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onDelete(file.filename);
+                    }}
+                  >
+                    <DeleteOutlineIcon fontSize="small" />
+                  </Button>
                 )}
               </li>
             );
