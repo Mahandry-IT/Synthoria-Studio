@@ -14,7 +14,7 @@ export function IngestedFilesPanel() {
   return (
     <Card className="space-y-3 p-5">
       <h2 className="text-base font-semibold text-gray-900">Fichiers ingérés</h2>
-      <FileList onDelete={setConfirmingFilename} />
+      <FileList onDelete={setConfirmingFilename} pageSize={5} scrollClassName="" />
 
       {confirmingFilename && (
         <ConfirmDialog
