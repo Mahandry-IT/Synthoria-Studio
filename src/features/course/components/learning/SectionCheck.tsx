@@ -83,10 +83,12 @@ interface SectionCheckProps {
   questions: QuizQuestion[];
   /** Appelé quand toutes les questions ont été validées : la section est « terminée ». */
   onComplete: () => void;
+  /** Le titre « Vérifie » est déjà porté par l'étape du lecteur progressif. */
+  hideTitle?: boolean;
 }
 
 /** « Vérifie » : 2-3 questions rapides à la fin de la section, retour immédiat. */
-export function SectionCheck({ questions, onComplete }: SectionCheckProps) {
+export function SectionCheck({ questions, onComplete, hideTitle = false }: SectionCheckProps) {
   const [checked, setChecked] = useState(0);
 
   if (questions.length === 0) return null;
@@ -99,7 +101,7 @@ export function SectionCheck({ questions, onComplete }: SectionCheckProps) {
 
   return (
     <div className="space-y-4 rounded-lg border border-gray-200 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Vérifie</p>
+      {!hideTitle && <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Vérifie</p>}
       {questions.map((q, i) => (
         <CheckQuestion key={i} question={q} index={i} onChecked={handleChecked} />
       ))}
