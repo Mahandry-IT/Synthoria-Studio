@@ -18,10 +18,12 @@ interface RecallBoxProps {
   sessionId: string;
   sectionId: string;
   prompt: RecallPrompt;
+  /** Le titre est déjà porté par l'étape du lecteur progressif. */
+  hideTitle?: boolean;
 }
 
 /** « Explique avec tes mots » : l'apprenant reformule, l'IA évalue et indique les points manquants. */
-export function RecallBox({ sessionId, sectionId, prompt }: RecallBoxProps) {
+export function RecallBox({ sessionId, sectionId, prompt, hideTitle = false }: RecallBoxProps) {
   const [answer, setAnswer] = useState("");
   const recall = useRecallFeedback();
   const result = recall.data;
@@ -31,7 +33,9 @@ export function RecallBox({ sessionId, sectionId, prompt }: RecallBoxProps) {
 
   return (
     <div className="space-y-3 rounded-lg border border-gray-200 p-4 text-sm">
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Explique avec tes mots</p>
+      {!hideTitle && (
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Explique avec tes mots</p>
+      )}
       <RichText text={prompt.prompt} className="font-medium text-gray-900" />
       <RichTextEditor
         ariaLabel="Votre explication"

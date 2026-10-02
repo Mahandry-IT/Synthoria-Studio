@@ -169,6 +169,8 @@ export interface CourseSection {
   id?: string;
   /** Cycle pédagogique (défi → … → À toi → Vérifie → reformulation) ; absent des sessions historiques. */
   challenge?: string;
+  /** Idées attendues en réponse au défi (lues côté serveur pour l'analyse) ; absentes des anciennes sessions. */
+  challenge_key_points?: string[];
   faded_example?: FadedExample | null;
   check_questions?: QuizQuestion[];
   recall_prompt?: RecallPrompt | null;
@@ -314,6 +316,13 @@ export interface RecallResponse {
   verdict: "correct" | "partiel" | "incorrect";
   feedback: string;
   missing_points: string[];
+}
+
+/** Réponse de l'analyse d'une réponse au défi : oriente vers l'explication sans la révéler. */
+export interface ChallengeResponse {
+  verdict: "on_track" | "partial" | "off_track";
+  feedback: string;
+  hint: string;
 }
 
 /** Réponse de PUT .../sections/{id}/note */

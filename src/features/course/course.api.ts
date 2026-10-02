@@ -2,6 +2,7 @@ import { deleteJson, getJson, postJson, putJson } from "@/shared/api/httpClient"
 import type { PaginatedResponse } from "@/shared/types/pagination";
 import type {
   AddCourseSectionsResponse,
+  ChallengeResponse,
   CourseFromPlanRequest,
   CourseGenerationRequest,
   CourseGenerationResponse,
@@ -19,6 +20,8 @@ import type {
 } from "./course.types";
 import {
   addCourseSectionsResponseSchema,
+  challengeRequestSchema,
+  challengeResponseSchema,
   courseFromPlanRequestSchema,
   coursePlanSchema,
   courseResponseSchema,
@@ -236,6 +239,35 @@ export async function evaluateRecall(
   if (!parsed.success) {
     console.error("Zod validation failed for recall:", parsed.error);
     throw new Error("Réponse invalide du moteur IA pour l'évaluation. Réessayez.");
+  }
+  return parsed.data;
+}
+
+/**
+ * Analyse la réponse de l'apprenant au défi d'une section. Le défi et ses idées attendues sont lus
+ * côté serveur : seul le texte de l'apprenant est envoyé (analysé à la volée, non enregistré).
+ *
+ * @throws {Error} si la réponse est vide ou trop longue, ou si la réponse du serveur est invalide
+ * @throws {HttpError} 404 session/section inconnue, 422, 429 (trop d'analyses), 502, 503
+ */
+export async function evaluateChallenge(
+  sessionId: string,
+  sectionId: string,
+  answer: string,
+): Promise<ChallengeResponse> {
+  const request = challengeRequestSchema.safeParse({ answer });
+  if (!request.success) throw new Error(request.error.issues[0]?.message ?? "Réponse invalide.");
+
+  const raw = await postJson<unknown>(
+    `/courses/${encodeURIComponent(sessionId)}/sections/${encodeURIComponent(sectionId)}/challenge`,
+    request.data,
+    { timeout: RECALL_TIMEOUT_MS, noRetry: true },
+  );
+
+  const parsed = challengeResponseSchema.safeParse(raw);
+  if (!parsed.success) {
+    console.error("Zod validation failed for challenge:", parsed.error);
+    throw new Error("Réponse invalide du moteur IA pour l'analyse du défi. Réessayez.");
   }
   return parsed.data;
 }
