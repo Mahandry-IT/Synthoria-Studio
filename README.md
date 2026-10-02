@@ -33,12 +33,19 @@ npm start
 
 Le cours est rendu **par blocs typés** (`subsections[].blocks[]`, `src/features/course/components/blocks/`) : tableaux, listes, formules, code, exemples pas à pas, encadrés, schémas **Mermaid** (chargés à la demande, mode strict, SVG nettoyé) et graphiques SVG (barres, courbes, secteurs). Un type de bloc inconnu est ignoré ; les sessions historiques gardent le rendu `quoi/pourquoi/comment`.
 
-Chaque section suit le cycle **Défi → Pourquoi → Quoi → Comment → À toi → Vérifie → Explique avec tes mots** (`components/learning/`) :
-- le défi verrouille l'explication jusqu'à une tentative (ou « je ne sais pas ») ;
-- l'exemple à trous révèle ses étapes une à une ;
+**Niveau de détail.** Le formulaire de `/ask` propose un `select` « Niveau de détail » : **Express** (3 à 5 sections courtes), **Standard** (6 à 8 sections) ou **Approfondi** (défaut). Le champ `depth` est envoyé à `POST /courses/plan` (et à la génération directe), puis relu depuis `GET /courses/plans/{plan_id}` : la reprise du plan et « Régénérer le plan » gardent le mode. Un plan ou un cours sans `depth` est traité en `approfondi`.
+
+**Lecteur une section à la fois.** Les sections s'affichent une par une (`SectionsList` → `SectionNav` + `SectionReader`) : liste des sections avec leur état (faite / en cours / à faire), accès direct, boutons Précédent / Suivant ; sur mobile, la liste se replie derrière un bouton. La section courante, les étapes dévoilées et l'avancement de l'exemple à trous sont gardés en `sessionStorage` (logique pure testée dans `sectionProgress.ts`).
+
+Chaque section suit le cycle **Défi → Pourquoi → Quoi → Comment → À toi → Vérifie → Explique avec tes mots** (`components/learning/`), dévoilé progressivement :
+- le défi s'affiche seul ; « Valider ma réponse » envoie la réponse (≤ 1000 caractères) à `POST /courses/{session_id}/sections/{section_id}/challenge` (via le rewrite `/api`) : l'IA renvoie un verdict (`on_track` / `partial` / `off_track`), un retour et une piste, sans révéler l'explication. La réponse est analysée à la volée, non enregistrée ;
+- **« Je ne sais pas » déverrouille la suite sans aucun appel ni envoi** ; en cas d'erreur (429, 502…), un toast s'affiche et « Continuer sans analyse » reste possible ;
+- chaque étape suivante se déplie via « Continuer » (focus déplacé sur l'étape révélée) ; les étapes déjà vues restent repliables. Pourquoi / Quoi / Comment sont lus dans `subsections` ; une sous-section au titre non standard devient une étape générique, dans l'ordre reçu ;
+- l'exemple à trous révèle ses étapes une à une (annonce `aria-live`) ;
 - « Vérifie » donne un retour immédiat option par option ;
-- « Explique avec tes mots » envoie la reformulation (≤ 1000 caractères) à `POST /courses/{session_id}/sections/{section_id}/recall` (via le rewrite `/api`), la section et les points attendus étant lus côté serveur ;
-- la progression par section est gardée en `sessionStorage`.
+- « Explique avec tes mots » envoie la reformulation (≤ 1000 caractères) à `POST /courses/{session_id}/sections/{section_id}/recall`, la section et les points attendus étant lus côté serveur.
+
+Replis : une section sans défi ni sous-sections (sessions historiques) s'affiche en entier comme avant ; un cours sans `session_id` (non persisté) n'envoie jamais la réponse au défi (pas d'analyse ni de reformulation évaluée).
 
 À l'étape du plan, un **pré-test** facultatif marque les sections déjà maîtrisées (`mastery: "known"`) : le cours en génère une version condensée. La page **/review** et la carte « À réviser aujourd'hui » du dashboard proposent les flashcards issues des questions « Vérifie » (répétition espacée Leitner : J+1, J+3, J+7, J+21).
 
