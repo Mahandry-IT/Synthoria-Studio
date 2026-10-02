@@ -10,6 +10,13 @@ import {
   SECTION_NOTE_MAX_LENGTH,
   VIDEO_NOTE_MAX_LENGTH,
 } from "@/shared/utils/constants";
+import { COURSE_DEPTHS, DEFAULT_COURSE_DEPTH } from "./courseDepth";
+
+/** Niveau de détail choisi dans le formulaire. */
+export const courseDepthSchema = z.enum(COURSE_DEPTHS);
+
+/** Niveau de détail lu dans une réponse : absent (anciens plans/cours) ou inconnu → défaut. */
+const responseDepthSchema = courseDepthSchema.default(DEFAULT_COURSE_DEPTH).catch(DEFAULT_COURSE_DEPTH);
 
 // ─── Schemas de réponse (validation défensive) ──────────────
 
@@ -205,6 +212,7 @@ const courseMetaSchema = z.object({
   format: z.string().optional().default("focused_answer"),
   language: z.string().optional().default("fr"),
   generated_at: z.string().optional(),
+  depth: responseDepthSchema,
 });
 
 export const courseResponseSchema = z.object({
@@ -240,6 +248,7 @@ export const questionInputSchema = z.object({
   filename: z.union([z.string(), z.array(z.string())]).nullish(),
   format: z.enum(["focused_answer", "full_course", "quiz_only"]).optional(),
   language: z.string().optional(),
+  depth: courseDepthSchema.default(DEFAULT_COURSE_DEPTH),
 });
 
 export type QuestionInputValues = z.infer<typeof questionInputSchema>;
@@ -278,6 +287,7 @@ export const coursePlanSchema = z.object({
   sections: z.array(plannedSectionSchema).min(1),
   pretest: z.array(pretestItemSchema).optional().default([]),
   coverage_notes: z.string().default(""),
+  depth: responseDepthSchema,
 });
 
 /** Élément de GET /courses/plans */

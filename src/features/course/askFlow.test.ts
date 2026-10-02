@@ -37,10 +37,21 @@ describe("toPendingPlan", () => {
   it("sépare la requête d'origine du plan", () => {
     const pending = toPendingPlan(detail);
 
-    expect(pending.request).toEqual({ question: "Explique X" });
+    expect(pending.request).toEqual({ question: "Explique X", depth: "approfondi" });
     expect(pending.plan.plan_id).toBe("p-1");
     expect(pending.plan).not.toHaveProperty("question");
     expect(pending.plan).not.toHaveProperty("filenames");
+  });
+
+  it("reprend le niveau de détail du plan dans la requête (régénération du plan)", () => {
+    const pending = toPendingPlan({ ...detail, depth: "express" });
+
+    expect(pending.request.depth).toBe("express");
+    expect(pending.plan.depth).toBe("express");
+  });
+
+  it("un ancien plan sans niveau de détail est repris en approfondi", () => {
+    expect(toPendingPlan(detail).plan.depth).toBe("approfondi");
   });
 
   it("un seul fichier → chaîne, plusieurs → tableau", () => {
