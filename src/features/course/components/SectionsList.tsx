@@ -71,7 +71,7 @@ export function SectionsList({ sections, sessionId, courseKey }: SectionsListPro
       </div>
 
       <div className="gap-6 lg:grid lg:grid-cols-[16rem_minmax(0,1fr)]">
-        <div className="mb-4 lg:mb-0">
+        <div className="mb-4 lg:sticky lg:top-4 lg:mb-0 lg:self-start">
           <SectionNav
             items={sections.map((s, i) => ({
               key: keys[i],

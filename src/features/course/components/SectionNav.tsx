@@ -40,7 +40,7 @@ export function SectionNav({ items, currentKey, onSelect, summary }: SectionNavP
   const currentIndex = items.findIndex((item) => item.key === currentKey);
 
   return (
-    <nav aria-label="Sections du cours" className="lg:sticky lg:top-4">
+    <nav aria-label="Sections du cours">
       <button
         type="button"
         className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 lg:hidden"
@@ -56,7 +56,7 @@ export function SectionNav({ items, currentKey, onSelect, summary }: SectionNavP
       </button>
       <ol
         id={listId}
-        className={`${open ? "block" : "hidden"} mt-2 max-h-[70vh] space-y-1 overflow-y-auto rounded-lg border border-gray-200 bg-white p-2 lg:mt-0 lg:block`}
+        className={`${open ? "block" : "hidden"} mt-2 max-h-[70vh] lg:max-h-[calc(100vh-6rem)] space-y-1 overflow-y-auto rounded-lg border border-gray-200 bg-white p-2 lg:mt-0 lg:block`}
       >
         {items.map((item, i) => {
           const isCurrent = item.key === currentKey;
