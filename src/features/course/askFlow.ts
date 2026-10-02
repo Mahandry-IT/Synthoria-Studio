@@ -1,4 +1,5 @@
 import type { CoursePlan, CoursePlanRequest } from "./course.types";
+import { DEFAULT_COURSE_DEPTH } from "./courseDepth";
 
 /** Clés de sessionStorage de l'état de /ask (partagées avec le dashboard pour « Reprendre le plan »). */
 /** Seul l'id du plan en attente est conservé : le plan est relu depuis le backend, source de vérité. */
@@ -31,11 +32,14 @@ export function resolveAskPhase(
 /**
  * Construit le plan en attente de revue à partir d'un plan relu côté backend.
  * `filename` n'est renseigné que si des fichiers étaient sélectionnés (une chaîne pour un seul).
+ * Le niveau de détail est repris du plan (défaut : approfondi) pour que « Régénérer le plan »
+ * et la génération directe gardent le mode choisi à l'origine.
  */
 export function toPendingPlan(detail: CoursePlan & { question: string; filenames: string[] }): PendingPlan {
   const { question, filenames, ...plan } = detail;
   const filename = filenames.length === 0 ? undefined : filenames.length === 1 ? filenames[0] : filenames;
-  return { request: { question, ...(filename ? { filename } : {}) }, plan };
+  const depth = plan.depth ?? DEFAULT_COURSE_DEPTH;
+  return { request: { question, ...(filename ? { filename } : {}), depth }, plan: { ...plan, depth } };
 }
 
 /**

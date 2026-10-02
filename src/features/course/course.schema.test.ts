@@ -5,6 +5,8 @@ import {
   coursePlanSchema,
   courseResponseSchema,
   moreSectionsResponseSchema,
+  pendingPlanDetailSchema,
+  questionInputSchema,
   recallRequestSchema,
   recallResponseSchema,
   regenerateSectionResponseSchema,
@@ -215,6 +217,31 @@ describe("cycle pédagogique (courseResponseSchema, coursePlanSchema)", () => {
     expect(withPretest.pretest[0].question.correct_option_indices).toEqual([1]);
     expect(withPretest.sections[0].mastery).toBe("known");
     expect(coursePlanSchema.parse(plan).pretest).toEqual([]);
+  });
+});
+
+describe("niveau de détail (depth)", () => {
+  const plan = {
+    plan_id: "p", expires_at: "x", mode: "question_only", meta: {}, sections: [section(1)], coverage_notes: "",
+  };
+
+  it("questionInputSchema : approfondi par défaut, valeurs connues acceptées, inconnues refusées", () => {
+    expect(questionInputSchema.parse({ question: "Q" }).depth).toBe("approfondi");
+    expect(questionInputSchema.parse({ question: "Q", depth: "express" }).depth).toBe("express");
+    expect(questionInputSchema.parse({ question: "Q", depth: "standard" }).depth).toBe("standard");
+    expect(questionInputSchema.safeParse({ question: "Q", depth: "rapide" }).success).toBe(false);
+  });
+
+  it("plan relu : depth conservé, absent ou inconnu → approfondi", () => {
+    expect(pendingPlanDetailSchema.parse({ ...plan, depth: "standard" }).depth).toBe("standard");
+    expect(coursePlanSchema.parse(plan).depth).toBe("approfondi");
+    expect(coursePlanSchema.parse({ ...plan, depth: "inconnu" }).depth).toBe("approfondi");
+  });
+
+  it("meta du cours : depth lu, défaut approfondi pour les anciens cours", () => {
+    const base = { mode: "question_only", format: "focused_answer", sources: [] };
+    expect(courseResponseSchema.parse({ ...base, meta: { depth: "express" } }).meta.depth).toBe("express");
+    expect(courseResponseSchema.parse({ ...base, meta: {} }).meta.depth).toBe("approfondi");
   });
 });
 

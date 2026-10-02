@@ -3,6 +3,8 @@
  * Alignés sur la réponse réelle de l'API backend.
  */
 
+import type { CourseDepth } from "./courseDepth";
+
 // ─── Enums ──────────────────────────────────────────────────
 
 export type CourseFormat = string;
@@ -89,6 +91,8 @@ export interface CourseMeta {
   format?: string;
   language?: string;
   generated_at?: string;
+  /** Niveau de détail du cours (absent des anciens cours = approfondi). */
+  depth?: CourseDepth;
 }
 
 export interface CourseDiagram {
@@ -231,6 +235,8 @@ export interface CourseGenerationRequest {
   filename?: string | string[];
   /** Si true, récupère l'intégralité des chunks du/des fichier(s) */
   full_document?: boolean;
+  /** Niveau de détail (express / standard / approfondi) ; absent = approfondi côté backend. */
+  depth?: CourseDepth;
 }
 
 // ─── Response ───────────────────────────────────────────────
@@ -299,6 +305,8 @@ export interface CoursePlan {
   sections: PlannedSection[];
   pretest?: PretestItem[];
   coverage_notes: string;
+  /** Niveau de détail demandé (absent des anciens plans = approfondi). */
+  depth?: CourseDepth;
 }
 
 /** Réponse de l'évaluation d'une reformulation. */

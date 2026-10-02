@@ -140,6 +140,7 @@ export function useAskFlow(): UseAskFlowReturn {
     const request: CoursePlanRequest = {
       question: values.question,
       filename: values.filename ?? undefined,
+      depth: values.depth,
     };
     reset();
     setView("form");
