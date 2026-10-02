@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { COURSE_PLAN_MAX_SECTIONS } from "@/shared/utils/constants";
 import {
+  challengeRequestSchema,
+  challengeResponseSchema,
   courseFromPlanRequestSchema,
   coursePlanSchema,
   courseResponseSchema,
@@ -242,6 +244,30 @@ describe("niveau de détail (depth)", () => {
     const base = { mode: "question_only", format: "focused_answer", sources: [] };
     expect(courseResponseSchema.parse({ ...base, meta: { depth: "express" } }).meta.depth).toBe("express");
     expect(courseResponseSchema.parse({ ...base, meta: {} }).meta.depth).toBe("approfondi");
+  });
+});
+
+describe("défi analysé par l'IA", () => {
+  it("challengeResponseSchema valide le verdict, hint par défaut vide", () => {
+    expect(challengeResponseSchema.parse({ verdict: "on_track", feedback: "ok", hint: "h" }).hint).toBe("h");
+    expect(challengeResponseSchema.parse({ verdict: "partial", feedback: "ok" }).hint).toBe("");
+    expect(challengeResponseSchema.safeParse({ verdict: "correct", feedback: "x" }).success).toBe(false);
+  });
+
+  it("challengeRequestSchema borne la réponse (1 à 1000 caractères, trim)", () => {
+    expect(challengeRequestSchema.safeParse({ answer: "   " }).success).toBe(false);
+    expect(challengeRequestSchema.safeParse({ answer: "x".repeat(1001) }).success).toBe(false);
+    expect(challengeRequestSchema.parse({ answer: " ma piste " }).answer).toBe("ma piste");
+  });
+
+  it("challenge_key_points : lus s'ils existent, [] pour les anciennes sessions", () => {
+    const base = { mode: "question_only", format: "full_course", meta: {}, sources: [] };
+    const parsed = courseResponseSchema.parse({
+      ...base,
+      sections: [{ id: "1", title: "A", challenge_key_points: ["idée"] }, { id: "2", title: "B" }],
+    });
+    expect(parsed.sections?.[0].challenge_key_points).toEqual(["idée"]);
+    expect(parsed.sections?.[1].challenge_key_points).toEqual([]);
   });
 });
 

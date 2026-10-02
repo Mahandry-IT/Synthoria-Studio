@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  CHALLENGE_ANSWER_MAX_LENGTH,
   COURSE_PLAN_MAX_SECTIONS,
   COURSE_QUESTION_MAX_LENGTH,
   PLAN_OBJECTIVE_MAX_LENGTH,
@@ -157,6 +158,8 @@ const courseSectionSchema = z.object({
   id: z.string().optional(),
   /** Cycle pédagogique : tous optionnels (sessions historiques sans cycle) */
   challenge: z.string().optional().default(""),
+  /** Idées attendues en réponse au défi (lues par le serveur pour l'analyse) ; absentes des anciennes sessions. */
+  challenge_key_points: z.array(z.string()).optional().default([]),
   faded_example: fadedExampleSchema.nullish(),
   check_questions: z.array(z.lazy(() => quizQuestionSchema)).optional().default([]),
   recall_prompt: recallPromptSchema.nullish(),
@@ -354,6 +357,27 @@ export const recallResponseSchema = z.object({
   verdict: z.enum(["correct", "partiel", "incorrect"]),
   feedback: z.string(),
   missing_points: z.array(z.string()).optional().default([]),
+});
+
+// ─── Défi analysé par l'IA ────────────────────────────────────
+
+/** Requête de POST /courses/{session_id}/sections/{section_id}/challenge (mêmes bornes que le backend) */
+export const challengeRequestSchema = z.object({
+  answer: z
+    .string()
+    .trim()
+    .min(1, "Écrivez votre réponse avant de la valider.")
+    .max(
+      CHALLENGE_ANSWER_MAX_LENGTH,
+      `Votre réponse ne peut pas dépasser ${CHALLENGE_ANSWER_MAX_LENGTH} caractères.`,
+    ),
+});
+
+/** Réponse de POST .../challenge : orientation vers l'explication, sans la révéler. */
+export const challengeResponseSchema = z.object({
+  verdict: z.enum(["on_track", "partial", "off_track"]),
+  feedback: z.string(),
+  hint: z.string().optional().default(""),
 });
 
 // ─── Régénération d'une section incomplète ───────────────────
