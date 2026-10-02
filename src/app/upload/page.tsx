@@ -1,3 +1,4 @@
+import { IngestedFilesPanel } from "@/features/ingestion/components/IngestedFilesPanel";
 import { FileUploadPanel } from "@/features/ingestion/components/FileUploadPanel";
 
 export default function UploadPage() {
@@ -14,6 +15,8 @@ export default function UploadPage() {
       </div>
 
       <FileUploadPanel />
+
+      <IngestedFilesPanel />
     </div>
   );
 }

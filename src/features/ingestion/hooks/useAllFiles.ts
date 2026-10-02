@@ -31,11 +31,12 @@ export function useAllFiles(): UseAllFilesReturn {
   });
 
   // Déclenche le fetch des pages restantes dès que la première arrive
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = query;
   useEffect(() => {
-    if (query.hasNextPage && !query.isFetchingNextPage) {
-      query.fetchNextPage();
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
-  }, [query.hasNextPage, query.isFetchingNextPage, query.fetchNextPage]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return {
     data: query.data?.pages.flatMap((p) => p.data) ?? [],

@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useAllFiles } from "../hooks/useAllFiles";
 import { Skeleton } from "@/components/Skeleton";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import { Button } from "@/components/Button";
 import { Pagination } from "@/components/Pagination";
 
-const PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 10;
 interface FileListProps {
   /** Callback quand un ou plusieurs fichiers sont sélectionnés */
   onSelect?: (filenames: string[]) => void;
@@ -15,19 +17,24 @@ interface FileListProps {
   multi?: boolean;
   /** Terme de recherche pour filtrer les fichiers par nom */
   search?: string;
+  /** Si fourni, chaque ligne affiche un bouton de suppression (la confirmation est à la charge de l'appelant) */
+  onDelete?: (filename: string) => void;
+  /** Nombre de fichiers par page */
+  pageSize?: number;
+  /** Hauteur max de la liste (défilement interne) ; sans valeur, la page entière est affichée */
+  scrollClassName?: string;
 }
 
 /**
  * Liste paginée des fichiers PDF ingestés avec support de sélection et recherche.
  * Récupère tous les fichiers au montage, filtre et pagine côté client.
  */
-export function FileList({ onSelect, selected = [], multi = false, search = "" }: FileListProps) {
-  const [page, setPage] = useState(1);
+export function FileList({ onSelect, selected = [], multi = false, search = "", onDelete, pageSize = DEFAULT_PAGE_SIZE, scrollClassName = "max-h-48 overflow-y-auto" }: FileListProps) {
+  // La page appartient à une recherche : quand elle change, on repart de la page 1 sans effet
+  const [pageState, setPageState] = useState({ search, page: 1 });
+  const page = pageState.search === search ? pageState.page : 1;
+  const setPage = (next: number) => setPageState({ search, page: next });
   const { data: allFiles, isLoading, error } = useAllFiles();
-
-  useEffect(() => {
-    setPage(1);
-  }, [search]);
 
   const filteredData = useMemo(() => {
     if (!allFiles.length && !isLoading) return [];
@@ -38,10 +45,10 @@ export function FileList({ onSelect, selected = [], multi = false, search = "" }
     );
   }, [allFiles, search, isLoading]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredData.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
   const paginatedData = filteredData.slice(
-    (page - 1) * PAGE_SIZE,
-    page * PAGE_SIZE,
+    (page - 1) * pageSize,
+    page * pageSize,
   );
 
   if (isLoading) {
@@ -87,7 +94,7 @@ export function FileList({ onSelect, selected = [], multi = false, search = "" }
 
   return (
     <div>
-      <div className="max-h-48 overflow-y-auto">
+      <div className={scrollClassName}>
         <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200" role="listbox" aria-label="Fichiers disponibles">
           {paginatedData.map((file) => {
             const isSelected = selected.includes(file.filename);
@@ -114,6 +121,20 @@ export function FileList({ onSelect, selected = [], multi = false, search = "" }
                   <svg className="h-5 w-5 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
+                )}
+                {onDelete && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="danger"
+                    aria-label={`Supprimer le fichier ${file.filename}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onDelete(file.filename);
+                    }}
+                  >
+                    <DeleteOutlineIcon fontSize="small" />
+                  </Button>
                 )}
               </li>
             );

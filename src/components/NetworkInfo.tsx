@@ -70,7 +70,7 @@ export function NetworkInfo({
           <div className="flex items-start gap-2">
             <span className="text-gray-500 text-sm">▶</span>
             <div className="text-sm text-gray-700">
-              <span className="font-medium">Exemples d'adresses IP :</span>{" "}
+              <span className="font-medium">Exemples d&apos;adresses IP :</span>{" "}
               <div className="mt-1 flex flex-wrap gap-2">
                 {cidrAddresses.map((cidr) => (
                   <code

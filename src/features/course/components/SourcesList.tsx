@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 import type { CourseSource } from "../course.types";
-import { LatexText } from "@/shared/utils/latex";
 
 interface SourcesListProps {
   sources: CourseSource[];

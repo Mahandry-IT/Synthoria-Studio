@@ -15,7 +15,7 @@ interface UseIngestPdfReturn {
 
 /**
  * Mutation React Query pour l'upload de PDFs.
- * Invalide le cache de useFiles() après succès pour rafraîchir la liste.
+ * Invalide le cache de useFiles() et useAllFiles() après succès pour rafraîchir la liste.
  */
 export function useIngestPdf(): UseIngestPdfReturn {
   const queryClient = useQueryClient();
@@ -44,6 +44,7 @@ export function useIngestPdf(): UseIngestPdfReturn {
         }
       }
       queryClient.invalidateQueries({ queryKey: ["files"] });
+      queryClient.invalidateQueries({ queryKey: ["allFiles"] });
     },
     onError: (err) => {
       toastError(err);

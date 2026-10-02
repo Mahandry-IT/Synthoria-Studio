@@ -77,7 +77,7 @@ function fixUnicodeDiacritics(text: string): string {
  */
 function fixAsciiDiacritics(text: string): string {
   let result = text;
-  for (const [pair, replacement] of Object.entries(ASCII_DIACRITIC_MAP)) {
+  for (const pair of Object.keys(ASCII_DIACRITIC_MAP)) {
     const escaped = pair[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     result = result.replace(new RegExp(escaped + "([aeiouAEIOU])"), (_m, v: string) => {
       // On utilise le couple (accent, voyelle) pour trouver la bonne lettre

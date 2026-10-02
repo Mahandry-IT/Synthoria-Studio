@@ -1,4 +1,4 @@
-import { postMultipart, getJson } from "@/shared/api/httpClient";
+import { postMultipart, getJson, deleteJson } from "@/shared/api/httpClient";
 import type {
   PDFIngestResponse,
   RawPDFIngestResponse,
@@ -56,4 +56,14 @@ export async function listFiles(
   return getJson<FileListResponse>("/pdf/files", {
     params: { page, limit },
   });
+}
+
+/**
+ * Supprime un fichier PDF ingéré (et ses données côté backend).
+ *
+ * @param filename - Nom du fichier tel que renvoyé par la liste
+ * @throws {HttpError} 404 fichier inconnu
+ */
+export async function deleteFile(filename: string): Promise<void> {
+  await deleteJson<void>(`/pdf/files/${encodeURIComponent(filename)}`);
 }

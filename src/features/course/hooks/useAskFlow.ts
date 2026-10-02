@@ -79,7 +79,10 @@ export function useAskFlow(): UseAskFlowReturn {
   const enqueuePodcast = useEnqueuePodcast();
   const openCourse = useOpenCourse(() => setLastCourseId(null));
   const [lastRequest, setLastRequest] = useState<CoursePlanRequest | null>(null);
-  const [view, setView] = useState<AskView>(() => (pendingPlanId ? "result" : "form"));
+  // Écran choisi par l'utilisateur ; à défaut, la revue du plan si un plan est en attente
+  // (le stockage n'est lu qu'après l'hydratation : pas de valeur initiale dépendante du navigateur)
+  const [chosenView, setView] = useState<AskView | null>(null);
+  const view: AskView = chosenView ?? (pendingPlanId ? "result" : "form");
 
   // Plan expiré ou supprimé : on l'oublie (la phase retombe sur le formulaire)
   useEffect(() => {
