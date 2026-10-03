@@ -86,9 +86,14 @@ export default function HistoryDetailPage({
         </div>
         <ScrollableQuestion markdown={data.question} />
         {data.filenames.length > 0 && (
-          <p className="mt-1 text-xs text-gray-400">
-            Fichiers : {data.filenames.join(", ")}
-          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-1.5" aria-label="Fichiers utilisés">
+            <span className="text-xs text-gray-500">Fichiers :</span>
+            {data.filenames.map((name) => (
+              <Badge key={name} variant="gray" className="max-w-full break-all" title={name}>
+                {name}
+              </Badge>
+            ))}
+          </div>
         )}
       </Card>
 

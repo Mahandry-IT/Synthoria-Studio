@@ -18,7 +18,6 @@ import { usePendingPlans } from "../hooks/usePendingPlans";
 import { useResumePlan } from "../hooks/useResumePlan";
 import { DashboardCardSkeleton } from "./DashboardCardSkeleton";
 
-const PAGE_SIZE = 5;
 
 /**
  * Plans en cours : proposés mais pas encore transformés en cours. Chaque plan affiche un compte
@@ -26,8 +25,9 @@ const PAGE_SIZE = 5;
  */
 export function PendingPlansList() {
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const [confirmingPlanId, setConfirmingPlanId] = useState<string | null>(null);
-  const { data, isLoading, error, refetch } = usePendingPlans(page, PAGE_SIZE);
+  const { data, isLoading, error, refetch } = usePendingPlans(page, pageSize);
   const { resume } = useResumePlan();
   const deletePlanMutation = useDeletePlan();
   const now = useNow(30_000);
@@ -109,7 +109,16 @@ export function PendingPlansList() {
         </ul>
       )}
 
-      <Pagination page={page} totalPages={data?.meta.totalPages ?? 1} onPageChange={setPage} />
+      <Pagination
+        page={page}
+        totalPages={data?.meta.totalPages ?? 1}
+        onPageChange={setPage}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPage(1);
+        }}
+      />
 
       {confirmingPlanId && (
         <ConfirmDialog
