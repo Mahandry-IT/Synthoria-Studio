@@ -11,7 +11,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Skeleton } from "@/components/Skeleton";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
-import { RichTextView } from "@/components/editor/RichTextView";
+import { ScrollableQuestion } from "@/components/ScrollableQuestion";
 import { HttpError } from "@/shared/api/httpClient";
 
 /**
@@ -84,9 +84,7 @@ export default function HistoryDetailPage({
             <DeleteOutlineIcon fontSize="small" />
           </Button>
         </div>
-        <div className="mt-2">
-          <RichTextView markdown={data.question} className="text-sm text-gray-700" />
-        </div>
+        <ScrollableQuestion markdown={data.question} />
         {data.filenames.length > 0 && (
           <p className="mt-1 text-xs text-gray-400">
             Fichiers : {data.filenames.join(", ")}
