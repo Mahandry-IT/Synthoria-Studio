@@ -11,7 +11,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Skeleton } from "@/components/Skeleton";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
-import { RichTextView } from "@/components/editor/RichTextView";
+import { ScrollableQuestion } from "@/components/ScrollableQuestion";
 import { HttpError } from "@/shared/api/httpClient";
 
 /**
@@ -84,13 +84,16 @@ export default function HistoryDetailPage({
             <DeleteOutlineIcon fontSize="small" />
           </Button>
         </div>
-        <div className="mt-2">
-          <RichTextView markdown={data.question} className="text-sm text-gray-700" />
-        </div>
+        <ScrollableQuestion markdown={data.question} />
         {data.filenames.length > 0 && (
-          <p className="mt-1 text-xs text-gray-400">
-            Fichiers : {data.filenames.join(", ")}
-          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-1.5" aria-label="Fichiers utilisés">
+            <span className="text-xs text-gray-500">Fichiers :</span>
+            {data.filenames.map((name) => (
+              <Badge key={name} variant="gray" className="max-w-full break-all" title={name}>
+                {name}
+              </Badge>
+            ))}
+          </div>
         )}
       </Card>
 

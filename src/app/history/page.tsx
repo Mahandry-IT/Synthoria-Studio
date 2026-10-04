@@ -30,7 +30,6 @@ import { innermostPointerWithin } from "@/features/history/history.dnd";
 import { markdownToPlain } from "@/shared/utils/markdown";
 import type { CourseFolderFilter, CourseHistoryItem } from "@/features/history/history.types";
 
-const PAGE_SIZE = 10;
 
 /**
  * Page d'historique des cours générés, organisés en dossiers/sous-dossiers (rangement virtuel :
@@ -38,6 +37,7 @@ const PAGE_SIZE = 10;
  */
 export default function HistoryPage() {
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [filter, setFilter] = useState<CourseFolderFilter | null>(null);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [movingItem, setMovingItem] = useState<CourseHistoryItem | null>(null);
@@ -45,7 +45,7 @@ export default function HistoryPage() {
   const [deletingSubfolder, setDeletingSubfolder] = useState<{ folder: string; subfolder: string } | null>(null);
   const [draggedItem, setDraggedItem] = useState<CourseHistoryItem | null>(null);
 
-  const { data, isLoading } = useCourseHistory(page, PAGE_SIZE, filter ?? undefined);
+  const { data, isLoading } = useCourseHistory(page, pageSize, filter ?? undefined);
   const { data: folders } = useCourseFolders();
   const deleteCourse = useDeleteCourse();
   const moveCourse = useMoveCourseToFolder();
@@ -138,6 +138,11 @@ export default function HistoryPage() {
                   page={data.meta.page}
                   totalPages={data.meta.totalPages}
                   onPageChange={setPage}
+                  pageSize={pageSize}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size);
+                    setPage(1);
+                  }}
                 />
               </>
             )}

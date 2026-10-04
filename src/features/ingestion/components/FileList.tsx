@@ -29,8 +29,9 @@ interface FileListProps {
  * Liste paginée des fichiers PDF ingestés avec support de sélection et recherche.
  * Récupère tous les fichiers au montage, filtre et pagine côté client.
  */
-export function FileList({ onSelect, selected = [], multi = false, search = "", onDelete, pageSize = DEFAULT_PAGE_SIZE, scrollClassName = "max-h-48 overflow-y-auto" }: FileListProps) {
+export function FileList({ onSelect, selected = [], multi = false, search = "", onDelete, pageSize: initialPageSize = DEFAULT_PAGE_SIZE, scrollClassName = "max-h-48 overflow-y-auto" }: FileListProps) {
   // La page appartient à une recherche : quand elle change, on repart de la page 1 sans effet
+  const [pageSize, setPageSize] = useState(initialPageSize);
   const [pageState, setPageState] = useState({ search, page: 1 });
   const page = pageState.search === search ? pageState.page : 1;
   const setPage = (next: number) => setPageState({ search, page: next });
@@ -145,6 +146,11 @@ export function FileList({ onSelect, selected = [], multi = false, search = "", 
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPage(1);
+        }}
       />
     </div>
   );
