@@ -8,6 +8,7 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import QuizIcon from "@mui/icons-material/Quiz";
 import HistoryIcon from "@mui/icons-material/History";
 import StyleIcon from "@mui/icons-material/Style";
+import ChatIcon from "@mui/icons-material/Chat";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import CloseIcon from "@mui/icons-material/Close";
@@ -27,6 +28,7 @@ const navItems: NavItem[] = [
   { label: "Question", href: "/ask", icon: <QuizIcon /> },
   { label: "Review", href: "/review", icon: <StyleIcon /> },
   { label: "History", href: "/history", icon: <HistoryIcon /> },
+  { label: "Chat", href: "/chat", icon: <ChatIcon /> },
 ];
 
 /**
