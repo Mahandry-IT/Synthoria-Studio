@@ -15,6 +15,7 @@ import { AddCourseContentButton } from "./learning/AddCourseContentButton";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
 import { SessionPodcast } from "@/features/podcast/components/SessionPodcast";
+import { ChatLauncher } from "@/features/chat/components/ChatLauncher";
 import type { AddCourseSectionsResponse, CourseGenerationResponse, CourseSection } from "../course.types";
 
 interface CourseViewProps {
@@ -135,6 +136,9 @@ export function CourseView({ data, sessionId: sessionIdProp }: CourseViewProps) 
           />
         </div>
       )}
+
+      {/* Le quiz en page propre (retour anticipé plus haut) masque le chat */}
+      {sessionId && <ChatLauncher sessionId={sessionId} />}
     </div>
   );
 }
