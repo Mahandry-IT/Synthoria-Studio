@@ -33,8 +33,12 @@ export async function getChat(sessionId: string): Promise<ChatHistoryResponse> {
  * @throws {Error} si le message est vide ou trop long, ou si la réponse du serveur est invalide
  * @throws {HttpError} 404, 422, 429 (limite par minute ou par jour), 502, 503
  */
-export async function sendChatMessage(sessionId: string, message: string): Promise<ChatSendResponse> {
-  const request = chatRequestSchema.safeParse({ message });
+export async function sendChatMessage(
+  sessionId: string,
+  message: string,
+  sectionId?: string,
+): Promise<ChatSendResponse> {
+  const request = chatRequestSchema.safeParse({ message, section_id: sectionId });
   if (!request.success) throw new Error(request.error.issues[0]?.message ?? "Message invalide.");
 
   const raw = await postJson<unknown>(chatPath(sessionId), request.data, {

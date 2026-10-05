@@ -9,6 +9,8 @@ import { ChatComposer } from "./ChatComposer";
 import { ChatHistory } from "./ChatHistory";
 
 interface ChatConversationProps {
+  /** Section en cours de lecture (facultatif), transmise pour cibler le contexte du tuteur. */
+  sectionId?: string;
   /** Session persistée du cours : le serveur lit la leçon à partir de cet id. */
   sessionId: string;
   /** Classes du conteneur (sa hauteur est fixée par le parent : tiroir ou page). */
@@ -19,13 +21,13 @@ interface ChatConversationProps {
  * Conversation avec le tuteur d'un cours : historique groupé par jour (zone défilante) et champ de
  * question en pied. Réutilisée par le tiroir du cours et la page /chat.
  */
-export function ChatConversation({ sessionId, className = "" }: ChatConversationProps) {
+export function ChatConversation({ sessionId, sectionId, className = "" }: ChatConversationProps) {
   const [draft, setDraft] = useState("");
   const chat = useCourseChat(sessionId);
   const send = useSendChatMessage(sessionId);
 
   const handleSubmit = () => {
-    send.mutate(draft, { onSuccess: () => setDraft("") });
+    send.mutate({ message: draft, sectionId }, { onSuccess: () => setDraft("") });
   };
 
   const lastAnswer = send.data?.assistant_message.content;
@@ -41,7 +43,7 @@ export function ChatConversation({ sessionId, className = "" }: ChatConversation
         )}
         {chat.error && <ErrorState error={chat.error} onRetry={() => chat.refetch()} />}
         {chat.data && (
-          <ChatHistory messages={chat.data.messages} pendingMessage={send.isPending ? send.variables : null} />
+          <ChatHistory messages={chat.data.messages} pendingMessage={send.isPending ? send.variables.message : null} />
         )}
       </div>
 

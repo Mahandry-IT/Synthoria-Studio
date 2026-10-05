@@ -103,3 +103,11 @@ describe("chat.logic", () => {
     expect(toSafeHttpUrl("Section 2 — Introduction")).toBeNull();
   });
 });
+
+describe("chatRequestSchema — section_id", () => {
+  it("accepte une section facultative et la rejette vide", () => {
+    expect(chatRequestSchema.safeParse({ message: "Pourquoi ?", section_id: "s2" }).success).toBe(true);
+    expect(chatRequestSchema.safeParse({ message: "Pourquoi ?" }).success).toBe(true);
+    expect(chatRequestSchema.safeParse({ message: "Pourquoi ?", section_id: "" }).success).toBe(false);
+  });
+});

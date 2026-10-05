@@ -8,7 +8,7 @@ import { ChatDrawer } from "./ChatDrawer";
  * Bouton flottant d'ouverture du chat d'un cours, placé juste au-dessus du bouton « remonter »
  * (`ScrollableMain`) et toujours visible ; ouvre le tiroir du chat.
  */
-export function ChatLauncher({ sessionId }: { sessionId: string }) {
+export function ChatLauncher({ sessionId, sectionId }: { sessionId: string; sectionId?: string }) {
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
 
@@ -26,7 +26,7 @@ export function ChatLauncher({ sessionId }: { sessionId: string }) {
       >
         <ChatBubbleOutlineIcon fontSize="small" />
       </button>
-      {open && <ChatDrawer sessionId={sessionId} onClose={close} />}
+      {open && <ChatDrawer sessionId={sessionId} sectionId={sectionId} onClose={close} />}
     </>
   );
 }

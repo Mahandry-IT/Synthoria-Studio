@@ -3,6 +3,8 @@ import { CHAT_MESSAGE_MAX_LENGTH } from "@/shared/utils/constants";
 
 /** Corps de POST /courses/{session_id}/chat : le message seul, la session vient de l'URL. */
 export const chatRequestSchema = z.object({
+  /** Section en cours de lecture (facultatif) : le serveur la prend en priorité comme contexte. */
+  section_id: z.string().min(1).max(64).optional(),
   message: z
     .string()
     .trim()

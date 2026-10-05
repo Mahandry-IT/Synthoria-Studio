@@ -6,6 +6,7 @@ import { useFocusTrap } from "@/shared/hooks/useFocusTrap";
 import { ChatConversation } from "./ChatConversation";
 
 interface ChatDrawerProps {
+  sectionId?: string;
   sessionId: string;
   onClose: () => void;
 }
@@ -14,7 +15,7 @@ interface ChatDrawerProps {
  * Panneau latéral du chat d'un cours : plein écran sur mobile, ~28 rem à droite dès `sm`.
  * Dialogue modal (focus piégé puis rendu au bouton d'ouverture), fermeture par Échap, voile ou bouton.
  */
-export function ChatDrawer({ sessionId, onClose }: ChatDrawerProps) {
+export function ChatDrawer({ sessionId, sectionId, onClose }: ChatDrawerProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   useFocusTrap(panelRef);
@@ -54,7 +55,7 @@ export function ChatDrawer({ sessionId, onClose }: ChatDrawerProps) {
             <CloseIcon />
           </button>
         </header>
-        <ChatConversation sessionId={sessionId} className="flex-1" />
+        <ChatConversation sessionId={sessionId} sectionId={sectionId} className="flex-1" />
       </div>
     </>
   );

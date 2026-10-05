@@ -24,6 +24,12 @@ function chatErrorMessage(err: unknown): string {
   return message;
 }
 
+export interface SendChatVariables {
+  message: string;
+  /** Section en cours de lecture, si connue : contexte prioritaire côté serveur. */
+  sectionId?: string;
+}
+
 /**
  * Envoie une question au chat du cours. En cas de succès, l'échange et le quota sont reportés
  * dans le cache ; l'historique est ensuite resynchronisé (aussi après un 429, pour le quota).
@@ -33,7 +39,7 @@ export function useSendChatMessage(sessionId: string) {
   const key = courseChatKey(sessionId);
 
   return useMutation({
-    mutationFn: (message: string) => sendChatMessage(sessionId, message),
+    mutationFn: ({ message, sectionId }: SendChatVariables) => sendChatMessage(sessionId, message, sectionId),
     onSuccess: (exchange) => {
       queryClient.setQueryData<ChatHistoryResponse>(key, (current) => appendExchange(current, exchange));
     },

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { CourseMetaHeader } from "./CourseMetaHeader";
 import { SourcesList } from "./SourcesList";
+import { useSectionProgress } from "../hooks/useSectionProgress";
 import { SectionsList } from "./SectionsList";
 import { PitfallsList } from "./PitfallsList";
 import { QuizPanel } from "./QuizPanel";
@@ -37,6 +38,10 @@ export function CourseView({ data, sessionId: sessionIdProp }: CourseViewProps) 
   const isMode2 = data.mode === "file_question";
   const quiz = data.quiz ?? [];
   const quizFlow = useQuizFlow(quiz);
+  // Section en cours de lecture (même clé de progression que SectionsList) : transmise au chat pour
+  // cibler le contexte du tuteur. Les clés de repli (« #n », section sans id) ne sont pas envoyées.
+  const { progress } = useSectionProgress(sessionId ?? data.meta?.title ?? "cours");
+  const chatSectionId = progress.current && !progress.current.startsWith("#") ? progress.current : undefined;
 
   // Sections/next_steps ajoutées après coup (bouton « Ajouter du contenu ») : appliquées en local
   // par-dessus les données reçues, comme les overrides de SectionsList, sans dépendre d'un état
@@ -138,7 +143,7 @@ export function CourseView({ data, sessionId: sessionIdProp }: CourseViewProps) 
       )}
 
       {/* Le quiz en page propre (retour anticipé plus haut) masque le chat */}
-      {sessionId && <ChatLauncher sessionId={sessionId} />}
+      {sessionId && <ChatLauncher sessionId={sessionId} sectionId={chatSectionId} />}
     </div>
   );
 }
