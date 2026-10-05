@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ErrorState } from "@/components/ErrorState";
 import { Skeleton } from "@/components/Skeleton";
+import { markdownToPlain } from "@/shared/utils/markdown";
 import { useCourseChat } from "../hooks/useCourseChat";
 import { useSendChatMessage } from "../hooks/useSendChatMessage";
 import { ChatComposer } from "./ChatComposer";
@@ -48,7 +49,7 @@ export function ChatConversation({ sessionId, sectionId, className = "" }: ChatC
       </div>
 
       <p className="sr-only" role="status" aria-live="polite">
-        {send.isPending ? "Le tuteur rédige sa réponse…" : lastAnswer ? `Réponse du tuteur : ${lastAnswer}` : ""}
+        {send.isPending ? "Le tuteur rédige sa réponse…" : lastAnswer ? `Réponse du tuteur : ${markdownToPlain(lastAnswer)}` : ""}
       </p>
 
       {chat.data && (

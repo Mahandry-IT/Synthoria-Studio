@@ -122,6 +122,55 @@
   list-style-type: decimal;
 }
 
+.rich-text h1,
+.rich-text h2,
+.rich-text h3,
+.rich-text h4,
+.rich-text h5,
+.rich-text h6 {
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.rich-text h1 {
+  font-size: 1.25rem;
+}
+
+.rich-text h2 {
+  font-size: 1.125rem;
+}
+
+.rich-text h3,
+.rich-text h4,
+.rich-text h5,
+.rich-text h6 {
+  font-size: 1rem;
+}
+
+.rich-text strong {
+  font-weight: 600;
+}
+
+.rich-text em {
+  font-style: italic;
+}
+
+.rich-text hr {
+  margin-block: 0.75rem;
+  border-color: currentColor;
+  opacity: 0.25;
+}
+
+.rich-text blockquote {
+  border-left: 3px solid currentColor;
+  padding-left: 0.75rem;
+  opacity: 0.85;
+}
+
+.rich-text a {
+  text-decoration: underline;
+}
+
 .rich-text li > p {
   margin: 0;
 }

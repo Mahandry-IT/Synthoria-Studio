@@ -1,7 +1,8 @@
 "use client";
 
+import { memo } from "react";
 import { Badge } from "@/components/Badge";
-import { RichText } from "@/features/course/components/RichText";
+import { RichTextView } from "@/components/editor/RichTextView";
 import { toSafeHttpUrl } from "../chat.logic";
 import type { ChatMessage, ChatSource } from "../chat.types";
 
@@ -40,10 +41,11 @@ const BUBBLE_STYLES = {
 } as const;
 
 /**
- * Un message du chat : question de l'apprenant (texte brut, aligné à droite) ou réponse du tuteur
- * (rendu riche, sources, badge « Hors sujet » si la question sortait du thème du cours).
+ * Un message du chat : question de l'apprenant (aligné à droite) ou réponse du tuteur (sources,
+ * badge « Hors sujet » si la question sortait du thème du cours). Les deux sont rendus en Markdown
+ * avec formules LaTeX (`$...$`, `$$...$$`), comme les saisies riches du reste de l'application.
  */
-export function ChatMessageBubble({ message }: { message: ChatMessage }) {
+function ChatMessageBubbleView({ message }: { message: ChatMessage }) {
   const isUser = message.role === "user";
   const style = isUser ? BUBBLE_STYLES.user : BUBBLE_STYLES[message.status];
   const time = formatTime(message.created_at);
@@ -56,11 +58,7 @@ export function ChatMessageBubble({ message }: { message: ChatMessage }) {
           Hors sujet
         </Badge>
       )}
-      {isUser ? (
-        <p className="whitespace-pre-wrap break-words">{message.content}</p>
-      ) : (
-        <RichText text={message.content} className="break-words" />
-      )}
+      <RichTextView markdown={message.content} className="break-words" />
       {!isUser && message.sources.length > 0 && (
         <div className="mt-2 border-t border-gray-100 pt-2 text-xs text-gray-600">
           <p className="font-medium">Sources</p>
@@ -79,3 +77,5 @@ export function ChatMessageBubble({ message }: { message: ChatMessage }) {
     </li>
   );
 }
+
+export const ChatMessageBubble = memo(ChatMessageBubbleView);
