@@ -77,6 +77,151 @@ export function appendExchange(
   return { messages: [...(history?.messages ?? []), ...added], quota: exchange.quota };
 }
 
+/* ------------------------------------------------------------------------------------------------
+ * Arbre des versions : chaque message pointe vers son parent (`parent_id`). Les questions de même
+ * parent sont des versions sœurs ; le fil affiché suit, à chaque niveau, la version sélectionnée.
+ * --------------------------------------------------------------------------------------------- */
+
+/** Clé de parent des messages racines (`parent_id: null`). */
+export const ROOT_KEY = "root";
+
+/** Version choisie à chaque niveau : clé de parent → id du message enfant affiché. */
+export type ChatSelection = Readonly<Record<string, string>>;
+
+export interface ChatVersionInfo {
+  /** Clé de parent partagée par les versions sœurs (clé de la sélection). */
+  parentKey: string;
+  /** Position de la version affichée, à partir de 1 (ordre chronologique des versions). */
+  index: number;
+  count: number;
+  previousId: string | null;
+  nextId: string | null;
+}
+
+export interface ChatThreadEntry {
+  message: ChatMessage;
+  /** Versions sœurs d'une question ; `null` pour une réponse du tuteur. */
+  versions: ChatVersionInfo | null;
+}
+
+function byTime(messages: ChatMessage[]): ChatMessage[] {
+  return [...messages].sort((a, b) => timeOf(a) - timeOf(b));
+}
+
+/**
+ * Clé de parent effective de chaque message. Historique antérieur aux versions (aucun `parent_id`) :
+ * les messages forment une chaîne dans l'ordre chronologique.
+ */
+function parentKeys(messages: ChatMessage[]): Map<string, string> {
+  const legacy = messages.length > 1 && messages.every((m) => m.parent_id == null);
+  const sorted = byTime(messages);
+  return new Map(
+    sorted.map((m, i) => [m.id, legacy ? (sorted[i - 1]?.id ?? ROOT_KEY) : (m.parent_id ?? ROOT_KEY)]),
+  );
+}
+
+/** Enfants de chaque clé de parent, du plus ancien au plus récent. */
+function childrenByParent(messages: ChatMessage[]): Map<string, ChatMessage[]> {
+  const parents = parentKeys(messages);
+  const children = new Map<string, ChatMessage[]>();
+  for (const message of byTime(messages)) {
+    const key = parents.get(message.id) ?? ROOT_KEY;
+    const siblings = children.get(key);
+    if (siblings) siblings.push(message);
+    else children.set(key, [message]);
+  }
+  return children;
+}
+
+function versionInfo(parentKey: string, versions: ChatMessage[], index: number): ChatVersionInfo {
+  return {
+    parentKey,
+    index: index + 1,
+    count: versions.length,
+    previousId: versions[index - 1]?.id ?? null,
+    nextId: versions[index + 1]?.id ?? null,
+  };
+}
+
+/**
+ * Fil affiché : depuis la racine, à chaque niveau, l'enfant sélectionné ou à défaut le plus récent.
+ * Une sélection obsolète (message supprimé) retombe sur la version la plus récente.
+ */
+export function resolveThread(messages: ChatMessage[], selection: ChatSelection = {}): ChatThreadEntry[] {
+  const children = childrenByParent(messages);
+  const thread: ChatThreadEntry[] = [];
+  const visited = new Set<string>();
+  let key = ROOT_KEY;
+
+  for (;;) {
+    const siblings = children.get(key) ?? [];
+    if (siblings.length === 0) break;
+    const selected = siblings.findIndex((m) => m.id === selection[key]);
+    const message = siblings[selected >= 0 ? selected : siblings.length - 1];
+    if (visited.has(message.id)) break; // garde-fou contre un cycle dans des données corrompues
+    visited.add(message.id);
+
+    const versions = siblings.filter((m) => m.role === message.role);
+    thread.push({
+      message,
+      versions: message.role === "user" ? versionInfo(key, versions, versions.indexOf(message)) : null,
+    });
+    key = message.id;
+  }
+  return thread;
+}
+
+/** Parent d'une nouvelle question : la dernière réponse du fil affiché (`null` si fil vide). */
+export function lastAssistantId(thread: ChatThreadEntry[]): string | null {
+  for (let i = thread.length - 1; i >= 0; i--) {
+    if (thread[i].message.role === "assistant") return thread[i].message.id;
+  }
+  return null;
+}
+
+/** Affiche ce message à son niveau (navigation entre versions, nouvelle version après édition). */
+export function selectMessage(selection: ChatSelection, message: ChatMessage): ChatSelection {
+  return { ...selection, [message.parent_id ?? ROOT_KEY]: message.id };
+}
+
+/**
+ * Sélection après suppression d'une question : la version voisine (précédente, sinon suivante)
+ * prend sa place ; s'il n'en reste aucune, la branche disparaît du fil.
+ * `messages` est l'historique avant suppression.
+ */
+export function selectionAfterDelete(
+  messages: ChatMessage[],
+  selection: ChatSelection,
+  deletedId: string,
+): ChatSelection {
+  const deleted = messages.find((m) => m.id === deletedId);
+  if (!deleted) return selection;
+
+  const key = parentKeys(messages).get(deletedId) ?? ROOT_KEY;
+  const versions = (childrenByParent(messages).get(key) ?? []).filter((m) => m.role === deleted.role);
+  const index = versions.findIndex((m) => m.id === deletedId);
+  const remaining = versions.filter((m) => m.id !== deletedId);
+
+  const next: Record<string, string> = { ...selection };
+  delete next[key];
+  if (remaining.length > 0) next[key] = remaining[Math.max(0, index - 1)].id;
+  return next;
+}
+
+/** Retire un message, sa réponse et toute sa descendance de l'historique en cache. */
+export function removeMessageBranch(history: ChatHistoryResponse, messageId: string): ChatHistoryResponse {
+  const children = childrenByParent(history.messages);
+  const removed = new Set<string>();
+  const stack = [messageId];
+  while (stack.length > 0) {
+    const id = stack.pop() as string;
+    if (removed.has(id)) continue;
+    removed.add(id);
+    for (const child of children.get(id) ?? []) stack.push(child.id);
+  }
+  return { ...history, messages: history.messages.filter((m) => !removed.has(m.id)) };
+}
+
 /** N'autorise un lien cliquable que pour une URL http(s) (pas de `javascript:` ni `data:`). */
 export function toSafeHttpUrl(reference: string): string | null {
   try {

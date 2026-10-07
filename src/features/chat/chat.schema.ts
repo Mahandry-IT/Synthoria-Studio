@@ -5,6 +5,11 @@ import { CHAT_MESSAGE_MAX_LENGTH } from "@/shared/utils/constants";
 export const chatRequestSchema = z.object({
   /** Section en cours de lecture (facultatif) : le serveur la prend en priorité comme contexte. */
   section_id: z.string().min(1).max(64).optional(),
+  /**
+   * Message du tuteur après lequel s'insère la question (`null` : racine de la conversation).
+   * Éditer une question = renvoyer le `parent_id` de la question éditée (nouvelle version sœur).
+   */
+  parent_id: z.string().min(1).nullable().optional(),
   message: z
     .string()
     .trim()
@@ -28,6 +33,12 @@ export const chatMessageSchema = z.object({
   status: z.enum(["answered", "off_topic"]),
   sources: z.array(chatSourceSchema).optional().default([]),
   created_at: z.string(),
+  /**
+   * Parent dans l'arbre de la conversation : réponse précédente pour une question (`null` = racine),
+   * question pour une réponse. Les questions de même parent sont des versions sœurs.
+   * Défaut `null` pour les historiques antérieurs aux versions.
+   */
+  parent_id: z.string().nullable().optional().default(null),
 });
 
 /** Quota quotidien de messages du cours (remis à zéro à `resets_at`, minuit UTC). */
