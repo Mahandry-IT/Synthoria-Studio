@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ErrorState } from "@/components/ErrorState";
 import { Skeleton } from "@/components/Skeleton";
 import { markdownToPlain } from "@/shared/utils/markdown";
+import { lastAssistantId, resolveThread } from "../chat.logic";
 import { useCourseChat } from "../hooks/useCourseChat";
 import { useSendChatMessage } from "../hooks/useSendChatMessage";
 import { ChatComposer } from "./ChatComposer";
@@ -28,7 +29,8 @@ export function ChatConversation({ sessionId, sectionId, className = "" }: ChatC
   const send = useSendChatMessage(sessionId);
 
   const handleSubmit = () => {
-    send.mutate({ message: draft, sectionId }, { onSuccess: () => setDraft("") });
+    const parentId = lastAssistantId(resolveThread(chat.data?.messages ?? []));
+    send.mutate({ message: draft, sectionId, parentId }, { onSuccess: () => setDraft("") });
   };
 
   const lastAnswer = send.data?.assistant_message.content;
