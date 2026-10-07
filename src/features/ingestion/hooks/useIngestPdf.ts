@@ -3,11 +3,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ingestPdf } from "../ingestion.api";
 import type { PDFIngestResponse } from "../ingestion.types";
+import type { FolderTarget } from "@/components/folders/folders.types";
 import { HttpError } from "@/shared/api/httpClient";
 import { toastError, toastSuccess, toastWarning } from "@/shared/ui/toast";
 
 interface UseIngestPdfReturn {
-  mutate: (files: File[]) => void;
+  /** `target` absent = fichiers rangés dans le dossier par défaut. */
+  mutate: (files: File[], target?: FolderTarget) => void;
   data: PDFIngestResponse | null;
   error: HttpError | null;
   isPending: boolean;
@@ -21,7 +23,7 @@ export function useIngestPdf(): UseIngestPdfReturn {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: ingestPdf,
+    mutationFn: ({ files, target }: { files: File[]; target?: FolderTarget }) => ingestPdf(files, target),
     onSuccess: (data) => {
       const count = data.files?.length ?? 0;
       const failedFiles = data.files?.filter((f) => f.status === "failed" || f.status === "error") ?? [];
@@ -52,7 +54,7 @@ export function useIngestPdf(): UseIngestPdfReturn {
   });
 
   return {
-    mutate: mutation.mutate,
+    mutate: (files, target) => mutation.mutate({ files, target }),
     data: mutation.data ?? null,
     error: mutation.error instanceof HttpError ? mutation.error : null,
     isPending: mutation.isPending,

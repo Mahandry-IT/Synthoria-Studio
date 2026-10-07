@@ -23,6 +23,12 @@ export interface FolderSummary {
   subfolders: SubfolderSummary[];
 }
 
+/** Destination d'un déplacement : `subfolder` omis/null = sous-dossier par défaut du dossier. */
+export interface FolderTarget {
+  folder: string;
+  subfolder?: string | null;
+}
+
 /** Filtre courant par dossier. `null` (hors de ce type) = tous les éléments. */
 export interface FolderFilter {
   folder: string;
