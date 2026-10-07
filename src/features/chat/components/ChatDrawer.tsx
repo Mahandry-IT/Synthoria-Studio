@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef } from "react";
+import { createPortal } from "react-dom";
 import CloseIcon from "@mui/icons-material/Close";
 import { useFocusTrap } from "@/shared/hooks/useFocusTrap";
 import { ChatConversation } from "./ChatConversation";
@@ -14,6 +15,8 @@ interface ChatDrawerProps {
 /**
  * Panneau latéral du chat d'un cours : plein écran sur mobile, ~28 rem à droite dès `sm`.
  * Dialogue modal (focus piégé puis rendu au bouton d'ouverture), fermeture par Échap, voile ou bouton.
+ * Rendu dans un portail sur `document.body` : le voile couvre tout l'écran, quels que soient le
+ * conteneur de défilement et les contextes d'empilement de la page qui l'ouvre.
  */
 export function ChatDrawer({ sessionId, sectionId, onClose }: ChatDrawerProps) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -28,7 +31,7 @@ export function ChatDrawer({ sessionId, sectionId, onClose }: ChatDrawerProps) {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
-  return (
+  return createPortal(
     <>
       <div className="fixed inset-0 z-50 bg-gray-900/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
       <div
@@ -57,6 +60,7 @@ export function ChatDrawer({ sessionId, sectionId, onClose }: ChatDrawerProps) {
         </header>
         <ChatConversation sessionId={sessionId} sectionId={sectionId} className="flex-1" />
       </div>
-    </>
+    </>,
+    document.body,
   );
 }
