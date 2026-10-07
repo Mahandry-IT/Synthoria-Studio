@@ -1,7 +1,7 @@
 "use client";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { listFiles } from "../ingestion.api";
 import type { FileInfo } from "../ingestion.types";
 
@@ -38,8 +38,12 @@ export function useAllFiles(): UseAllFilesReturn {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  // Référence stable entre les rendus : les listes et l'arbre de dossiers dérivés sont mémoïsés dessus
+  const pages = query.data?.pages;
+  const data = useMemo(() => pages?.flatMap((p) => p.data) ?? [], [pages]);
+
   return {
-    data: query.data?.pages.flatMap((p) => p.data) ?? [],
+    data,
     isLoading: query.isLoading,
     error: query.error ?? null,
   };

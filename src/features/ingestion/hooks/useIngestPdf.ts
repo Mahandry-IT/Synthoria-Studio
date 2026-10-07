@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ingestPdf } from "../ingestion.api";
 import type { PDFIngestResponse } from "../ingestion.types";
@@ -53,8 +54,14 @@ export function useIngestPdf(): UseIngestPdfReturn {
     },
   });
 
+  const { mutate: mutateIngest } = mutation;
+  const mutate = useCallback(
+    (files: File[], target?: FolderTarget) => mutateIngest({ files, target }),
+    [mutateIngest],
+  );
+
   return {
-    mutate: (files, target) => mutation.mutate({ files, target }),
+    mutate,
     data: mutation.data ?? null,
     error: mutation.error instanceof HttpError ? mutation.error : null,
     isPending: mutation.isPending,

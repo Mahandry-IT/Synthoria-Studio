@@ -3,18 +3,41 @@
 import { useState } from "react";
 import { Card } from "@/components/Card";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import type { FolderFilter } from "@/components/folders/folders.types";
 import { useDeleteFile } from "../hooks/useDeleteFile";
+import type { FileInfo } from "../ingestion.types";
 import { FileList } from "./FileList";
 
-/** Fichiers déjà ingérés, avec suppression (après confirmation) côté backend. */
-export function IngestedFilesPanel() {
+interface IngestedFilesPanelProps {
+  /** Dossier affiché ; `null` = tous les fichiers. */
+  folderFilter: FolderFilter | null;
+  /** Libellé du dossier affiché, en sous-titre. */
+  folderLabel: string;
+  onMove: (file: FileInfo) => void;
+}
+
+/**
+ * Fichiers déjà ingérés du dossier courant : déplacement (bouton ou glisser sur un dossier) et
+ * suppression (après confirmation) côté backend.
+ */
+export function IngestedFilesPanel({ folderFilter, folderLabel, onMove }: IngestedFilesPanelProps) {
   const [confirmingFilename, setConfirmingFilename] = useState<string | null>(null);
   const deleteMutation = useDeleteFile();
 
   return (
     <Card className="space-y-3 p-5">
-      <h2 className="text-base font-semibold text-gray-900">Fichiers ingérés</h2>
-      <FileList onDelete={setConfirmingFilename} pageSize={5} scrollClassName="" />
+      <div>
+        <h2 className="text-base font-semibold text-gray-900">Fichiers ingérés</h2>
+        <p className="mt-0.5 truncate text-xs text-gray-500">{folderLabel}</p>
+      </div>
+      <FileList
+        folderFilter={folderFilter}
+        onDelete={setConfirmingFilename}
+        onMove={onMove}
+        draggable
+        pageSize={5}
+        scrollClassName=""
+      />
 
       {confirmingFilename && (
         <ConfirmDialog
