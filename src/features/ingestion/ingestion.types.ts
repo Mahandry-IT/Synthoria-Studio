@@ -36,6 +36,17 @@ export interface FileInfo {
   id: number;
   /** Nom du fichier PDF */
   filename: string;
+  /** Dossier de rangement (dossier par défaut si jamais déplacé) */
+  folder: string;
+  /** Sous-dossier de rangement (sous-dossier par défaut si jamais déplacé) */
+  subfolder: string;
+}
+
+/** Réponse de `PUT /pdf/files/{filename}/folder`. */
+export interface FileFolderResult {
+  filename: string;
+  folder: string;
+  subfolder: string;
 }
 
 export interface FileListResponse {

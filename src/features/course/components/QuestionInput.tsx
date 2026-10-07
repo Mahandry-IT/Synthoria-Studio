@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { Button } from "@/components/Button";
 import { RichTextEditor } from "@/components/editor/RichTextEditor";
-import { FileList } from "@/features/ingestion/components/FileList";
+import { ContextFilePicker } from "@/features/ingestion/components/ContextFilePicker";
 import { COURSE_QUESTION_MAX_LENGTH } from "@/shared/utils/constants";
 import { questionInputSchema } from "../course.schema";
 import type { QuestionInputValues } from "../course.schema";
@@ -13,14 +13,6 @@ import {
   isCourseDepth,
   type CourseDepth,
 } from "../courseDepth";
-
-function SearchIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-      <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
-    </svg>
-  );
-}
 
 interface QuestionInputProps {
   onSubmit: (values: QuestionInputValues) => void;
@@ -38,7 +30,6 @@ interface QuestionInputProps {
 export function QuestionInput({ onSubmit, isPending }: QuestionInputProps) {
   const [question, setQuestion] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
-  const [search, setSearch] = useState("");
   const [depth, setDepth] = useState<CourseDepth>(DEFAULT_COURSE_DEPTH);
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -98,35 +89,7 @@ export function QuestionInput({ onSubmit, isPending }: QuestionInputProps) {
         </div>
       </div>
 
-      <div>
-        <div className="flex items-center justify-between gap-3 mb-1">
-          <p className="text-sm font-medium text-gray-700">
-            Fichiers de contexte <span className="text-gray-400 font-normal">(optionnel)</span>
-          </p>
-          <div className="relative w-56">
-            <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Rechercher…"
-              aria-label="Rechercher un fichier de contexte"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 py-1.5 pl-8 pr-3 text-sm placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
-        </div>
-        <FileList
-          onSelect={setSelectedFiles}
-          selected={selectedFiles}
-          multi
-          search={search}
-        />
-        {selectedFiles.length > 0 && (
-          <p className="mt-1 text-xs text-gray-500">
-            {selectedFiles.length} fichier(s) sélectionné(s)
-          </p>
-        )}
-      </div>
+      <ContextFilePicker selected={selectedFiles} onChange={setSelectedFiles} />
 
       <div>
         <label htmlFor="course-depth" className="block text-sm font-medium text-gray-700 mb-1">

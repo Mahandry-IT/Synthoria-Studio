@@ -4,12 +4,20 @@ import { useCallback, useState } from "react";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { useIngestPdf } from "../hooks/useIngestPdf";
 import { MAX_PDF_SIZE_BYTES } from "@/shared/utils/constants";
+import type { FolderTarget } from "@/components/folders/folders.types";
+
+interface FileUploadPanelProps {
+  /** Dossier où ranger les fichiers envoyés ; absent = dossier par défaut. */
+  target?: FolderTarget;
+  /** Libellé du dossier de destination, affiché sous la zone de dépôt. */
+  targetLabel: string;
+}
 
 /**
- * Panneau d'upload de fichiers PDF avec drag-and-drop.
+ * Panneau d'upload de fichiers PDF avec drag-and-drop, vers le dossier `target`.
  * Valide la taille côté client avant envoi au serveur.
  */
-export function FileUploadPanel() {
+export function FileUploadPanel({ target, targetLabel }: FileUploadPanelProps) {
   const { mutate, isPending, data } = useIngestPdf();
   const [rejectedFiles, setRejectedFiles] = useState<string[]>([]);
 
@@ -18,10 +26,10 @@ export function FileUploadPanel() {
       setRejectedFiles(rejections.map((r) => r.file.name));
 
       if (acceptedFiles.length > 0) {
-        mutate(acceptedFiles);
+        mutate(acceptedFiles, target);
       }
     },
-    [mutate],
+    [mutate, target],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -77,6 +85,9 @@ export function FileUploadPanel() {
             </p>
             <p className="mt-1 text-xs text-gray-500">
               PDF uniquement — max 10 Mo par fichier
+            </p>
+            <p className="mt-1 text-xs text-gray-500">
+              Destination : <span className="font-medium text-gray-700">{targetLabel}</span>
             </p>
           </>
         )}

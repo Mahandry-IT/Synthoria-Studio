@@ -1,5 +1,7 @@
-import { postMultipart, getJson, deleteJson } from "@/shared/api/httpClient";
+import { postMultipart, getJson, deleteJson, putJson } from "@/shared/api/httpClient";
+import type { FolderTarget } from "@/components/folders/folders.types";
 import type {
+  FileFolderResult,
   PDFIngestResponse,
   RawPDFIngestResponse,
   FileListResponse,
@@ -9,12 +11,17 @@ import type {
  * Upload un ou plusieurs fichiers PDF pour ingestion.
  *
  * @param files - Tableau de fichiers File à uploader
+ * @param target - Dossier de rangement des fichiers ; absent = dossier par défaut
  * @throws {HttpError} en cas d'erreur serveur
  */
-export async function ingestPdf(files: File[]): Promise<PDFIngestResponse> {
+export async function ingestPdf(files: File[], target?: FolderTarget): Promise<PDFIngestResponse> {
   const formData = new FormData();
   for (const file of files) {
     formData.append("files", file);
+  }
+  if (target) {
+    formData.append("folder", target.folder);
+    if (target.subfolder) formData.append("subfolder", target.subfolder);
   }
   const raw = await postMultipart<RawPDFIngestResponse>("/pdf/ingest", formData);
   return normalizeIngestResponse(raw);
@@ -66,4 +73,34 @@ export async function listFiles(
  */
 export async function deleteFile(filename: string): Promise<void> {
   await deleteJson<void>(`/pdf/files/${encodeURIComponent(filename)}`);
+}
+
+/**
+ * Range un fichier dans un dossier/sous-dossier, créés implicitement s'ils n'existent pas encore.
+ *
+ * @throws {HttpError} 404 fichier inconnu, 422 nom de dossier invalide
+ */
+export function moveFileToFolder(filename: string, target: FolderTarget): Promise<FileFolderResult> {
+  return putJson<FileFolderResult>(`/pdf/files/${encodeURIComponent(filename)}/folder`, target);
+}
+
+/**
+ * Supprime un dossier de fichiers : ses fichiers rejoignent le dossier par défaut (aucun fichier
+ * supprimé).
+ *
+ * @throws {HttpError} 400 si `folder` est le dossier par défaut
+ */
+export function deleteFileFolder(folder: string): Promise<{ moved: number }> {
+  return deleteJson<{ moved: number }>(`/pdf/folders/${encodeURIComponent(folder)}`);
+}
+
+/**
+ * Supprime un sous-dossier de fichiers : ses fichiers rejoignent le sous-dossier par défaut.
+ *
+ * @throws {HttpError} 400 si `subfolder` est le sous-dossier par défaut
+ */
+export function deleteFileSubfolder(folder: string, subfolder: string): Promise<{ moved: number }> {
+  return deleteJson<{ moved: number }>(
+    `/pdf/folders/${encodeURIComponent(folder)}/subfolders/${encodeURIComponent(subfolder)}`,
+  );
 }

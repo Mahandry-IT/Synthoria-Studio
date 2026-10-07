@@ -1,16 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
-} from "@dnd-kit/core";
+import { DndContext, DragOverlay, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core";
 import { useCourseHistory } from "@/features/history/hooks/useCourseHistory";
 import { useDeleteCourse } from "@/features/history/hooks/useDeleteCourse";
 import { useCourseFolders } from "@/features/history/hooks/useCourseFolders";
@@ -18,15 +9,15 @@ import { useMoveCourseToFolder } from "@/features/history/hooks/useMoveCourseToF
 import { useDeleteFolder } from "@/features/history/hooks/useDeleteFolder";
 import { useDeleteSubfolder } from "@/features/history/hooks/useDeleteSubfolder";
 import { HistoryTimeline } from "@/features/history/components/HistoryTimeline";
-import { FolderNav } from "@/features/history/components/FolderNav";
-import { MoveCourseDialog } from "@/features/history/components/MoveCourseDialog";
+import { FolderNav } from "@/components/folders/FolderNav";
+import { MoveToFolderDialog } from "@/components/folders/MoveToFolderDialog";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Pagination } from "@/components/Pagination";
 import { Skeleton } from "@/components/Skeleton";
 import { Card } from "@/components/Card";
-import { DEFAULT_FOLDER, DEFAULT_SUBFOLDER } from "@/features/history/history.constants";
-import type { DragData, DropTarget } from "@/features/history/history.dnd";
-import { innermostPointerWithin } from "@/features/history/history.dnd";
+import type { DragData, DropTarget } from "@/components/folders/folders.dnd";
+import { innermostPointerWithin, resolveDropMove } from "@/components/folders/folders.dnd";
+import { useFolderDndSensors } from "@/components/folders/useFolderDndSensors";
 import { markdownToPlain } from "@/shared/utils/markdown";
 import type { CourseFolderFilter, CourseHistoryItem } from "@/features/history/history.types";
 
@@ -46,16 +37,13 @@ export default function HistoryPage() {
   const [draggedItem, setDraggedItem] = useState<CourseHistoryItem | null>(null);
 
   const { data, isLoading } = useCourseHistory(page, pageSize, filter ?? undefined);
-  const { data: folders } = useCourseFolders();
+  const { data: folders, isLoading: foldersLoading } = useCourseFolders();
   const deleteCourse = useDeleteCourse();
   const moveCourse = useMoveCourseToFolder();
   const deleteFolder = useDeleteFolder();
   const deleteSubfolder = useDeleteSubfolder();
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
-  );
+  const sensors = useFolderDndSensors();
 
   function handleSelect(next: CourseFolderFilter | null) {
     setFilter(next);
@@ -63,7 +51,7 @@ export default function HistoryPage() {
   }
 
   function handleDragStart(event: DragStartEvent) {
-    setDraggedItem((event.active.data.current as DragData | undefined)?.item ?? null);
+    setDraggedItem((event.active.data.current as DragData<CourseHistoryItem> | undefined)?.item ?? null);
   }
 
   function handleDragEnd(event: DragEndEvent) {
@@ -71,15 +59,11 @@ export default function HistoryPage() {
     const { active, over } = event;
     if (!over) return; // déposé hors du panneau de dossiers : glisser annulé, aucun effet
 
-    const dragged = (active.data.current as DragData | undefined)?.item;
-    const target = over.data.current as DropTarget | undefined;
-    if (!dragged || !target) return;
-
-    const targetFolder = target.kind === "default" ? DEFAULT_FOLDER : target.folder;
-    const targetSubfolder = target.kind === "subfolder" ? target.subfolder : DEFAULT_SUBFOLDER;
-    if (dragged.folder === targetFolder && dragged.subfolder === targetSubfolder) return;
-
-    moveCourse.mutate({ sessionId: dragged.id, folder: targetFolder, subfolder: targetSubfolder });
+    const move = resolveDropMove(
+      active.data.current as DragData<CourseHistoryItem> | undefined,
+      over.data.current as DropTarget | undefined,
+    );
+    if (move) moveCourse.mutate({ sessionId: move.item.id, ...move.placement });
   }
 
   return (
@@ -102,6 +86,11 @@ export default function HistoryPage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]">
           <Card className="h-fit p-3">
             <FolderNav
+              folders={folders}
+              isLoading={foldersLoading}
+              allLabel="Tous les cours"
+              ariaLabel="Dossiers de cours"
+              collapsedStorageKey="history-collapsed-folders"
               filter={filter}
               onSelect={handleSelect}
               onDeleteFolder={setDeletingFolder}
@@ -169,8 +158,9 @@ export default function HistoryPage() {
       )}
 
       {movingItem && (
-        <MoveCourseDialog
-          item={movingItem}
+        <MoveToFolderDialog
+          title="Déplacer ce cours"
+          current={movingItem}
           folders={folders}
           loading={moveCourse.isPending}
           onConfirm={(folder, subfolder) =>

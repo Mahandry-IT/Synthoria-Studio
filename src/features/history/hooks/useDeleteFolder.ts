@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteFolder } from "../history.api";
-import { DEFAULT_FOLDER } from "../history.constants";
+import { DEFAULT_FOLDER } from "@/components/folders/folders.constants";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
 
 /** Supprime un dossier : ses cours rejoignent le dossier par défaut. Rafraîchit liste + arborescence. */
