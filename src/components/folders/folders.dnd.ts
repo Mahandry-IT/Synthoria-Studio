@@ -30,6 +30,20 @@ export function isSamePlacement(a: FolderPlacement, b: FolderPlacement): boolean
 }
 
 /**
+ * Déplacement induit par un dépôt (`active.data.current`, `over.data.current`) : l'élément glissé
+ * et son nouvel emplacement, ou `null` si le dépôt est hors zone ou ne change rien.
+ */
+export function resolveDropMove<T extends FolderPlacement>(
+  activeData: DragData<T> | undefined,
+  overData: DropTarget | undefined,
+): { item: T; placement: FolderPlacement } | null {
+  const item = activeData?.item;
+  if (!item || !overData) return null;
+  const placement = dropTargetPlacement(overData);
+  return isSamePlacement(item, placement) ? null : { item, placement };
+}
+
+/**
  * Les zones de dépôt de `FolderNav` sont imbriquées (nav > dossier > sous-dossier) : leurs aires se
  * chevauchent, donc `pointerWithin` seul peut retourner plusieurs collisions au même point. On ne
  * garde que la plus petite (la plus spécifique), pour qu'un dépôt sur un sous-dossier résolve à ce

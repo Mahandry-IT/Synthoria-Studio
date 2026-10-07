@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ClientRect, Collision } from "@dnd-kit/core";
 import { DEFAULT_FOLDER, DEFAULT_SUBFOLDER } from "./folders.constants";
-import { dropTargetPlacement, innermostPointerWithin, isSamePlacement } from "./folders.dnd";
+import { dropTargetPlacement, innermostPointerWithin, isSamePlacement, resolveDropMove } from "./folders.dnd";
 
 function rect(left: number, top: number, width: number, height: number): ClientRect {
   return { left, top, width, height, right: left + width, bottom: top + height };
@@ -31,6 +31,26 @@ describe("isSamePlacement", () => {
   it("compares folder and subfolder exactly", () => {
     expect(isSamePlacement({ folder: "A", subfolder: "B" }, { folder: "A", subfolder: "B" })).toBe(true);
     expect(isSamePlacement({ folder: "A", subfolder: "B" }, { folder: "a", subfolder: "B" })).toBe(false);
+  });
+});
+
+describe("resolveDropMove", () => {
+  const item = { id: "f1", folder: "Maths", subfolder: DEFAULT_SUBFOLDER };
+
+  it("returns null without dragged item or drop target", () => {
+    expect(resolveDropMove(undefined, { kind: "default" })).toBeNull();
+    expect(resolveDropMove({ item }, undefined)).toBeNull();
+  });
+
+  it("returns null when the drop keeps the same placement", () => {
+    expect(resolveDropMove({ item }, { kind: "folder", folder: "Maths" })).toBeNull();
+  });
+
+  it("returns the item and its new placement", () => {
+    expect(resolveDropMove({ item }, { kind: "subfolder", folder: "Maths", subfolder: "Algèbre" })).toEqual({
+      item,
+      placement: { folder: "Maths", subfolder: "Algèbre" },
+    });
   });
 });
 

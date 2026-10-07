@@ -6,7 +6,7 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import DriveFileMoveOutlinedIcon from "@mui/icons-material/DriveFileMoveOutlined";
 import { Badge } from "@/components/Badge";
 import { markdownToPlain } from "@/shared/utils/markdown";
-import { DEFAULT_FOLDER, DEFAULT_SUBFOLDER } from "@/components/folders/folders.constants";
+import { folderLabel } from "@/components/folders/folders.utils";
 import type { DragData } from "@/components/folders/folders.dnd";
 import type { CourseHistoryItem } from "../history.types";
 
@@ -16,11 +16,6 @@ interface HistoryItemProps {
   onMoveClick: (item: CourseHistoryItem) => void;
   /** Affiche le badge de dossier — utile en vue « Tous les cours », redondant dans un dossier déjà filtré. */
   showFolder?: boolean;
-}
-
-function folderLabel(item: CourseHistoryItem): string {
-  if (item.folder === DEFAULT_FOLDER && item.subfolder === DEFAULT_SUBFOLDER) return DEFAULT_FOLDER;
-  return item.subfolder === DEFAULT_SUBFOLDER ? item.folder : `${item.folder} / ${item.subfolder}`;
 }
 
 /**

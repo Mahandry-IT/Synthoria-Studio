@@ -1,16 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
-} from "@dnd-kit/core";
+import { DndContext, DragOverlay, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core";
 import { useCourseHistory } from "@/features/history/hooks/useCourseHistory";
 import { useDeleteCourse } from "@/features/history/hooks/useDeleteCourse";
 import { useCourseFolders } from "@/features/history/hooks/useCourseFolders";
@@ -25,7 +16,8 @@ import { Pagination } from "@/components/Pagination";
 import { Skeleton } from "@/components/Skeleton";
 import { Card } from "@/components/Card";
 import type { DragData, DropTarget } from "@/components/folders/folders.dnd";
-import { dropTargetPlacement, innermostPointerWithin, isSamePlacement } from "@/components/folders/folders.dnd";
+import { innermostPointerWithin, resolveDropMove } from "@/components/folders/folders.dnd";
+import { useFolderDndSensors } from "@/components/folders/useFolderDndSensors";
 import { markdownToPlain } from "@/shared/utils/markdown";
 import type { CourseFolderFilter, CourseHistoryItem } from "@/features/history/history.types";
 
@@ -51,10 +43,7 @@ export default function HistoryPage() {
   const deleteFolder = useDeleteFolder();
   const deleteSubfolder = useDeleteSubfolder();
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
-  );
+  const sensors = useFolderDndSensors();
 
   function handleSelect(next: CourseFolderFilter | null) {
     setFilter(next);
@@ -70,14 +59,11 @@ export default function HistoryPage() {
     const { active, over } = event;
     if (!over) return; // déposé hors du panneau de dossiers : glisser annulé, aucun effet
 
-    const dragged = (active.data.current as DragData<CourseHistoryItem> | undefined)?.item;
-    const target = over.data.current as DropTarget | undefined;
-    if (!dragged || !target) return;
-
-    const placement = dropTargetPlacement(target);
-    if (isSamePlacement(dragged, placement)) return;
-
-    moveCourse.mutate({ sessionId: dragged.id, ...placement });
+    const move = resolveDropMove(
+      active.data.current as DragData<CourseHistoryItem> | undefined,
+      over.data.current as DropTarget | undefined,
+    );
+    if (move) moveCourse.mutate({ sessionId: move.item.id, ...move.placement });
   }
 
   return (
