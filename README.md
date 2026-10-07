@@ -25,10 +25,19 @@ npm start
 | Route | Rôle |
 | --- | --- |
 | `/dashboard` | Tableau de bord : les 3 derniers podcasts (une carte, lecture inline) et les plans de cours en cours, avec compte à rebours d'expiration et bouton « Reprendre » |
-| `/` | Upload et ingestion de PDF |
-| `/ask` | Question → plan (relu/édité) → cours → podcast |
+| `/` | Upload et ingestion de PDF, rangés en dossiers / sous-dossiers |
+| `/ask` | Question → plan (relu/édité) → cours → podcast ; fichiers de contexte choisis par dossier |
 | `/history` | Historique des cours ; le détail propose le podcast du cours |
 | `/chat` | Chat avec le tuteur d'un cours : choix du cours (`?course=<id>`), puis conversation |
+
+## Dossiers
+
+Les cours de l'historique et les fichiers ingérés se rangent en **dossiers / sous-dossiers** (2 niveaux), avec les mêmes règles : dossier « Général » / sous-dossier « Non classé » par défaut (non supprimables), création implicite en tapant un nouveau nom lors d'un déplacement, réutilisation de la casse d'un dossier existant, et suppression d'un dossier qui reclasse son contenu au défaut sans rien supprimer.
+
+- **Composants partagés** (`src/components/folders/`) : `FolderNav` (arborescence repliable, zones de dépôt optionnelles), `MoveToFolderDialog`, `CollapsibleFolderPanel` (navigation repliable sous `lg`), helpers de glisser-déposer `folders.dnd.ts` (`@dnd-kit`).
+- **Upload** : glisser un fichier sur un dossier, ou bouton « Déplacer » ; un upload range les fichiers dans le dossier sélectionné (« Tous les fichiers » = dossier par défaut). L'arbre et les compteurs sont calculés côté client (`features/ingestion/fileFolders.ts`) depuis `GET /pdf/files`, qui renvoie `folder` / `subfolder` pour chaque fichier.
+- **`/ask`** : navigation compacte par dossier ; la sélection est conservée d'un dossier à l'autre, avec « Tout sélectionner dans ce dossier » / « Tout désélectionner ».
+- **API** : `PUT /pdf/files/{filename}/folder`, `DELETE /pdf/folders/{folder}`, `DELETE /pdf/folders/{folder}/subfolders/{subfolder}`, champs multipart `folder` / `subfolder` sur `POST /pdf/ingest`.
 
 ## Format du cours et apprentissage actif
 
