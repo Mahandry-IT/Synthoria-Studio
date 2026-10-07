@@ -7,6 +7,7 @@ import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Skeleton } from "@/components/Skeleton";
 import { ChatConversation } from "@/features/chat/components/ChatConversation";
+import { ClearChatButton } from "@/features/chat/components/ClearChatButton";
 import { CourseChatPicker } from "@/features/chat/components/CourseChatPicker";
 import { useCourseHistoryDetail } from "@/features/history/hooks/useCourseHistoryDetail";
 import { markdownToPlain } from "@/shared/utils/markdown";
@@ -26,7 +27,7 @@ function SelectedCourseHeader({ sessionId, onChange }: { sessionId: string; onCh
           <Skeleton lines={1} className="w-48" />
         )}
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button type="button" size="sm" variant="secondary" onClick={onChange}>
           Changer de cours
         </Button>
@@ -36,6 +37,7 @@ function SelectedCourseHeader({ sessionId, onChange }: { sessionId: string; onCh
         >
           Voir le cours
         </Link>
+        <ClearChatButton sessionId={sessionId} showLabel />
       </div>
     </div>
   );

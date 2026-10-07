@@ -2,14 +2,19 @@
 
 import { useEffect, useRef } from "react";
 import { Skeleton } from "@/components/Skeleton";
-import { dayLabel, groupMessagesByDay, localDayKey } from "../chat.logic";
-import type { ChatMessage } from "../chat.types";
-import { ChatMessageBubble } from "./ChatMessageBubble";
+import { dayLabel, groupMessagesByDay, localDayKey, type ChatThreadEntry } from "../chat.logic";
+import { ChatMessageBubble, type ChatMessageActions } from "./ChatMessageBubble";
 
 interface ChatHistoryProps {
-  messages: ChatMessage[];
+  /** Fil affiché (versions sélectionnées), en ordre chronologique. */
+  thread: ChatThreadEntry[];
+  /** Nombre total de messages connus : le défilement vers la fin ne suit que les ajouts. */
+  messageCount: number;
   /** Question en cours d'envoi : affichée dans le jour courant, suivie d'un squelette de réponse. */
   pendingMessage?: string | null;
+  actions?: ChatMessageActions;
+  /** Question en cours d'édition et son texte. */
+  editing?: { id: string; text: string } | null;
 }
 
 /** Bulle provisoire de la question envoyée et squelette de la réponse attendue. */
@@ -28,18 +33,24 @@ function PendingExchange({ text }: { text: string }) {
 
 /**
  * Historique du chat regroupé par jour en accordéons (`<details>`) : le jour le plus récent en tête
- * et ouvert, les plus anciens repliés ; messages en ordre chronologique dans chaque jour.
+ * et ouvert, les plus anciens repliés ; messages du fil affiché en ordre chronologique dans chaque jour.
  */
-export function ChatHistory({ messages, pendingMessage }: ChatHistoryProps) {
+export function ChatHistory({ thread, messageCount, pendingMessage, actions, editing = null }: ChatHistoryProps) {
   const endRef = useRef<HTMLLIElement>(null);
-  const groups = groupMessagesByDay(messages);
+  const previousCount = useRef(0);
+  const entries = new Map(thread.map((entry) => [entry.message.id, entry]));
+  const groups = groupMessagesByDay(thread.map((entry) => entry.message));
   const todayKey = localDayKey(new Date());
   if (pendingMessage && groups[0]?.key !== todayKey) groups.unshift({ key: todayKey, messages: [] });
 
-  // Garde le dernier échange visible (fin du jour le plus récent) à chaque nouveau message
+  // Garde le dernier échange visible à l'envoi et à l'arrivée d'une réponse, mais pas quand on
+  // change de version ou qu'on supprime un message (la lecture reste là où elle était)
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: "nearest" });
-  }, [messages.length, pendingMessage]);
+    if (pendingMessage || messageCount > previousCount.current) {
+      endRef.current?.scrollIntoView({ block: "nearest" });
+    }
+    previousCount.current = messageCount;
+  }, [messageCount, pendingMessage]);
 
   if (groups.length === 0) {
     return (
@@ -65,9 +76,20 @@ export function ChatHistory({ messages, pendingMessage }: ChatHistoryProps) {
             </svg>
           </summary>
           <ul className="flex flex-col gap-2 border-t border-gray-100 px-3 pb-3 pt-2">
-            {group.messages.map((message) => (
-              <ChatMessageBubble key={message.id} message={message} />
-            ))}
+            {group.messages.map((message) => {
+              const entry = entries.get(message.id);
+              if (!entry) return null;
+              // Une question garde la même clé d'une version à l'autre : le focus reste sur `< >`
+              const key = entry.versions ? `versions:${entry.versions.parentKey}` : message.id;
+              return (
+                <ChatMessageBubble
+                  key={key}
+                  entry={entry}
+                  actions={actions}
+                  editText={editing?.id === message.id ? editing.text : null}
+                />
+              );
+            })}
             {index === 0 && pendingMessage && <PendingExchange text={pendingMessage} />}
             {index === 0 && <li ref={endRef} aria-hidden="true" className="h-0" />}
           </ul>

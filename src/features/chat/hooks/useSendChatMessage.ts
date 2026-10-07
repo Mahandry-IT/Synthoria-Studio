@@ -8,7 +8,7 @@ import { toastError } from "@/shared/ui/toast";
 import { sendChatMessage } from "../chat.api";
 import { appendExchange } from "../chat.logic";
 import type { ChatHistoryResponse } from "../chat.types";
-import { courseChatKey } from "./useCourseChat";
+import { courseChatKey, courseChatMutationKey } from "./useCourseChat";
 
 const CHAT_LIMIT_FALLBACK = "Limite de messages atteinte pour ce cours. Réessayez plus tard.";
 
@@ -28,10 +28,14 @@ export interface SendChatVariables {
   message: string;
   /** Section en cours de lecture, si connue : contexte prioritaire côté serveur. */
   sectionId?: string;
+  /** Réponse après laquelle s'insère la question (`null` : racine). */
+  parentId: string | null;
+  /** Question éditée (affichage seulement) : le fil est coupé à cette question pendant l'envoi. */
+  editedId?: string;
 }
 
 /**
- * Envoie une question au chat du cours. En cas de succès, l'échange et le quota sont reportés
+ * Envoie une question au chat du cours, ou une nouvelle version d'une question éditée. En cas de succès, l'échange et le quota sont reportés
  * dans le cache ; l'historique est ensuite resynchronisé (aussi après un 429, pour le quota).
  */
 export function useSendChatMessage(sessionId: string) {
@@ -39,7 +43,9 @@ export function useSendChatMessage(sessionId: string) {
   const key = courseChatKey(sessionId);
 
   return useMutation({
-    mutationFn: ({ message, sectionId }: SendChatVariables) => sendChatMessage(sessionId, message, sectionId),
+    mutationKey: [...courseChatMutationKey(sessionId), "send"],
+    mutationFn: ({ message, sectionId, parentId }: SendChatVariables) =>
+      sendChatMessage(sessionId, message, { sectionId, parentId }),
     onSuccess: (exchange) => {
       queryClient.setQueryData<ChatHistoryResponse>(key, (current) => appendExchange(current, exchange));
     },

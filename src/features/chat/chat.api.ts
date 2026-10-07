@@ -1,4 +1,4 @@
-import { getJson, postJson } from "@/shared/api/httpClient";
+import { deleteJson, getJson, postJson } from "@/shared/api/httpClient";
 import { chatHistoryResponseSchema, chatRequestSchema, chatSendResponseSchema } from "./chat.schema";
 import type { ChatHistoryResponse, ChatSendResponse } from "./chat.types";
 
@@ -26,9 +26,19 @@ export async function getChat(sessionId: string): Promise<ChatHistoryResponse> {
   return parsed.data;
 }
 
+export interface SendChatOptions {
+  /** Section en cours de lecture : contexte prioritaire côté serveur. */
+  sectionId?: string;
+  /**
+   * Réponse du tuteur après laquelle s'insère la question (`null` : racine). Pour éditer une
+   * question, le parent de la question éditée : le serveur crée une version sœur.
+   */
+  parentId?: string | null;
+}
+
 /**
- * Envoie une question au tuteur du cours. Le cours est lu côté serveur : seul le message est envoyé.
- * Sans retry : un message rejoué consommerait le quota une seconde fois.
+ * Envoie une question (ou une nouvelle version d'une question) au tuteur du cours. Le cours est lu
+ * côté serveur. Sans retry : un message rejoué consommerait le quota une seconde fois.
  *
  * @throws {Error} si le message est vide ou trop long, ou si la réponse du serveur est invalide
  * @throws {HttpError} 404, 422, 429 (limite par minute ou par jour), 502, 503
@@ -36,9 +46,9 @@ export async function getChat(sessionId: string): Promise<ChatHistoryResponse> {
 export async function sendChatMessage(
   sessionId: string,
   message: string,
-  sectionId?: string,
+  { sectionId, parentId }: SendChatOptions = {},
 ): Promise<ChatSendResponse> {
-  const request = chatRequestSchema.safeParse({ message, section_id: sectionId });
+  const request = chatRequestSchema.safeParse({ message, section_id: sectionId, parent_id: parentId });
   if (!request.success) throw new Error(request.error.issues[0]?.message ?? "Message invalide.");
 
   const raw = await postJson<unknown>(chatPath(sessionId), request.data, {
@@ -52,4 +62,22 @@ export async function sendChatMessage(
     throw new Error("Réponse invalide du moteur IA pour le chat. Réessayez.");
   }
   return parsed.data;
+}
+
+/**
+ * Supprime une question, sa réponse et toute leur descendance (le quota n'est pas rendu).
+ *
+ * @throws {HttpError} 404 cours ou message inconnu
+ */
+export async function deleteChatMessage(sessionId: string, messageId: string): Promise<void> {
+  await deleteJson(`${chatPath(sessionId)}/messages/${encodeURIComponent(messageId)}`);
+}
+
+/**
+ * Supprime tout le chat du cours (le quota n'est pas rendu).
+ *
+ * @throws {HttpError} 404 cours inconnu
+ */
+export async function clearChat(sessionId: string): Promise<void> {
+  await deleteJson(chatPath(sessionId));
 }
