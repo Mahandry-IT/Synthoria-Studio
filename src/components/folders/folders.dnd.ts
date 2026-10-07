@@ -1,9 +1,10 @@
 import { pointerWithin, type CollisionDetection } from "@dnd-kit/core";
-import type { CourseHistoryItem } from "./history.types";
+import { DEFAULT_FOLDER, DEFAULT_SUBFOLDER } from "./folders.constants";
+import type { FolderPlacement } from "./folders.types";
 
-/** `data` porté par la carte de cours glissée (`useDraggable` dans `HistoryItem`). */
-export interface DragData {
-  item: CourseHistoryItem;
+/** `data` porté par l'élément glissé (`useDraggable`) : cours, fichier… */
+export interface DragData<T> {
+  item: T;
 }
 
 /** `data` porté par une zone de dépôt de `FolderNav` (`useDroppable`). */
@@ -11,6 +12,22 @@ export type DropTarget =
   | { kind: "subfolder"; folder: string; subfolder: string }
   | { kind: "folder"; folder: string }
   | { kind: "default" };
+
+/**
+ * Emplacement visé par un dépôt : la zone de repli vise le dossier par défaut, un dossier sans
+ * sous-dossier précis vise son sous-dossier par défaut.
+ */
+export function dropTargetPlacement(target: DropTarget): FolderPlacement {
+  return {
+    folder: target.kind === "default" ? DEFAULT_FOLDER : target.folder,
+    subfolder: target.kind === "subfolder" ? target.subfolder : DEFAULT_SUBFOLDER,
+  };
+}
+
+/** Vrai si les deux emplacements sont identiques (un dépôt dessus est alors sans effet). */
+export function isSamePlacement(a: FolderPlacement, b: FolderPlacement): boolean {
+  return a.folder === b.folder && a.subfolder === b.subfolder;
+}
 
 /**
  * Les zones de dépôt de `FolderNav` sont imbriquées (nav > dossier > sous-dossier) : leurs aires se

@@ -1,4 +1,5 @@
 import type { CourseGenerationResponse } from "@/features/course/course.types";
+import type { FolderFilter } from "@/components/folders/folders.types";
 
 export interface CourseHistoryItem {
   id: string;
@@ -31,7 +32,4 @@ export interface CourseFolder {
 }
 
 /** Filtre courant de l'historique par dossier. `null` (hors de ce type) = tous les cours. */
-export interface CourseFolderFilter {
-  folder: string;
-  subfolder?: string;
-}
+export type CourseFolderFilter = FolderFilter;

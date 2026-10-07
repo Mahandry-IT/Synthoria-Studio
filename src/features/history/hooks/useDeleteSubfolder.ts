@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteSubfolder } from "../history.api";
-import { DEFAULT_SUBFOLDER } from "../history.constants";
+import { DEFAULT_SUBFOLDER } from "@/components/folders/folders.constants";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
 
 interface DeleteSubfolderArgs {

@@ -6,8 +6,8 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import DriveFileMoveOutlinedIcon from "@mui/icons-material/DriveFileMoveOutlined";
 import { Badge } from "@/components/Badge";
 import { markdownToPlain } from "@/shared/utils/markdown";
-import { DEFAULT_FOLDER, DEFAULT_SUBFOLDER } from "../history.constants";
-import type { DragData } from "../history.dnd";
+import { DEFAULT_FOLDER, DEFAULT_SUBFOLDER } from "@/components/folders/folders.constants";
+import type { DragData } from "@/components/folders/folders.dnd";
 import type { CourseHistoryItem } from "../history.types";
 
 interface HistoryItemProps {
@@ -32,7 +32,7 @@ export function HistoryItem({ item, onDeleteClick, onMoveClick, showFolder = fal
     hour: "2-digit",
     minute: "2-digit",
   });
-  const dragData: DragData = { item };
+  const dragData: DragData<CourseHistoryItem> = { item };
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: item.id, data: dragData });
 
   return (
