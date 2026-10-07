@@ -33,3 +33,6 @@ export const SECTION_NOTE_MAX_LENGTH = 2000;
 
 /** Longueur maximale d'une note libre sur une vidéo (alignée sur le backend). */
 export const VIDEO_NOTE_MAX_LENGTH = 2000;
+
+/** Longueur maximale d'un message envoyé au chat d'un cours (alignée sur le backend). */
+export const CHAT_MESSAGE_MAX_LENGTH = 1000;

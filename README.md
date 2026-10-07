@@ -28,6 +28,7 @@ npm start
 | `/` | Upload et ingestion de PDF |
 | `/ask` | Question → plan (relu/édité) → cours → podcast |
 | `/history` | Historique des cours ; le détail propose le podcast du cours |
+| `/chat` | Chat avec le tuteur d'un cours : choix du cours (`?course=<id>`), puis conversation |
 
 ## Format du cours et apprentissage actif
 
@@ -48,6 +49,14 @@ Chaque section suit le cycle **Défi → Pourquoi → Quoi → Comment → À to
 Replis : une section sans défi ni sous-sections (sessions historiques) s'affiche en entier comme avant ; un cours sans `session_id` (non persisté) n'envoie jamais la réponse au défi (pas d'analyse ni de reformulation évaluée).
 
 À l'étape du plan, un **pré-test** facultatif marque les sections déjà maîtrisées (`mastery: "known"`) : le cours en génère une version condensée. La page **/review** et la carte « À réviser aujourd'hui » du dashboard proposent les flashcards issues des questions « Vérifie » (répétition espacée Leitner : J+1, J+3, J+7, J+21).
+
+### Chat du cours
+
+Chaque cours persisté (avec `session_id`) a un **tuteur** qui ne répond qu'aux questions sur sa leçon (`src/features/chat/`) :
+- **accès** : bouton flottant (bulle) juste au-dessus du bouton « remonter », qui ouvre un panneau latéral (plein écran sur mobile ; Échap ou ✕ pour fermer) ; ou la page **/chat** (entrée « Chat » de la barre latérale), où l'on choisit d'abord un cours. Le bouton est masqué pendant le quiz ;
+- **API** : `GET /courses/{session_id}/chat` (historique chronologique + quota) et `POST /courses/{session_id}/chat` `{ message }` (via le rewrite `/api`, timeout 60 s, sans retry pour ne pas consommer deux fois le quota). Le cours est lu côté serveur : seul le message est envoyé ;
+- **limites** (alignées sur le backend) : 1000 caractères par message (`CHAT_MESSAGE_MAX_LENGTH`), **15 messages par jour et par cours** (remis à zéro à minuit UTC). Le compteur « N messages restants aujourd'hui » vient du serveur ; le champ est désactivé une fois la limite atteinte. Un 429 affiche le message du backend tel quel ;
+- **historique** : groupé par jour en accordéons (jour le plus récent ouvert), réponses rendues en texte riche avec leurs sources (liens http(s) uniquement) ; une question hors sujet reçoit un refus marqué d'un badge « Hors sujet ».
 
 ## Podcast
 
