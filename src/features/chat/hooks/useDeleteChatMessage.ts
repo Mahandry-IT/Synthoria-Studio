@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toastError } from "@/shared/ui/toast";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { deleteChatMessage } from "../chat.api";
 import { removeMessageBranch } from "../chat.logic";
 import type { ChatHistoryResponse } from "../chat.types";
@@ -22,6 +22,7 @@ export function useDeleteChatMessage(sessionId: string) {
       queryClient.setQueryData<ChatHistoryResponse>(key, (current) =>
         current ? removeMessageBranch(current, messageId) : current,
       );
+      toastSuccess("Question supprimée.");
     },
     onError: toastError,
     onSettled: () => queryClient.invalidateQueries({ queryKey: key }),
