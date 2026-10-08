@@ -17,6 +17,9 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+LABEL org.opencontainers.image.source="https://github.com/Mahandry-IT/Synthoria-Studio" \
+      org.opencontainers.image.description="Synthoria Studio (Next.js standalone)"
+
 ENV NODE_ENV=production
 
 RUN addgroup --system --gid 1001 nodejs && \
@@ -32,5 +35,9 @@ EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+
+# Sonde de vivacité (route /healthz, sans dépendance au backend). wget = busybox d'Alpine.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD wget -qO /dev/null "http://127.0.0.1:${PORT}/healthz" || exit 1
 
 CMD ["node", "server.js"]
