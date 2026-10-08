@@ -2,7 +2,7 @@
 
 import { CodeBlock } from "@/components/code/CodeBlock";
 import { InlineCode } from "@/components/code/InlineCode";
-import { maskCode } from "@/shared/utils/code/segments";
+import { looksLikeBareCode, maskCode } from "@/shared/utils/code/segments";
 import { LatexText } from "@/shared/utils/latex";
 import { sanitizeExtractedText } from "@/shared/utils/textSanitize";
 
@@ -63,9 +63,11 @@ function parseFlattenedTable(text: string): { headers: string[]; rows: string[][
 /**
  * Détecte une liste aplatie backend : items séparés par " ; " (≥ 2 items).
  * On ne considère pas une liste si le séparateur apparaît une seule fois
- * (pourrait être de la prose normale).
+ * (pourrait être de la prose normale), ni si le texte contient du code non balisé :
+ * ses `;` terminent des instructions, ils ne séparent pas des items.
  */
 function parseFlattenedList(text: string): string[] | null {
+  if (looksLikeBareCode(text)) return null;
   const trimmed = text.trim();
   const parts = trimmed.split(/\s*;\s+/);
   // Au moins 2 items, chacun non vide
