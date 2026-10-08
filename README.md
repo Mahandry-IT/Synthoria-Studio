@@ -1,5 +1,7 @@
 # Synthoria
 
+[![CI / Publish image](https://github.com/Mahandry-IT/Synthoria-Studio/actions/workflows/publish.yml/badge.svg?branch=main)](https://github.com/Mahandry-IT/Synthoria-Studio/actions/workflows/publish.yml)
+
 Application Next.js pour la génération de cours structurés par IA.
 
 ## Getting Started
@@ -108,12 +110,33 @@ docker compose --profile dev up dev
 
 ### Build Arguments
 
-- `NODE_ENV`: Set to `production` (default) or `development`
+- `NEXT_PUBLIC_API_URL` : URL du backend Synthoria-LLM vue **depuis le serveur Next** (rewrites `/api/*` et routes proxy). Figée au build ; le navigateur n'appelle que `/api`, jamais cette URL.
 
 ### Environment Variables
 
 - `PORT`: Server port (default: 3000)
 - `HOSTNAME`: Server hostname (default: "0.0.0.0")
+
+### Healthcheck
+
+`GET /healthz` répond `200 {"status":"ok"}` sans appeler le backend (vivacité du serveur Next uniquement).
+L'image embarque un `HEALTHCHECK` sur cette route. `GET /api/health` reste la santé de l'API, via le rewrite.
+
+## Images publiées
+
+Branches : les branches de travail partent de `develop` et leurs PR ciblent `develop` ; une PR `develop` → `main`
+livre en production.
+
+Le workflow [`publish.yml`](.github/workflows/publish.yml) lance lint, Vitest et build sur chaque PR et push vers
+`develop` ou `main`. Sur un push de `develop` ou `main`, et seulement si les tests passent, il publie :
+
+| Image | Tags |
+| --- | --- |
+| `ghcr.io/mahandry-it/synthoria-studio` | `latest` (`main`, production), `develop` (`develop`, stack de test), `sha-<7>` (retour en arrière) |
+
+L'image est construite avec `NEXT_PUBLIC_API_URL=http://api:8000` : elle suppose un service nommé `api`
+sur le même réseau Docker. Le déploiement complet (Studio + LLM + mise à jour automatique) se fait depuis le
+dépôt parapluie [Mahandry-IT/Synthoria](https://github.com/Mahandry-IT/Synthoria).
 
 ## Learn More
 
