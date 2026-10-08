@@ -124,12 +124,15 @@ L'image embarque un `HEALTHCHECK` sur cette route. `GET /api/health` reste la sa
 
 ## Images publiées
 
-Le workflow [`publish.yml`](.github/workflows/publish.yml) lance lint, Vitest et build sur chaque PR et push.
-Sur `main` uniquement, et seulement si les tests passent, il publie :
+Branches : les branches de travail partent de `develop` et leurs PR ciblent `develop` ; une PR `develop` → `main`
+livre en production.
+
+Le workflow [`publish.yml`](.github/workflows/publish.yml) lance lint, Vitest et build sur chaque PR et push vers
+`develop` ou `main`. Sur un push de `develop` ou `main`, et seulement si les tests passent, il publie :
 
 | Image | Tags |
 | --- | --- |
-| `ghcr.io/mahandry-it/synthoria-studio` | `latest`, `sha-<7>` (retour en arrière) |
+| `ghcr.io/mahandry-it/synthoria-studio` | `latest` (`main`, production), `develop` (`develop`, stack de test), `sha-<7>` (retour en arrière) |
 
 L'image est construite avec `NEXT_PUBLIC_API_URL=http://api:8000` : elle suppose un service nommé `api`
 sur le même réseau Docker. Le déploiement complet (Studio + LLM + mise à jour automatique) se fait depuis le
