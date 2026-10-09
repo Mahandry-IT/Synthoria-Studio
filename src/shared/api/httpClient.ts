@@ -1,4 +1,5 @@
 import axios, { type AxiosRequestConfig, type AxiosError } from "axios";
+import { parseRetryAfter } from "./retryAfter";
 
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 1000;
@@ -10,6 +11,8 @@ export class HttpError extends Error {
     public readonly status: number,
     message: string,
     public readonly body?: unknown,
+    /** Délai d'attente annoncé par l'en-tête `Retry-After` (429/503), en secondes. */
+    public readonly retryAfterSeconds?: number,
   ) {
     super(message);
     this.name = "HttpError";
@@ -34,7 +37,8 @@ function shouldRetry(status: number): boolean {
 function toHttpError(err: AxiosError): HttpError {
   const status = err.response?.status ?? 0;
   const body = err.response?.data ?? null;
-  return new HttpError(status, `HTTP ${status}`, body);
+  const retryAfter = parseRetryAfter(err.response?.headers?.["retry-after"]);
+  return new HttpError(status, `HTTP ${status}`, body, retryAfter);
 }
 
 /**
