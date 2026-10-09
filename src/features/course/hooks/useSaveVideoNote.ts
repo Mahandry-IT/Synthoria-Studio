@@ -14,6 +14,6 @@ interface SaveNoteVariables {
 export function useSaveVideoNote() {
   return useMutation({
     mutationFn: ({ sessionId, videoId, note }: SaveNoteVariables) => saveVideoNote(sessionId, videoId, note),
-    onError: toastError,
+    onError: (err) => toastError(err),
   });
 }
