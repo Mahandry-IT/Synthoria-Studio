@@ -4,14 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/Badge";
-import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { ErrorState } from "@/components/ErrorState";
 import { Skeleton } from "@/components/Skeleton";
 import { RichText } from "@/features/course/components/RichText";
-import { boxLabel, splitBack, summarizeReview } from "../review.logic";
+import { boxLabel, resolveCardMode, summarizeReview } from "../review.logic";
 import type { ReviewResult } from "../review.schema";
 import { DUE_CARDS_KEY, useDueCards, useRecordReview } from "../hooks/useReview";
+import { ReviewChoiceCard } from "./ReviewChoiceCard";
+import { ReviewFreeTextCard } from "./ReviewFreeTextCard";
 
 /** Couleur du badge de boîte : amber (à revoir bientôt) → gray (en cours) → green (maîtrisée). */
 function boxBadgeVariant(box: number): "amber" | "gray" | "green" {
@@ -21,7 +22,9 @@ function boxBadgeVariant(box: number): "amber" | "gray" | "green" {
 }
 
 /**
- * Session de révision : une carte à la fois (question → « Voir la réponse » → « Je savais » / « À revoir »).
+ * Session de révision, une carte à la fois, en mode mixte :
+ * - QCM : choisir puis « Valider », correction immédiate et résultat envoyé automatiquement ;
+ * - réponse libre : écrire sa réponse, « Voir la correction », puis « Je savais » / « À revoir ».
  * Le résultat de chaque carte est enregistré immédiatement ; le bilan s'affiche à la fin.
  */
 export function ReviewSession() {
@@ -29,8 +32,9 @@ export function ReviewSession() {
   const record = useRecordReview();
   const queryClient = useQueryClient();
   const [index, setIndex] = useState(0);
-  const [revealed, setRevealed] = useState(false);
   const [results, setResults] = useState<ReviewResult[]>([]);
+  // Résultat enregistré de la carte QCM courante (en attente de « Carte suivante »)
+  const [recorded, setRecorded] = useState(false);
 
   if (isLoading) return <Skeleton lines={4} />;
   if (error) return <ErrorState error={error} onRetry={() => refetch()} />;
@@ -53,7 +57,7 @@ export function ReviewSession() {
       <Card className="space-y-3 p-6 text-center" role="status">
         <p className="text-lg font-semibold text-gray-900">Session terminée</p>
         <p className="text-sm text-gray-600">
-          {summary.correct}/{summary.total} cartes sues ({summary.percent} %). Les cartes ratées reviennent demain.
+          {summary.correct}/{summary.total} cartes sues ({summary.percent} %). Les cartes ratées reviennent demain ; les cartes sues reviendront plus tard sous une autre formulation.
         </p>
         <Link
           href="/"
@@ -67,16 +71,22 @@ export function ReviewSession() {
   }
 
   const card = cards[index];
-  const { answer, explanation } = splitBack(card.back);
+  const mode = resolveCardMode(card);
 
-  const answerCard = (result: ReviewResult) =>
+  const goNext = () => {
+    setRecorded(false);
+    setIndex((current) => current + 1);
+  };
+
+  /** Enregistre le résultat ; `advance` passe directement à la carte suivante (réponse libre). */
+  const recordResult = (result: ReviewResult, advance: boolean) =>
     record.mutate(
       { sessionId: card.session_id, cardId: card.card_id, result },
       {
         onSuccess: () => {
           setResults((current) => [...current, result]);
-          setRevealed(false);
-          setIndex((current) => current + 1);
+          if (advance) goNext();
+          else setRecorded(true);
         },
       },
     );
@@ -101,43 +111,29 @@ export function ReviewSession() {
       <div className="flex flex-wrap items-center gap-1.5">
         {card.course_title && <Badge variant="indigo">{card.course_title}</Badge>}
         <Badge variant={boxBadgeVariant(card.box)}>{boxLabel(card.box)}</Badge>
+        <Badge variant="gray">{mode === "qcm" ? "QCM" : "Réponse libre"}</Badge>
       </div>
 
       <div>
         <RichText text={card.front} className="text-base font-medium leading-relaxed text-gray-900" />
       </div>
 
-      {!revealed ? (
-        <Button type="button" className="w-full sm:w-auto" onClick={() => setRevealed(true)}>
-          Voir la réponse
-        </Button>
+      {mode === "qcm" ? (
+        <ReviewChoiceCard
+          key={`${card.session_id}:${card.card_id}:${index}`}
+          card={card}
+          recording={record.isPending}
+          recorded={recorded}
+          onValidate={(result) => recordResult(result, false)}
+          onNext={goNext}
+        />
       ) : (
-        <div className="space-y-4">
-          <div className="rounded-xl bg-indigo-50 p-4 text-sm text-indigo-900">
-            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-indigo-500">Réponse</p>
-            <RichText text={answer} className="font-semibold" />
-            {explanation && <RichText text={explanation} className="mt-2 opacity-80" />}
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Button
-              type="button"
-              className="flex-1"
-              loading={record.isPending}
-              onClick={() => answerCard("correct")}
-            >
-              Je savais
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="flex-1"
-              loading={record.isPending}
-              onClick={() => answerCard("incorrect")}
-            >
-              À revoir
-            </Button>
-          </div>
-        </div>
+        <ReviewFreeTextCard
+          key={`${card.session_id}:${card.card_id}:${index}`}
+          card={card}
+          recording={record.isPending}
+          onAnswer={(result) => recordResult(result, true)}
+        />
       )}
     </Card>
   );
