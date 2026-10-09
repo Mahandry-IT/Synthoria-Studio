@@ -10,6 +10,7 @@ import {
   isQuotaExhausted,
   lastAssistantId,
   resolveThread,
+  retryRequestFor,
   ROOT_KEY,
   selectionAfterDelete,
   selectMessage,
@@ -38,7 +39,8 @@ const NO_MESSAGES: ChatMessage[] = [];
 /**
  * Conversation avec le tuteur d'un cours : fil affiché (une version par niveau) groupé par jour
  * dans une zone défilante, champ de question en pied. Les questions s'éditent en nouvelles versions
- * (navigation `< i/X >`) et se suppriment avec leur suite. Réutilisée par le tiroir et la page /chat.
+ * (navigation `< i/X >`) et se suppriment avec leur suite ; « Réessayer » sur une réponse repose
+ * la même question en version sœur. Réutilisée par le tiroir et la page /chat.
  */
 export function ChatConversation({ sessionId, sectionId, className = "" }: ChatConversationProps) {
   const [draft, setDraft] = useState("");
@@ -102,8 +104,17 @@ export function ChatConversation({ sessionId, sectionId, className = "" }: ChatC
         setVersionAnnouncement(`Version ${versions.index + direction} sur ${versions.count}`);
       },
       onDelete: ({ message }: ChatThreadEntry) => setDeleting(message),
+      onRetry: ({ message }: ChatThreadEntry) => {
+        const retry = retryRequestFor(thread, message.id);
+        if (!retry) return;
+        setEditing(null);
+        sendMessage(
+          { message: retry.message, sectionId, parentId: retry.parentId, editedId: retry.questionId },
+          { onSuccess: (exchange) => setSelection((current) => selectMessage(current, exchange.user_message)) },
+        );
+      },
     }),
-    [busy, quota, sectionId, sendMessage],
+    [busy, quota, sectionId, sendMessage, thread],
   );
 
   const confirmDelete = () => {
