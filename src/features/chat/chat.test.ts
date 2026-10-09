@@ -9,6 +9,7 @@ import {
   remainingLabel,
   removeMessageBranch,
   resolveThread,
+  retryRequestFor,
   ROOT_KEY,
   selectionAfterDelete,
   selectMessage,
@@ -224,5 +225,27 @@ describe("chat.logic — versions en arbre", () => {
     const thread = resolveThread(legacy);
     expect(thread.map((e) => e.message.id)).toEqual(["q1", "r1", "q2"]);
     expect(thread[2].versions).toMatchObject({ parentKey: "r1", index: 1, count: 1 });
+  });
+});
+
+describe("chat.logic — réessayer une réponse", () => {
+  const at = (hour: number) => localIso(2026, 10, 4, hour);
+  const u1 = message("u1", at(8));
+  const a1 = message("a1", at(9), "assistant", "u1");
+  const u2 = message("u2", at(10), "user", "a1");
+  const a2 = message("a2", at(11), "assistant", "u2");
+  const thread = resolveThread([u1, a1, u2, a2]);
+
+  it("question racine : même texte, parent null", () => {
+    expect(retryRequestFor(thread, "a1")).toEqual({ questionId: "u1", message: "u1", parentId: null });
+  });
+
+  it("question de suite : parent = réponse précédente (version sœur)", () => {
+    expect(retryRequestFor(thread, "a2")).toEqual({ questionId: "u2", message: "u2", parentId: "a1" });
+  });
+
+  it("null pour une question ou un message absent du fil", () => {
+    expect(retryRequestFor(thread, "u2")).toBeNull();
+    expect(retryRequestFor(thread, "inconnu")).toBeNull();
   });
 });

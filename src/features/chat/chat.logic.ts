@@ -179,6 +179,32 @@ export function lastAssistantId(thread: ChatThreadEntry[]): string | null {
   return null;
 }
 
+/** Question à renvoyer pour « Réessayer » une réponse du tuteur. */
+export interface ChatRetryRequest {
+  /** Question à l'origine de la réponse (coupée du fil pendant l'envoi). */
+  questionId: string;
+  message: string;
+  /** Parent de la question : la nouvelle version en sera la sœur (`null` : racine). */
+  parentId: string | null;
+}
+
+/**
+ * « Réessayer » une réponse : même texte que la question qui la précède dans le fil, envoyé avec le
+ * même parent pour créer une version sœur navigable. `null` si la réponse n'est pas précédée d'une question.
+ */
+export function retryRequestFor(thread: ChatThreadEntry[], assistantId: string): ChatRetryRequest | null {
+  const index = thread.findIndex((entry) => entry.message.id === assistantId);
+  const question = index > 0 ? thread[index - 1] : undefined;
+  if (thread[index]?.message.role !== "assistant" || question?.message.role !== "user") return null;
+
+  const parentKey = question.versions?.parentKey ?? ROOT_KEY;
+  return {
+    questionId: question.message.id,
+    message: question.message.content,
+    parentId: parentKey === ROOT_KEY ? null : parentKey,
+  };
+}
+
 /** Affiche ce message à son niveau (navigation entre versions, nouvelle version après édition). */
 export function selectMessage(selection: ChatSelection, message: ChatMessage): ChatSelection {
   return { ...selection, [message.parent_id ?? ROOT_KEY]: message.id };
