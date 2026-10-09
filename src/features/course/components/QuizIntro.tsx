@@ -6,12 +6,14 @@ import type { QuizQuestion } from "../course.types";
 interface QuizIntroProps {
   questions: QuizQuestion[];
   onStart: () => void;
+  /** Tirage de la série en cours côté serveur. */
+  starting?: boolean;
 }
 
 /**
  * Écran d'intro du quiz : affiche le nombre de questions, les points et un bouton "Commencer".
  */
-export function QuizIntro({ questions, onStart }: QuizIntroProps) {
+export function QuizIntro({ questions, onStart, starting = false }: QuizIntroProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -44,9 +46,11 @@ export function QuizIntro({ questions, onStart }: QuizIntroProps) {
         ref={buttonRef}
         type="button"
         onClick={onStart}
-        className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
+        disabled={starting}
+        aria-busy={starting}
+        className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors disabled:cursor-wait disabled:opacity-60"
       >
-        Commencer
+        {starting ? "Préparation du quiz…" : "Commencer"}
       </button>
     </section>
   );

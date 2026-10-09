@@ -183,7 +183,7 @@ const coursePitfallSchema = z.object({
   tip: z.string().optional(),
 });
 
-const quizQuestionSchema = z.object({
+export const quizQuestionSchema = z.object({
   question: z.string(),
   options: z.array(z.string()).min(2),
   /** Indices 0-based des bonnes réponses (1 = unique, >1 = QCM multiple) */
