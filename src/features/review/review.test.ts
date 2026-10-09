@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { boxLabel, splitBack, summarizeReview } from "./review.logic";
-import { dueCardListSchema, reviewResponseSchema } from "./review.schema";
+import { boxLabel, cardCorrection, isChoiceCorrect, resolveCardMode, splitBack, summarizeReview } from "./review.logic";
+import { dueCardListSchema, dueCardSchema, reviewResponseSchema } from "./review.schema";
 
 describe("review.logic", () => {
   it("summarizeReview compte et arrondit", () => {
@@ -45,5 +45,56 @@ describe("review.schema", () => {
   it("valide la réponse d'une révision", () => {
     expect(reviewResponseSchema.parse({ box: 1, due_at: "2026-09-25T00:00:00Z" }).box).toBe(1);
     expect(reviewResponseSchema.safeParse({ box: -1, due_at: "x" }).success).toBe(false);
+  });
+});
+
+describe("review — cartes mixtes", () => {
+  const base = {
+    box: 0,
+    variant_no: 0,
+    mode: undefined,
+    choices: ["A", "B", "C"],
+    correct_indices: [1],
+  };
+
+  it("alterne QCM et réponse libre selon box + variant_no", () => {
+    expect(resolveCardMode(base)).toBe("qcm");
+    expect(resolveCardMode({ ...base, variant_no: 1 })).toBe("text");
+    expect(resolveCardMode({ ...base, box: 1, variant_no: 1 })).toBe("qcm");
+  });
+
+  it("suit le mode du serveur s'il est fourni", () => {
+    expect(resolveCardMode({ ...base, mode: "text" })).toBe("text");
+  });
+
+  it("carte sans choix exploitables : toujours en réponse libre", () => {
+    expect(resolveCardMode({ ...base, choices: [], mode: "qcm" })).toBe("text");
+    expect(resolveCardMode({ ...base, correct_indices: [] })).toBe("text");
+    expect(resolveCardMode({ ...base, correct_indices: [5] })).toBe("text");
+  });
+
+  it("corrige un QCM par égalité exacte des ensembles", () => {
+    expect(isChoiceCorrect([1], [1])).toBe(true);
+    expect(isChoiceCorrect([0, 2], [2, 0, 2])).toBe(true);
+    expect(isChoiceCorrect([0, 2], [0])).toBe(false);
+    expect(isChoiceCorrect([1], [])).toBe(false);
+    expect(isChoiceCorrect([], [])).toBe(false);
+  });
+
+  it("corrigé : explication du serveur, sinon celle du verso", () => {
+    expect(cardCorrection({ back: "B\nDu verso", explanation: "" })).toEqual({ answer: "B", explanation: "Du verso" });
+    expect(cardCorrection({ back: "B\nDu verso", explanation: "Dédiée" })).toEqual({ answer: "B", explanation: "Dédiée" });
+  });
+
+  it("schéma : champs de variante facultatifs (backend antérieur)", () => {
+    const parsed = dueCardSchema.parse({
+      session_id: "3f6f1c1e-9d0a-4c6e-8a55-0b7d4d5e6f70",
+      card_id: "1-0",
+      front: "Q ?",
+      back: "B",
+      choices: null,
+    });
+    expect(parsed).toMatchObject({ variant_no: 0, choices: [], correct_indices: [], explanation: "" });
+    expect(parsed.mode).toBeUndefined();
   });
 });
