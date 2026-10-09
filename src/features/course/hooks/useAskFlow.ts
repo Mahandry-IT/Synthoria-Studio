@@ -13,10 +13,11 @@ import {
   type PendingPlan,
 } from "../askFlow";
 import type { QuestionInputValues } from "../course.schema";
-import type {
-  CourseGenerationResponse,
-  CoursePlanRequest,
-  PlannedSection,
+import {
+  PLAN_ERROR_MESSAGES,
+  type CourseGenerationResponse,
+  type CoursePlanRequest,
+  type PlannedSection,
 } from "../course.types";
 import { useEnqueuePodcast } from "@/features/podcast/hooks/useEnqueuePodcast";
 import { toastError, toastSuccess, toastWarning } from "@/shared/ui/toast";
@@ -87,7 +88,7 @@ export function useAskFlow(): UseAskFlowReturn {
   // Plan expiré ou supprimé : on l'oublie (la phase retombe sur le formulaire)
   useEffect(() => {
     if (!planQuery.isError) return;
-    toastError(planQuery.error);
+    toastError(planQuery.error, { messages: PLAN_ERROR_MESSAGES });
     setPendingPlanId(null);
   }, [planQuery.isError, planQuery.error, setPendingPlanId]);
 
@@ -99,7 +100,7 @@ export function useAskFlow(): UseAskFlowReturn {
       setView("result");
       toastSuccess("Plan généré. Relisez-le, modifiez-le si besoin, puis validez.");
     },
-    onError: toastError,
+    onError: (err) => toastError(err, { messages: PLAN_ERROR_MESSAGES }),
   });
 
   const onCourseGenerated = (data: CourseGenerationResponse) => {
@@ -119,13 +120,13 @@ export function useAskFlow(): UseAskFlowReturn {
   const fromPlanMutation = useMutation({
     mutationFn: generateCourseFromPlan,
     onSuccess: onCourseGenerated,
-    onError: toastError,
+    onError: (err) => toastError(err, { messages: PLAN_ERROR_MESSAGES }),
   });
 
   const directMutation = useMutation({
     mutationFn: generateCourse,
     onSuccess: onCourseGenerated,
-    onError: toastError,
+    onError: (err) => toastError(err, { messages: PLAN_ERROR_MESSAGES }),
   });
 
   function reset() {
