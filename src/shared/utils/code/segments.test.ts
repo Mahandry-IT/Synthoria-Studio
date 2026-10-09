@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { maskCode } from "./segments";
+import { looksLikeBareCode, maskCode } from "./segments";
 
 describe("maskCode — inline", () => {
   it("masque le code et le sort du texte", () => {
@@ -164,5 +164,19 @@ describe("restore et split", () => {
 
   it("split renvoie le texte tel quel s'il n'y a pas de code", () => {
     expect(maskCode("juste du texte").split("juste du texte")).toEqual(["juste du texte"]);
+  });
+});
+
+describe("looksLikeBareCode", () => {
+  it("reconnaît du code C laissé hors backticks", () => {
+    expect(
+      looksLikeBareCode("Analyse du code suivant : int s = 0; for(int i = 0; i < n; i++) { s += A[i][j]; }"),
+    ).toBe(true);
+    expect(looksLikeBareCode("while (x > 0) x--;")).toBe(true);
+  });
+
+  it("laisse passer une vraie liste aplatie en prose", () => {
+    expect(looksLikeBareCode("Sommets ; arêtes ; degrés")).toBe(false);
+    expect(looksLikeBareCode("Pour chaque sommet, on note son degré ; si le degré est pair, on continue")).toBe(false);
   });
 });
