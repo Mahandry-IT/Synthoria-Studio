@@ -20,6 +20,6 @@ export function useRecordReview() {
   return useMutation({
     mutationFn: ({ sessionId, cardId, result }: { sessionId: string; cardId: string; result: ReviewResult }) =>
       recordReview(sessionId, cardId, result),
-    onError: toastError,
+    onError: (err) => toastError(err),
   });
 }
