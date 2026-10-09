@@ -111,3 +111,15 @@ export function maskCode(text: string): MaskedCode {
 
   return { masked, segments, restore, split };
 }
+
+/** En-tête de boucle ou de condition de style C (`for (`, `while(`…) ou accolade de bloc. */
+const BARE_CODE_PATTERN = /[{}]|\b(?:for|while|if|switch)\s*\(/;
+
+/**
+ * Code laissé hors backticks par le backend (ex. `int s = 0; for(int i = 0; i < n; i++) { … }`).
+ * À appeler sur un texte dont le code balisé et les formules sont déjà masqués : une accolade ou un
+ * en-tête `for (`/`while (` restant signale alors du code nu, dont les `;` ne séparent pas des items.
+ */
+export function looksLikeBareCode(text: string): boolean {
+  return BARE_CODE_PATTERN.test(text);
+}
