@@ -6,16 +6,31 @@ const BASE_DELAY_MS = 1000;
 const MAX_DELAY_MS = 10_000;
 const DEFAULT_TIMEOUT_MS = 60_000;
 
+/** Contexte d'une erreur HTTP, utile au diagnostic (toast d'erreur, logs). */
+export interface HttpErrorMeta {
+  /** Délai d'attente annoncé par l'en-tête `Retry-After` (429/503), en secondes. */
+  retryAfterSeconds?: number;
+  /** Identifiant de la requête (`request_id` du corps ou en-tête `X-Request-ID`). */
+  requestId?: string;
+  method?: string;
+  url?: string;
+  /** Code axios d'une erreur sans réponse (ex. `ECONNABORTED` pour un délai dépassé). */
+  code?: string;
+}
+
 export class HttpError extends Error {
   constructor(
     public readonly status: number,
     message: string,
     public readonly body?: unknown,
-    /** Délai d'attente annoncé par l'en-tête `Retry-After` (429/503), en secondes. */
-    public readonly retryAfterSeconds?: number,
+    public readonly meta: HttpErrorMeta = {},
   ) {
     super(message);
     this.name = "HttpError";
+  }
+
+  get retryAfterSeconds(): number | undefined {
+    return this.meta.retryAfterSeconds;
   }
 }
 
@@ -37,8 +52,17 @@ function shouldRetry(status: number): boolean {
 function toHttpError(err: AxiosError): HttpError {
   const status = err.response?.status ?? 0;
   const body = err.response?.data ?? null;
-  const retryAfter = parseRetryAfter(err.response?.headers?.["retry-after"]);
-  return new HttpError(status, `HTTP ${status}`, body, retryAfter);
+  const headers = err.response?.headers;
+  const bodyRequestId =
+    body && typeof body === "object" ? (body as Record<string, unknown>).request_id : undefined;
+  const headerRequestId = headers?.["x-request-id"];
+  return new HttpError(status, `HTTP ${status}`, body, {
+    retryAfterSeconds: parseRetryAfter(headers?.["retry-after"]),
+    requestId: typeof bodyRequestId === "string" ? bodyRequestId : typeof headerRequestId === "string" ? headerRequestId : undefined,
+    method: err.config?.method?.toUpperCase(),
+    url: err.config?.url,
+    code: err.code,
+  });
 }
 
 /**

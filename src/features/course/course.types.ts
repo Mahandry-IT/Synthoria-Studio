@@ -392,12 +392,11 @@ export interface AddCourseSectionsResponse {
 
 // ─── Error types ────────────────────────────────────────────
 
-export const ERROR_MESSAGES: Record<number, string> = {
+/** Messages propres au flux plan → cours, quand le backend ne donne pas de `detail`. */
+export const PLAN_ERROR_MESSAGES: Readonly<Record<number, string>> = {
   404: "Plan introuvable. Régénérez le plan.",
   410: "Ce plan a expiré. Régénérez-le.",
   413: "Votre question est trop longue. Raccourcissez-la et réessayez.",
   422: "Le plan est invalide : au moins une section de développement est requise (80 sections maximum).",
   429: "Quota d'appels Gemini atteint. Réessayez dans quelques instants.",
-  502: "Réponse invalide du moteur IA. Réessayez.",
-  503: "Le moteur IA est temporairement indisponible. Réessayez dans quelques instants.",
 };
