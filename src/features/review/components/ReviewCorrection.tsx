@@ -14,8 +14,8 @@ export function ReviewCorrection({ answer, explanation, title = "Réponse" }: Re
   return (
     <div className="rounded-xl bg-indigo-50 p-4 text-sm text-indigo-900">
       <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-indigo-500">{title}</p>
-      {answer && <RichText text={answer} className="font-semibold" />}
-      {explanation && <RichText text={explanation} className="mt-2 opacity-80" />}
+      {answer && <RichText text={answer} className="block font-semibold" />}
+      {explanation && <RichText text={explanation} className="mt-2 block opacity-80" />}
     </div>
   );
 }
