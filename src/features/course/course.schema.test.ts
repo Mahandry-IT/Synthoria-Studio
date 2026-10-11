@@ -400,6 +400,38 @@ describe("courseResponseSchema — sous-sections par blocs", () => {
     expect(blocks[1].type).toBe("hologram");
   });
 
+  it("parse un bloc graphe, complète les étapes absentes et ignore un graphe invalide", () => {
+    const graph = {
+      layout: "tree",
+      directed: true,
+      nodes: [{ id: "A", label: "A" }, { id: "B", label: "B" }],
+      edges: [{ id: "e1", source: "A", target: "B" }],
+    };
+    const parsed = courseResponseSchema.parse({
+      ...base,
+      sections: [
+        {
+          ...legacySection,
+          subsections: [
+            {
+              title: "Quoi",
+              blocks: [
+                { type: "graph", graph },
+                { type: "graph", graph: { ...graph, steps: [{ caption: "Départ", highlight_nodes: ["A"] }] } },
+                { type: "graph", graph: { ...graph, layout: "spirale" } },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const blocks = parsed.sections?.[0].subsections?.[0].blocks ?? [];
+    expect(blocks[0].graph?.steps).toEqual([]);
+    expect(blocks[0].graph?.caption).toBe("");
+    expect(blocks[1].graph?.steps[0]).toEqual({ caption: "Départ", highlight_nodes: ["A"], highlight_edges: [] });
+    expect(blocks[2].graph).toBeNull();
+  });
+
   it("parse un bloc image ré-hébergé avec attribution", () => {
     const parsed = courseResponseSchema.parse({
       ...base,

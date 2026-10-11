@@ -46,6 +46,44 @@ describe("BlockRenderer", () => {
     expect(html([{ type: "diagram", diagram: { kind: "flowchart", caption: "Flux", mermaid: "flowchart TD; A-->B" } }])).toContain("Flux");
   });
 
+  describe("graphe", () => {
+    const graph = {
+      layout: "graph" as const,
+      directed: true,
+      caption: "Réseau",
+      nodes: [{ id: "A", label: "<b>A</b>" }, { id: "B", label: "B" }],
+      edges: [{ id: "e1", source: "A", target: "B", label: "7" }],
+    };
+
+    it("rend un graphe statique en SVG, libellés échappés et sans contrôles", () => {
+      const out = html([{ type: "graph", graph }]);
+
+      expect(out).toContain("<svg");
+      expect(out.match(/<ellipse/g)).toHaveLength(2);
+      expect(out).toContain("<marker"); // orienté : pointes de flèche
+      expect(out).toContain("&lt;b&gt;A&lt;/b&gt;");
+      expect(out).not.toContain("<b>");
+      expect(out).not.toContain("Suivant");
+    });
+
+    it("affiche le pas-à-pas et met en avant les éléments de la première étape", () => {
+      const steps = [
+        { caption: "On part de A.", highlight_nodes: ["A"], highlight_edges: [] },
+        { caption: "On rejoint B.", highlight_nodes: ["B"], highlight_edges: ["e1"] },
+      ];
+      const out = html([{ type: "graph", graph: { ...graph, directed: false, steps } }]);
+
+      expect(out).toContain("On part de A.");
+      expect(out).toContain("Suivant");
+      expect(out.match(/fill-indigo-600 stroke-indigo-700/g)).toHaveLength(1); // seul A est mis en avant
+      expect(out).not.toContain("<marker"); // non orienté : aucune flèche
+    });
+
+    it("ne rend rien sans donnée de graphe", () => {
+      expect(html([{ type: "graph" }, { type: "graph", graph: { ...graph, nodes: [] } }])).toBe("");
+    });
+  });
+
   it("ignore un type inconnu ou un bloc sans donnée sans casser le reste", () => {
     const out = html([
       { type: "hologram", text: "futur" },

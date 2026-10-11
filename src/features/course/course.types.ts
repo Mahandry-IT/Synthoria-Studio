@@ -108,6 +108,38 @@ export interface CourseChart {
   series: { name: string; values: number[] }[];
 }
 
+export interface CourseGraphNode {
+  id: string;
+  label: string;
+}
+
+export interface CourseGraphEdge {
+  id: string;
+  source: string;
+  target: string;
+  /** Poids ou étiquette courte de l'arête. */
+  label?: string | null;
+}
+
+export interface CourseGraphStep {
+  caption: string;
+  highlight_nodes?: string[];
+  highlight_edges?: string[];
+}
+
+/**
+ * Graphe en données pures : ni coordonnées ni couleurs, la disposition revient au client.
+ * `steps` vide = schéma statique. Libellés et légendes sont du texte non fiable (LLM).
+ */
+export interface CourseGraph {
+  layout: "graph" | "tree" | "layered";
+  directed: boolean;
+  caption?: string;
+  nodes: CourseGraphNode[];
+  edges: CourseGraphEdge[];
+  steps?: CourseGraphStep[];
+}
+
 /** Attribution obligatoire pour les licences CC BY / CC BY-SA (jamais affichée sans elle). */
 export interface CourseImageAttribution {
   author?: string | null;
@@ -146,6 +178,7 @@ export interface CourseContentBlock {
   pitfall?: { description: string; why_it_happens?: string; how_to_avoid?: string } | null;
   diagram?: CourseDiagram | null;
   chart?: CourseChart | null;
+  graph?: CourseGraph | null;
 }
 
 export interface CourseSubsection {
