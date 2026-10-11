@@ -50,6 +50,8 @@ export interface CourseVideo {
   category?: string | null;
   level?: string | null;
   relevance_reason?: string | null;
+  /** `id` de la section que la vidéo illustre ; nul, absent ou inconnu = vidéo générale du cours. */
+  section_id?: string | null;
   /** Note libre de l'apprenant sur cette vidéo (pense-bête, idées) ; jamais générée par le modèle. */
   note?: string;
 }

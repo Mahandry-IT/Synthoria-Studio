@@ -70,6 +70,8 @@ const courseVideoSchema = z.object({
   category: z.string().nullish(),
   level: z.string().nullish(),
   relevance_reason: z.string().nullish(),
+  // Rattachement à une section : absent des cours enregistrés avant l'ajout, nul = vidéo générale.
+  section_id: z.string().nullish(),
   note: z.string().optional().default(""),
 });
 

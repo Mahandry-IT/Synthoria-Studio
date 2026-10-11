@@ -13,7 +13,7 @@ const video = (overrides: Partial<CourseVideo> = {}): CourseVideo => ({
   ...overrides,
 });
 
-const html = (videos: CourseVideo[]) => renderToStaticMarkup(createElement(VideoCards, { videos }));
+const html = (videos: CourseVideo[]) => renderToStaticMarkup(createElement(VideoCards, { videos, onNoteSaved: () => {} }));
 
 describe("VideoCards", () => {
   it("n'affiche rien sans vidéo", () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CourseVideo } from "./course.types";
-import { groupByCategory } from "./videoGrouping";
+import { groupByCategory, splitVideosBySection } from "./videoGrouping";
 
 const video = (overrides: Partial<CourseVideo> = {}): CourseVideo => ({
   video_id: "dQw4w9WgXcQ",
@@ -58,5 +58,48 @@ describe("groupByCategory", () => {
 
   it("renvoie un tableau vide sans vidéo", () => {
     expect(groupByCategory([])).toEqual([]);
+  });
+});
+
+describe("splitVideosBySection", () => {
+  const ids = (videos: CourseVideo[] | undefined) => (videos ?? []).map((v) => v.video_id);
+
+  it("rattache chaque vidéo à sa section et laisse les autres au niveau du cours, dans l'ordre reçu", () => {
+    const videos = [
+      video({ video_id: "a", section_id: "s2" }),
+      video({ video_id: "b" }),
+      video({ video_id: "c", section_id: "s1" }),
+      video({ video_id: "d", section_id: null }),
+      video({ video_id: "e", section_id: "s2" }),
+    ];
+
+    const { general, bySection } = splitVideosBySection(videos, ["s1", "s2"]);
+
+    expect(ids(general)).toEqual(["b", "d"]);
+    expect(ids(bySection.get("s1"))).toEqual(["c"]);
+    expect(ids(bySection.get("s2"))).toEqual(["a", "e"]);
+  });
+
+  it("garde en vidéo générale celle dont la section est inconnue", () => {
+    const { general, bySection } = splitVideosBySection([video({ section_id: "supprimée" })], ["s1"]);
+
+    expect(general).toHaveLength(1);
+    expect(bySection.size).toBe(0);
+  });
+
+  it("plafonne à 2 vidéos par section, le surplus restant au niveau du cours", () => {
+    const videos = ["a", "b", "c"].map((video_id) => video({ video_id, section_id: "s1" }));
+
+    const { general, bySection } = splitVideosBySection(videos, ["s1"]);
+
+    expect(ids(bySection.get("s1"))).toEqual(["a", "b"]);
+    expect(ids(general)).toEqual(["c"]);
+  });
+
+  it("ne change rien pour un cours sans rattachement ni section", () => {
+    const videos = [video({ video_id: "a" }), video({ video_id: "b", section_id: "s1" })];
+
+    expect(splitVideosBySection(videos, []).general).toEqual(videos);
+    expect(splitVideosBySection([], ["s1"])).toEqual({ general: [], bySection: new Map() });
   });
 });
