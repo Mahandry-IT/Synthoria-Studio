@@ -9,10 +9,17 @@ interface RegenerateSectionButtonProps {
   sectionId: string;
   /** Appelé avec la section régénérée en cas de succès. */
   onRegenerated: (section: CourseSection) => void;
+  /** Une régénération groupée traite déjà cette section : le bouton est désactivé le temps qu'elle finisse. */
+  locked?: boolean;
 }
 
 /** Affiché à la place du contenu d'une section marquée `incomplete` : régénère cette section seule. */
-export function RegenerateSectionButton({ sessionId, sectionId, onRegenerated }: RegenerateSectionButtonProps) {
+export function RegenerateSectionButton({
+  sessionId,
+  sectionId,
+  onRegenerated,
+  locked = false,
+}: RegenerateSectionButtonProps) {
   const regenerate = useRegenerateSection(onRegenerated);
 
   return (
@@ -24,10 +31,16 @@ export function RegenerateSectionButton({ sessionId, sectionId, onRegenerated }:
         size="sm"
         className="mt-3"
         loading={regenerate.isPending}
+        disabled={locked}
         onClick={() => regenerate.mutate({ sessionId, sectionId })}
       >
         Régénérer cette section
       </Button>
+      {locked && (
+        <p className="mt-2 text-xs" aria-live="polite">
+          Une régénération de toutes les sections incomplètes est en cours : cette section sera traitée avec les autres.
+        </p>
+      )}
     </div>
   );
 }

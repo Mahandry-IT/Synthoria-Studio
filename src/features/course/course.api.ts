@@ -26,6 +26,7 @@ import {
   courseFromPlanRequestSchema,
   coursePlanSchema,
   courseResponseSchema,
+  courseSectionSchema,
   moreSectionsResponseSchema,
   pendingPlanDetailSchema,
   pendingPlansResponseSchema,
@@ -298,6 +299,22 @@ export async function regenerateSection(sessionId: string, sectionId: string): P
     throw new Error("Réponse invalide du moteur IA pour la régénération. Réessayez.");
   }
   return parsed.data;
+}
+
+/**
+ * État actuel d'une section côté serveur, ou null si le cours ou la section n'existe plus. Sert à
+ * resynchroniser l'affichage quand le serveur refuse une régénération (409) parce que la section a
+ * déjà été régénérée ailleurs (régénération groupée, autre onglet).
+ */
+export async function fetchCourseSection(sessionId: string, sectionId: string): Promise<CourseSection | null> {
+  const course = await getJson<{ gemini_response?: { sections?: unknown[] } }>(
+    `/courses/history/${encodeURIComponent(sessionId)}`,
+  );
+  for (const raw of course.gemini_response?.sections ?? []) {
+    const parsed = courseSectionSchema.safeParse(raw);
+    if (parsed.success && parsed.data.id === sectionId) return parsed.data;
+  }
+  return null;
 }
 
 /** Jusqu'à 10 sections par appel côté serveur, chacune pouvant demander une réparation. */

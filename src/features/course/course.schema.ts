@@ -178,7 +178,7 @@ const recallPromptSchema = z.object({
   expected_key_points: z.array(z.string()).optional().default([]),
 });
 
-const courseSectionSchema = z.object({
+export const courseSectionSchema = z.object({
   id: z.string().optional(),
   /** Cycle pédagogique : tous optionnels (sessions historiques sans cycle) */
   challenge: z.string().optional().default(""),

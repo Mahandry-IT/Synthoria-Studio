@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/Button";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import type { CourseGenerationResponse, RegenerateIncompleteSectionsResponse } from "../../course.types";
@@ -15,6 +15,8 @@ interface IncompleteCourseBannerProps {
   missingWrapUp: boolean;
   onSectionsRegenerated: (result: RegenerateIncompleteSectionsResponse) => void;
   onCourseRegenerated: (course: CourseGenerationResponse) => void;
+  /** Vrai tant qu'une régénération groupée ou complète est en cours (pour verrouiller les boutons par section). */
+  onBusyChange?: (busy: boolean) => void;
 }
 
 /**
@@ -28,6 +30,7 @@ export function IncompleteCourseBanner({
   missingWrapUp,
   onSectionsRegenerated,
   onCourseRegenerated,
+  onBusyChange,
 }: IncompleteCourseBannerProps) {
   const [confirming, setConfirming] = useState(false);
   const sections = useRegenerateIncompleteSections(onSectionsRegenerated);
@@ -36,9 +39,13 @@ export function IncompleteCourseBanner({
     onCourseRegenerated(regenerated);
   });
 
+  const busy = sections.isPending || course.isPending;
+  useEffect(() => {
+    onBusyChange?.(busy);
+  }, [busy, onBusyChange]);
+
   if (incompleteCount === 0 && !missingWrapUp) return null;
 
-  const busy = sections.isPending || course.isPending;
   const problems = [
     incompleteCount > 0 &&
       `${incompleteCount} ${incompleteCount > 1 ? "sections sont incomplètes" : "section est incomplète"}`,
