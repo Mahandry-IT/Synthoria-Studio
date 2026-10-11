@@ -119,6 +119,16 @@ describe("courseResponseSchema — tableaux et vidéos", () => {
     expect(parsed.videos?.[0].video_id).toBe("dQw4w9WgXcQ");
   });
 
+  it("lit le rattachement d'une vidéo à une section, qu'il soit présent, nul ou absent", () => {
+    const video = { video_id: "dQw4w9WgXcQ", url: "u", embed_url: "e", thumbnail_url: "t", title: "V" };
+    const parsed = courseResponseSchema.parse({
+      ...base,
+      videos: [{ ...video, section_id: "s1" }, { ...video, section_id: null }, video],
+    });
+
+    expect(parsed.videos?.map((v) => v.section_id)).toEqual(["s1", null, undefined]);
+  });
+
   it("accepte les vidéos avec ou sans durée/date/classement (V1 sans clé Data API, V2 désactivé)", () => {
     const withoutExtras = courseResponseSchema.parse({
       ...base,

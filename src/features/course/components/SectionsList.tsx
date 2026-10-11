@@ -13,7 +13,7 @@ import {
   sectionStatus,
   setCurrentSection,
 } from "../sectionProgress";
-import type { CourseSection } from "../course.types";
+import type { CourseSection, CourseVideo } from "../course.types";
 
 interface SectionsListProps {
   sections: CourseSection[];
@@ -21,6 +21,9 @@ interface SectionsListProps {
   sessionId?: string | null;
   /** Identifiant du cours pour la progression (session, à défaut titre du cours). */
   courseKey: string;
+  /** Vidéos rattachées aux sections, par `id` de section (cf. `splitVideosBySection`). */
+  videosBySection?: ReadonlyMap<string, CourseVideo[]>;
+  onVideoNoteSaved?: (videoId: string, note: string) => void;
 }
 
 const headingIdOf = (index: number) => `section-${index}-heading`;
@@ -30,7 +33,13 @@ const headingIdOf = (index: number) => `section-${index}-heading`;
  * Suivant, accès direct) et dévoilement progressif du cycle pédagogique dans chaque section.
  * La section courante et la progression sont conservées le temps de la session du navigateur.
  */
-export function SectionsList({ sections, sessionId, courseKey }: SectionsListProps) {
+export function SectionsList({
+  sections,
+  sessionId,
+  courseKey,
+  videosBySection,
+  onVideoNoteSaved,
+}: SectionsListProps) {
   const { progress, update } = useSectionProgress(courseKey);
   // Régénération et notes : appliquées en local par-dessus les sections reçues (comme la progression),
   // sans dépendre d'un état mutable détenu par le parent (page Ask ou historique).
@@ -95,6 +104,8 @@ export function SectionsList({ sections, sessionId, courseKey }: SectionsListPro
             progress={progress}
             update={update}
             onOverride={(patch) => setOverrides((current) => ({ ...current, [id]: { ...current[id], ...patch } }))}
+            videos={section.id ? videosBySection?.get(section.id) : undefined}
+            onVideoNoteSaved={onVideoNoteSaved}
           />
 
           {sections.length > 1 && (

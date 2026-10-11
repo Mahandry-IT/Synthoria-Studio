@@ -8,6 +8,8 @@ import { SectionsList } from "./SectionsList";
 import { PitfallsList } from "./PitfallsList";
 import { QuizPanel } from "./QuizPanel";
 import { useQuizFlow } from "../hooks/useQuizFlow";
+import { useVideoNotes } from "../hooks/useVideoNotes";
+import { splitVideosBySection } from "../videoGrouping";
 import { SummaryBlock } from "./SummaryBlock";
 import { NextStepsList } from "./NextStepsList";
 import { AnswerBlock } from "./AnswerBlock";
@@ -53,6 +55,13 @@ export function CourseView({ data, sessionId: sessionIdProp }: CourseViewProps) 
   const sections = [...(data.sections ?? []), ...added.sections];
   const nextSteps = added.nextSteps ?? data.next_steps ?? [];
 
+  // Vidéos rattachées à une section : affichées dans cette section ; les autres au niveau du cours.
+  const { applyNotes, saveNote } = useVideoNotes();
+  const videos = splitVideosBySection(
+    applyNotes(data.videos ?? []),
+    sections.flatMap((s) => (s.id ? [s.id] : [])),
+  );
+
   function handleContentAdded(result: AddCourseSectionsResponse) {
     setAdded((current) => ({
       sections: [...current.sections, ...result.sections],
@@ -83,7 +92,7 @@ export function CourseView({ data, sessionId: sessionIdProp }: CourseViewProps) 
 
       <CourseMetaHeader meta={data.meta} />
 
-      {data.videos && data.videos.length > 0 && <VideoCards videos={data.videos} sessionId={sessionId} />}
+      <VideoCards videos={videos.general} sessionId={sessionId} onNoteSaved={saveNote} />
 
       {sessionId && <SessionPodcast sessionId={sessionId} />}
 
@@ -119,6 +128,8 @@ export function CourseView({ data, sessionId: sessionIdProp }: CourseViewProps) 
           sections={sections}
           sessionId={sessionId}
           courseKey={sessionId ?? data.meta?.title ?? "cours"}
+          videosBySection={videos.bySection}
+          onVideoNoteSaved={saveNote}
         />
       )}
 
