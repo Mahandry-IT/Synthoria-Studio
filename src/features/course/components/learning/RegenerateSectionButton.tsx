@@ -13,7 +13,7 @@ interface RegenerateSectionButtonProps {
 
 /** Affiché à la place du contenu d'une section marquée `incomplete` : régénère cette section seule. */
 export function RegenerateSectionButton({ sessionId, sectionId, onRegenerated }: RegenerateSectionButtonProps) {
-  const regenerate = useRegenerateSection();
+  const regenerate = useRegenerateSection(onRegenerated);
 
   return (
     <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
@@ -24,9 +24,7 @@ export function RegenerateSectionButton({ sessionId, sectionId, onRegenerated }:
         size="sm"
         className="mt-3"
         loading={regenerate.isPending}
-        onClick={() =>
-          regenerate.mutate({ sessionId, sectionId }, { onSuccess: onRegenerated })
-        }
+        onClick={() => regenerate.mutate({ sessionId, sectionId })}
       >
         Régénérer cette section
       </Button>

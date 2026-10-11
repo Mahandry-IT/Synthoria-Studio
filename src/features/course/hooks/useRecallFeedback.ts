@@ -14,6 +14,6 @@ interface RecallVariables {
 export function useRecallFeedback() {
   return useMutation({
     mutationFn: ({ sessionId, sectionId, answer }: RecallVariables) => evaluateRecall(sessionId, sectionId, answer),
-    onError: toastError,
+    onError: (err) => toastError(err),
   });
 }

@@ -5,13 +5,15 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import ReplayIcon from "@mui/icons-material/Replay";
 import { Badge } from "@/components/Badge";
 import { RichTextView } from "@/components/editor/RichTextView";
 import { toSafeHttpUrl, type ChatThreadEntry } from "../chat.logic";
 import type { ChatSource } from "../chat.types";
 import { ChatMessageEditor } from "./ChatMessageEditor";
+import { CopyMessageButton } from "./CopyMessageButton";
 
-/** Actions sur les questions du fil (édition en versions, navigation, suppression). */
+/** Actions sur les messages du fil (édition en versions, navigation, suppression, réessai). */
 export interface ChatMessageActions {
   /** Envoi ou suppression en cours : toutes les actions sont désactivées. */
   busy: boolean;
@@ -22,6 +24,8 @@ export interface ChatMessageActions {
   onSaveEdit: (entry: ChatThreadEntry, text: string) => void;
   onNavigate: (entry: ChatThreadEntry, direction: -1 | 1) => void;
   onDelete: (entry: ChatThreadEntry) => void;
+  /** Renvoie la question d'une réponse du tuteur (nouvelle version sœur ; consomme le quota). */
+  onRetry: (entry: ChatThreadEntry) => void;
 }
 
 interface ChatMessageBubbleProps {
@@ -68,13 +72,14 @@ const BUBBLE_STYLES = {
 const ICON_BUTTON =
   "flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 focus-visible:outline-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent";
 
-/** Barre sous une question : navigation `< i/X >` entre versions (si X > 1), Modifier, Supprimer. */
+/** Barre sous une question : navigation `< i/X >` entre versions (si X > 1), Copier, Modifier, Supprimer. */
 function UserMessageToolbar({ entry, actions }: { entry: ChatThreadEntry; actions: ChatMessageActions }) {
   const versions = entry.versions;
   const { busy } = actions;
 
   return (
     <div className="flex items-center gap-0.5 text-xs text-gray-500">
+      <CopyMessageButton markdown={entry.message.content} className={ICON_BUTTON} />
       {versions && versions.count > 1 && (
         <div className="flex items-center" role="group" aria-label="Versions de la question">
           <button
@@ -124,6 +129,27 @@ function UserMessageToolbar({ entry, actions }: { entry: ChatThreadEntry; action
       >
         <DeleteOutlineIcon fontSize="small" />
       </button>
+    </div>
+  );
+}
+
+/** Barre sous une réponse du tuteur : Copier, et Réessayer (même question, nouvelle version). */
+function AssistantMessageToolbar({ entry, actions }: { entry: ChatThreadEntry; actions?: ChatMessageActions }) {
+  return (
+    <div className="flex items-center gap-0.5 text-xs text-gray-500">
+      <CopyMessageButton markdown={entry.message.content} className={ICON_BUTTON} />
+      {actions && (
+        <button
+          type="button"
+          className={ICON_BUTTON}
+          aria-label="Réessayer : reposer la même question"
+          title={actions.canEdit ? "Réessayer (compte dans la limite du jour)" : "Limite du jour atteinte"}
+          disabled={actions.busy || !actions.canEdit}
+          onClick={() => actions.onRetry(entry)}
+        >
+          <ReplayIcon fontSize="small" />
+        </button>
+      )}
     </div>
   );
 }
@@ -191,12 +217,23 @@ function ChatMessageBubbleView({ entry, actions, editText = null }: ChatMessageB
     </div>
   );
 
-  if (!isUser) return <li className="flex">{bubble}</li>;
+  if (!isUser) {
+    return (
+      <li className="flex flex-col items-start gap-0.5">
+        {bubble}
+        <AssistantMessageToolbar entry={entry} actions={actions} />
+      </li>
+    );
+  }
 
   return (
     <li ref={itemRef} className="ml-auto flex max-w-[85%] flex-col items-end gap-0.5">
       {bubble}
-      {actions && <UserMessageToolbar entry={entry} actions={actions} />}
+      {actions ? (
+        <UserMessageToolbar entry={entry} actions={actions} />
+      ) : (
+        <CopyMessageButton markdown={message.content} className={ICON_BUTTON} />
+      )}
     </li>
   );
 }

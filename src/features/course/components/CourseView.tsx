@@ -37,7 +37,7 @@ export function CourseView({ data, sessionId: sessionIdProp }: CourseViewProps) 
   const isMode3 = data.mode === "question_only";
   const isMode2 = data.mode === "file_question";
   const quiz = data.quiz ?? [];
-  const quizFlow = useQuizFlow(quiz);
+  const quizFlow = useQuizFlow(quiz, sessionId);
   // Section en cours de lecture (même clé de progression que SectionsList) : transmise au chat pour
   // cibler le contexte du tuteur. Les clés de repli (« #n », section sans id) ne sont pas envoyées.
   const { progress } = useSectionProgress(sessionId ?? data.meta?.title ?? "cours");

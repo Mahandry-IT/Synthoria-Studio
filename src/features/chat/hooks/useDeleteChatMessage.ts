@@ -24,7 +24,7 @@ export function useDeleteChatMessage(sessionId: string) {
       );
       toastSuccess("Question supprimée.");
     },
-    onError: toastError,
+    onError: (err) => toastError(err),
     onSettled: () => queryClient.invalidateQueries({ queryKey: key }),
   });
 }

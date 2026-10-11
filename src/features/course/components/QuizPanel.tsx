@@ -22,7 +22,7 @@ interface QuizPanelProps {
  * le focus ou le plein écran sont quittés pendant le quiz (useFullscreenAntiCheat).
  */
 export function QuizPanel({ questions, flow }: QuizPanelProps) {
-  const { phase, currentIndex, answers, score, totalPoints, total, start, answer, next, restart, abort, abortReason, isActive } = flow;
+  const { phase, currentIndex, answers, grade, total, submitAnswer, reset, abort, abortReason, isActive } = flow;
 
   useFullscreenAntiCheat(isActive, abort);
 
@@ -41,8 +41,9 @@ export function QuizPanel({ questions, flow }: QuizPanelProps) {
 
   if (questions.length === 0) return null;
 
+  // « Commencer » et « Recommencer » : nouvelle tentative (nouvelle série tirée par le serveur)
   const handleStart = () => {
-    start();
+    flow.start();
     // Doit être appelé de façon synchrone dans le geste utilisateur (exigence des navigateurs) ;
     // un refus (permission, iframe restreinte...) laisse le quiz démarrer en mode dégradé, sans
     // plein écran — la détection onglet/focus reste active dans tous les cas.
@@ -54,34 +55,33 @@ export function QuizPanel({ questions, flow }: QuizPanelProps) {
   const content = (
     <>
       {phase === "intro" && (
-        <QuizIntro questions={questions} onStart={handleStart} />
+        <QuizIntro questions={questions} onStart={handleStart} starting={flow.isStarting} />
       )}
 
       {phase === "in_progress" && (
         <QuizQuestionStep
           key={currentIndex}
-          question={questions[currentIndex]}
+          question={flow.questions[currentIndex]}
           index={currentIndex}
           total={total}
-          onNext={(indices) => {
-            answer(indices);
-            next();
-          }}
+          onNext={submitAnswer}
           isActive={isActive}
         />
       )}
 
       {phase === "results" && (
         <QuizResults
-          questions={questions}
+          grade={grade}
           answers={answers}
-          score={score}
-          totalPoints={totalPoints}
-          onRestart={restart}
+          grading={flow.isGrading}
+          gradingError={flow.gradingError}
+          onRetryGrading={flow.retryGrading}
+          onRestart={handleStart}
+          onBack={reset}
         />
       )}
 
-      {phase === "aborted" && <QuizAborted reason={abortReason} onRestart={restart} />}
+      {phase === "aborted" && <QuizAborted reason={abortReason} onRestart={handleStart} onBack={reset} />}
     </>
   );
 

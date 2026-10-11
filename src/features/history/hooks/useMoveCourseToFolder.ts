@@ -22,6 +22,6 @@ export function useMoveCourseToFolder() {
       queryClient.invalidateQueries({ queryKey: ["course-history"] });
       queryClient.invalidateQueries({ queryKey: ["course-folders"] });
     },
-    onError: toastError,
+    onError: (err) => toastError(err),
   });
 }

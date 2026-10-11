@@ -8,6 +8,6 @@ import { toastError } from "@/shared/ui/toast";
 export function useMoreSections() {
   return useMutation({
     mutationFn: generateMoreSections,
-    onError: toastError,
+    onError: (err) => toastError(err),
   });
 }

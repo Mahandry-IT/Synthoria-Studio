@@ -8,6 +8,6 @@ import { toastError } from "@/shared/ui/toast";
 export function useRefineSection() {
   return useMutation({
     mutationFn: refinePlanSection,
-    onError: toastError,
+    onError: (err) => toastError(err),
   });
 }

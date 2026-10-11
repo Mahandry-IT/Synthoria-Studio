@@ -14,6 +14,6 @@ export function useAddCourseSections() {
   return useMutation({
     mutationFn: ({ sessionId, instructions }: AddCourseSectionsVariables) =>
       addCourseSections(sessionId, instructions),
-    onError: toastError,
+    onError: (err) => toastError(err),
   });
 }

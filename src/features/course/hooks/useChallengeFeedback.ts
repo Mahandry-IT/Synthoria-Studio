@@ -15,6 +15,6 @@ export function useChallengeFeedback() {
   return useMutation({
     mutationFn: ({ sessionId, sectionId, answer }: ChallengeVariables) =>
       evaluateChallenge(sessionId, sectionId, answer),
-    onError: toastError,
+    onError: (err) => toastError(err),
   });
 }

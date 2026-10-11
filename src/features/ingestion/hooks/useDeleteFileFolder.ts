@@ -18,6 +18,6 @@ export function useDeleteFileFolder() {
       );
       invalidateFiles();
     },
-    onError: toastError,
+    onError: (err) => toastError(err),
   });
 }

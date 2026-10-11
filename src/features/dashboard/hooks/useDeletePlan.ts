@@ -17,6 +17,6 @@ export function useDeletePlan() {
       queryClient.removeQueries({ queryKey: ["pending-plan", planId] });
       queryClient.invalidateQueries({ queryKey: ["pending-plans"] });
     },
-    onError: toastError,
+    onError: (err) => toastError(err),
   });
 }

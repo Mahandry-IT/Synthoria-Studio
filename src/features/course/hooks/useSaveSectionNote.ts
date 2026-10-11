@@ -14,6 +14,6 @@ interface SaveNoteVariables {
 export function useSaveSectionNote() {
   return useMutation({
     mutationFn: ({ sessionId, sectionId, note }: SaveNoteVariables) => saveSectionNote(sessionId, sectionId, note),
-    onError: toastError,
+    onError: (err) => toastError(err),
   });
 }

@@ -14,6 +14,6 @@ export function useDeleteCourse() {
       toastSuccess("Cours supprimé.");
       queryClient.invalidateQueries({ queryKey: ["course-history"] });
     },
-    onError: toastError,
+    onError: (err) => toastError(err),
   });
 }

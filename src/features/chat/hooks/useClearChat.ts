@@ -20,7 +20,7 @@ export function useClearChat(sessionId: string) {
       );
       toastSuccess("Conversation supprimée.");
     },
-    onError: toastError,
+    onError: (err) => toastError(err),
     onSettled: () => queryClient.invalidateQueries({ queryKey: key }),
   });
 }

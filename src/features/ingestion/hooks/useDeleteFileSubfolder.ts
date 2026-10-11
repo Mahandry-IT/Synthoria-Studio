@@ -25,6 +25,6 @@ export function useDeleteFileSubfolder() {
       );
       invalidateFiles();
     },
-    onError: toastError,
+    onError: (err) => toastError(err),
   });
 }
