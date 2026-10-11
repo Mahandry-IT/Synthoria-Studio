@@ -56,6 +56,8 @@ interface SectionReaderProps {
   /** Vidéos rattachées à cette section, affichées sous son titre. */
   videos?: CourseVideo[];
   onVideoNoteSaved?: (videoId: string, note: string) => void;
+  /** Régénération groupée en cours : le bouton de régénération de la section est désactivé. */
+  regenerationLocked?: boolean;
 }
 
 /** Contenu explicatif complet : blocs typés si présents, sinon rendu legacy quoi/pourquoi/comment. */
@@ -134,6 +136,7 @@ export function SectionReader({
   onOverride,
   videos = [],
   onVideoNoteSaved = () => {},
+  regenerationLocked = false,
 }: SectionReaderProps) {
   // Étapes repliées par l'apprenant (état d'affichage local, non persisté)
   const [collapsed, setCollapsed] = useState<string[]>([]);
@@ -186,6 +189,7 @@ export function SectionReader({
             sessionId={sessionId}
             sectionId={section.id}
             onRegenerated={(regenerated) => onOverride(regenerated)}
+            locked={regenerationLocked}
           />
         ) : (
           <SectionExplanation section={section} />

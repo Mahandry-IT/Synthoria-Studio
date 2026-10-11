@@ -57,6 +57,9 @@ export function SectionsList({
   // Régénération et notes : appliquées en local par-dessus les sections reçues (comme la progression),
   // sans dépendre d'un état mutable détenu par le parent (page Ask ou historique).
   const [overrides, setOverrides] = useState<Record<string, Partial<CourseSection>>>({});
+  // Régénération groupée ou complète en cours : les boutons « Régénérer cette section » sont
+  // désactivés, le serveur traitant déjà ces sections (il refuserait un second appel).
+  const [regenerating, setRegenerating] = useState(false);
 
   if (sections.length === 0) return null;
 
@@ -109,6 +112,7 @@ export function SectionsList({
           missingWrapUp={missingWrapUp}
           onSectionsRegenerated={applyRegenerated}
           onCourseRegenerated={onCourseRegenerated}
+          onBusyChange={setRegenerating}
         />
       )}
 
@@ -139,6 +143,7 @@ export function SectionsList({
             onOverride={(patch) => setOverrides((current) => ({ ...current, [id]: { ...current[id], ...patch } }))}
             videos={section.id ? videosBySection?.get(section.id) : undefined}
             onVideoNoteSaved={onVideoNoteSaved}
+            regenerationLocked={regenerating}
           />
 
           {sections.length > 1 && (
