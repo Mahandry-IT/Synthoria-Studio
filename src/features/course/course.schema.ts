@@ -137,6 +137,28 @@ const courseContentBlockSchema = z.object({
     })
     .nullish()
     .catch(null),
+  graph: z
+    .object({
+      layout: z.enum(["graph", "tree", "layered"]),
+      directed: z.boolean(),
+      caption: z.string().optional().default(""),
+      nodes: z.array(z.object({ id: z.string(), label: z.string() })).min(1),
+      edges: z.array(
+        z.object({ id: z.string(), source: z.string(), target: z.string(), label: z.string().nullish() }),
+      ),
+      steps: z
+        .array(
+          z.object({
+            caption: z.string(),
+            highlight_nodes: z.array(z.string()).optional().default([]),
+            highlight_edges: z.array(z.string()).optional().default([]),
+          }),
+        )
+        .optional()
+        .default([]),
+    })
+    .nullish()
+    .catch(null),
 });
 
 const courseSubsectionSchema = z.object({
