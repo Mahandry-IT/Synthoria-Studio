@@ -13,6 +13,7 @@ import { RecallBox } from "./learning/RecallBox";
 import { RegenerateSectionButton } from "./learning/RegenerateSectionButton";
 import { SectionCheck } from "./learning/SectionCheck";
 import { SectionNoteButton } from "./learning/SectionNoteButton";
+import { SectionVideos } from "./SectionVideos";
 import {
   buildLearningSteps,
   completeSection,
@@ -26,7 +27,7 @@ import {
   type LearningStepKind,
   type SectionProgress,
 } from "../sectionProgress";
-import type { CourseSection } from "../course.types";
+import type { CourseSection, CourseVideo } from "../course.types";
 
 const STEP_LABELS: Record<LearningStepKind, string> = {
   challenge: "Défi",
@@ -52,6 +53,9 @@ interface SectionReaderProps {
   update: (transition: (current: SectionProgress) => SectionProgress) => void;
   /** Section régénérée ou note enregistrée : appliquées en local par le parent. */
   onOverride: (patch: Partial<CourseSection>) => void;
+  /** Vidéos rattachées à cette section, affichées sous son titre. */
+  videos?: CourseVideo[];
+  onVideoNoteSaved?: (videoId: string, note: string) => void;
 }
 
 /** Contenu explicatif complet : blocs typés si présents, sinon rendu legacy quoi/pourquoi/comment. */
@@ -128,6 +132,8 @@ export function SectionReader({
   progress,
   update,
   onOverride,
+  videos = [],
+  onVideoNoteSaved = () => {},
 }: SectionReaderProps) {
   // Étapes repliées par l'apprenant (état d'affichage local, non persisté)
   const [collapsed, setCollapsed] = useState<string[]>([]);
@@ -136,24 +142,27 @@ export function SectionReader({
   const domPrefix = `section-${index}`;
 
   const header = (
-    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-      <h3 id={headingId} tabIndex={-1} className="text-base font-semibold text-indigo-600 focus:outline-none">
-        <span className="mr-2">{index + 1}.</span>
-        <LatexText text={section.title.replace(/^\d+\.\s*/, "")} />
-      </h3>
-      <div className="flex items-center gap-2">
-        {done && <Badge variant="green">Terminée</Badge>}
-        {sessionId && section.id && !section.incomplete && (
-          <SectionNoteButton
-            sessionId={sessionId}
-            sectionId={section.id}
-            sectionTitle={section.title}
-            initialNote={section.note}
-            onSaved={(note) => onOverride({ note })}
-          />
-        )}
+    <>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h3 id={headingId} tabIndex={-1} className="text-base font-semibold text-indigo-600 focus:outline-none">
+          <span className="mr-2">{index + 1}.</span>
+          <LatexText text={section.title.replace(/^\d+\.\s*/, "")} />
+        </h3>
+        <div className="flex items-center gap-2">
+          {done && <Badge variant="green">Terminée</Badge>}
+          {sessionId && section.id && !section.incomplete && (
+            <SectionNoteButton
+              sessionId={sessionId}
+              sectionId={section.id}
+              sectionTitle={section.title}
+              initialNote={section.note}
+              onSaved={(note) => onOverride({ note })}
+            />
+          )}
+        </div>
       </div>
-    </div>
+      <SectionVideos videos={videos} sessionId={sessionId} onNoteSaved={onVideoNoteSaved} />
+    </>
   );
 
   const fadedExample = section.faded_example;
