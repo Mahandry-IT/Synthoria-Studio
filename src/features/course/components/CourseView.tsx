@@ -10,6 +10,7 @@ import { QuizPanel } from "./QuizPanel";
 import { useQuizFlow } from "../hooks/useQuizFlow";
 import { useVideoNotes } from "../hooks/useVideoNotes";
 import { splitVideosBySection } from "../videoGrouping";
+import { isMissingWrapUp } from "../incompleteCourse";
 import { SummaryBlock } from "./SummaryBlock";
 import { NextStepsList } from "./NextStepsList";
 import { AnswerBlock } from "./AnswerBlock";
@@ -33,8 +34,30 @@ interface CourseViewProps {
 /**
  * Rendu complet d'un cours généré.
  * Réutilisé par la page Ask et la page historique détail.
+ *
+ * Un cours régénéré en entier remplace celui reçu du parent : le contenu est remonté (`key`) pour
+ * repartir d'un état neuf — sections ajoutées, overrides et quiz de l'ancien cours n'ont plus cours.
  */
-export function CourseView({ data, sessionId: sessionIdProp }: CourseViewProps) {
+export function CourseView({ data, sessionId }: CourseViewProps) {
+  const [regenerated, setRegenerated] = useState<{ course: CourseGenerationResponse; version: number } | null>(null);
+
+  return (
+    <CourseContent
+      key={regenerated?.version ?? 0}
+      data={regenerated?.course ?? data}
+      sessionId={sessionId}
+      onCourseRegenerated={(course) =>
+        setRegenerated((current) => ({ course, version: (current?.version ?? 0) + 1 }))
+      }
+    />
+  );
+}
+
+interface CourseContentProps extends CourseViewProps {
+  onCourseRegenerated: (course: CourseGenerationResponse) => void;
+}
+
+function CourseContent({ data, sessionId: sessionIdProp, onCourseRegenerated }: CourseContentProps) {
   const sessionId = sessionIdProp ?? data.session_id ?? null;
   const isMode3 = data.mode === "question_only";
   const isMode2 = data.mode === "file_question";
@@ -130,6 +153,8 @@ export function CourseView({ data, sessionId: sessionIdProp }: CourseViewProps) 
           courseKey={sessionId ?? data.meta?.title ?? "cours"}
           videosBySection={videos.bySection}
           onVideoNoteSaved={saveNote}
+          missingWrapUp={isMissingWrapUp(data)}
+          onCourseRegenerated={onCourseRegenerated}
         />
       )}
 

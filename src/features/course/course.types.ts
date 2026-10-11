@@ -415,6 +415,24 @@ export interface MoreSectionsRequest {
   sections: PlannedSection[];
 }
 
+export interface SectionRegenerationFailure {
+  section_id: string;
+  title: string;
+  reason: "invalid_response" | "quota" | "unavailable";
+}
+
+/** Réponse de POST /courses/{session_id}/sections/regenerate-incomplete */
+export interface RegenerateIncompleteSectionsResponse {
+  /** Sections régénérées et enregistrées côté serveur. */
+  regenerated: CourseSection[];
+  /** Sections tentées sans succès : toujours incomplètes, relançables. */
+  failed: SectionRegenerationFailure[];
+  /** Sections incomplètes non tentées (arrêt sur quota/indisponibilité, ou plafond par appel). */
+  remaining_section_ids: string[];
+  /** Pourquoi le traitement s'est arrêté avant la fin ; null s'il est allé au bout. */
+  stopped_reason: "quota" | "unavailable" | "limit" | null;
+}
+
 /** Réponse de POST /courses/{session_id}/sections : nouvelles sections ajoutées à un cours déjà généré */
 export interface AddCourseSectionsResponse {
   sections: CourseSection[];

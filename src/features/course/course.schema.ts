@@ -409,6 +409,23 @@ export const challengeResponseSchema = z.object({
 /** Réponse de POST .../regenerate : la section mise à jour (mêmes règles que dans le cours). */
 export const regenerateSectionResponseSchema = courseSectionSchema;
 
+/** Réponse de POST .../sections/regenerate-incomplete : succès partiel possible. */
+export const regenerateIncompleteSectionsResponseSchema = z.object({
+  regenerated: z.array(courseSectionSchema).optional().default([]),
+  failed: z
+    .array(
+      z.object({
+        section_id: z.string(),
+        title: z.string(),
+        reason: z.enum(["invalid_response", "quota", "unavailable"]),
+      }),
+    )
+    .optional()
+    .default([]),
+  remaining_section_ids: z.array(z.string()).optional().default([]),
+  stopped_reason: z.enum(["quota", "unavailable", "limit"]).nullable().optional().default(null),
+});
+
 // ─── Ajout de contenu à un cours déjà généré ──────────────────
 
 /** Réponse de POST /courses/{session_id}/sections */

@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/Button";
 import { SectionNav } from "./SectionNav";
 import { focusAfterRender, SectionReader } from "./SectionReader";
+import { IncompleteCourseBanner } from "./learning/IncompleteCourseBanner";
+import { countIncompleteSections } from "../incompleteCourse";
 import { useSectionProgress } from "../hooks/useSectionProgress";
 import {
   adjacentSection,
@@ -13,7 +15,12 @@ import {
   sectionStatus,
   setCurrentSection,
 } from "../sectionProgress";
-import type { CourseSection, CourseVideo } from "../course.types";
+import type {
+  CourseGenerationResponse,
+  CourseSection,
+  CourseVideo,
+  RegenerateIncompleteSectionsResponse,
+} from "../course.types";
 
 interface SectionsListProps {
   sections: CourseSection[];
@@ -24,6 +31,10 @@ interface SectionsListProps {
   /** Vidéos rattachées aux sections, par `id` de section (cf. `splitVideosBySection`). */
   videosBySection?: ReadonlyMap<string, CourseVideo[]>;
   onVideoNoteSaved?: (videoId: string, note: string) => void;
+  /** Cours livré sans résumé ou sans quiz : propose la régénération complète même sans section incomplète. */
+  missingWrapUp?: boolean;
+  /** Le cours entier a été régénéré : le parent remplace le cours affiché. */
+  onCourseRegenerated?: (course: CourseGenerationResponse) => void;
 }
 
 const headingIdOf = (index: number) => `section-${index}-heading`;
@@ -39,6 +50,8 @@ export function SectionsList({
   courseKey,
   videosBySection,
   onVideoNoteSaved,
+  missingWrapUp = false,
+  onCourseRegenerated,
 }: SectionsListProps) {
   const { progress, update } = useSectionProgress(courseKey);
   // Régénération et notes : appliquées en local par-dessus les sections reçues (comme la progression),
@@ -52,6 +65,16 @@ export function SectionsList({
   const currentIndex = currentKey === null ? 0 : Math.max(keys.indexOf(currentKey), 0);
   const id = keys[currentIndex];
   const section = { ...sections[currentIndex], ...overrides[id] };
+  const incompleteCount = countIncompleteSections(sections.map((s, i) => ({ ...s, ...overrides[keys[i]] })));
+
+  // Les sections régénérées gardent leur `id` : c'est aussi leur clé de progression et d'override.
+  const applyRegenerated = (result: RegenerateIncompleteSectionsResponse) =>
+    setOverrides((current) => ({
+      ...current,
+      ...Object.fromEntries(
+        result.regenerated.flatMap((s) => (s.id ? [[s.id, { ...current[s.id], ...s }] as const] : [])),
+      ),
+    }));
 
   const tracked = sections.filter((s) => isTrackable(s.check_questions?.length ?? 0));
   const doneCount = tracked.filter((s) => progress.done.includes(sectionKey(s.id, sections.indexOf(s)))).length;
@@ -78,6 +101,16 @@ export function SectionsList({
           </span>
         )}
       </div>
+
+      {sessionId && onCourseRegenerated && (
+        <IncompleteCourseBanner
+          sessionId={sessionId}
+          incompleteCount={incompleteCount}
+          missingWrapUp={missingWrapUp}
+          onSectionsRegenerated={applyRegenerated}
+          onCourseRegenerated={onCourseRegenerated}
+        />
+      )}
 
       <div className="gap-6 lg:grid lg:grid-cols-[16rem_minmax(0,1fr)]">
         <div className="mb-4 lg:sticky lg:top-4 lg:mb-0 lg:self-start">

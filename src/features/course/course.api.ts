@@ -14,6 +14,7 @@ import type {
   PendingPlanItem,
   PlannedSection,
   RecallResponse,
+  RegenerateIncompleteSectionsResponse,
   RefineSectionRequest,
   SectionNoteResponse,
   VideoNoteResponse,
@@ -31,6 +32,7 @@ import {
   plannedSectionSchema,
   recallRequestSchema,
   recallResponseSchema,
+  regenerateIncompleteSectionsResponseSchema,
   regenerateSectionResponseSchema,
   sectionNoteRequestSchema,
   sectionNoteResponseSchema,
@@ -296,6 +298,49 @@ export async function regenerateSection(sessionId: string, sectionId: string): P
     throw new Error("Réponse invalide du moteur IA pour la régénération. Réessayez.");
   }
   return parsed.data;
+}
+
+/** Jusqu'à 10 sections par appel côté serveur, chacune pouvant demander une réparation. */
+const REGENERATE_INCOMPLETE_TIMEOUT_MS = 600_000;
+
+/**
+ * Régénère toutes les sections incomplètes d'un cours, une par une côté serveur. Un succès partiel
+ * est une réponse normale : voir `failed`, `remaining_section_ids` et `stopped_reason`.
+ *
+ * @throws {HttpError} 404 session inconnue, 409 aucune section incomplète, 429 (trop de
+ *   régénérations, ou quota du moteur IA dès la première section), 503 moteur IA indisponible
+ * @throws {Error} si la réponse du serveur est invalide
+ */
+export async function regenerateIncompleteSections(sessionId: string): Promise<RegenerateIncompleteSectionsResponse> {
+  const raw = await postJson<unknown>(
+    `/courses/${encodeURIComponent(sessionId)}/sections/regenerate-incomplete`,
+    {},
+    { timeout: REGENERATE_INCOMPLETE_TIMEOUT_MS, noRetry: true },
+  );
+
+  const parsed = regenerateIncompleteSectionsResponseSchema.safeParse(raw);
+  if (!parsed.success) {
+    console.error("Zod validation failed for regenerate incomplete sections:", parsed.error);
+    throw new Error("Réponse invalide du moteur IA pour la régénération. Réessayez.");
+  }
+  return parsed.data;
+}
+
+/**
+ * Régénère en entier un cours incomplet ; il est remplacé en place côté serveur (même session,
+ * même dossier, notes conservées ; quiz et flashcards remis à zéro).
+ *
+ * @throws {HttpError} 404 session inconnue, 409 cours complet, 429, 502/503 échec du moteur IA
+ *   (rien n'est alors modifié côté serveur)
+ */
+export async function regenerateCourse(sessionId: string): Promise<CourseGenerationResponse> {
+  const raw = await postJson<CourseGenerationResponse>(
+    `/courses/${encodeURIComponent(sessionId)}/regenerate`,
+    {},
+    { timeout: FROM_PLAN_TIMEOUT_MS, noRetry: true },
+  );
+
+  return parseCourseResponse(raw);
 }
 
 /**

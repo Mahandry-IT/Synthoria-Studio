@@ -491,3 +491,25 @@ describe("courseResponseSchema — sous-sections par blocs", () => {
     expect(parsed.sections?.[0].subsections?.[0].blocks[0].image).toBeNull();
   });
 });
+
+describe("regenerateIncompleteSectionsResponseSchema", () => {
+  it("accepte un résultat partiel et applique les valeurs par défaut", async () => {
+    const { regenerateIncompleteSectionsResponseSchema } = await import("./course.schema");
+
+    const parsed = regenerateIncompleteSectionsResponseSchema.parse({
+      failed: [{ section_id: "2", title: "DFS", reason: "quota" }],
+      remaining_section_ids: ["3"],
+      stopped_reason: "quota",
+    });
+
+    expect(parsed.regenerated).toEqual([]);
+    expect(parsed.failed[0].reason).toBe("quota");
+    expect(regenerateIncompleteSectionsResponseSchema.parse({}).stopped_reason).toBeNull();
+  });
+
+  it("rejette une raison d'arrêt inconnue", async () => {
+    const { regenerateIncompleteSectionsResponseSchema } = await import("./course.schema");
+
+    expect(regenerateIncompleteSectionsResponseSchema.safeParse({ stopped_reason: "autre" }).success).toBe(false);
+  });
+});
