@@ -509,3 +509,24 @@ describe("regenerateIncompleteSectionsResponseSchema", () => {
     expect(regenerateIncompleteSectionsResponseSchema.safeParse({ stopped_reason: "autre" }).success).toBe(false);
   });
 });
+
+describe("courseResponseSchema — bloc widget", () => {
+  const withBlock = (block: unknown) =>
+    courseResponseSchema.parse({
+      mode: "question_only",
+      format: "full_course",
+      meta: {},
+      sections: [{ title: "S", subsections: [{ title: "x", blocks: [block, { type: "text", text: "ok" }] }] }],
+    }).sections![0].subsections[0].blocks;
+
+  it("accepte un widget valide avec défauts", () => {
+    const [b] = withBlock({ type: "widget", widget: { html: "<p>x</p>", height_hint: 400 } });
+    expect(b.widget).toEqual({ title: "", description: "", html: "<p>x</p>", height_hint: 400 });
+  });
+
+  it("un widget invalide devient null sans invalider le cours", () => {
+    const blocks = withBlock({ type: "widget", widget: { html: 42 } });
+    expect(blocks[0].widget).toBeNull();
+    expect(blocks[1].text).toBe("ok");
+  });
+});

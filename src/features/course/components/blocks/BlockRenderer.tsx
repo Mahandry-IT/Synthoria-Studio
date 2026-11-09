@@ -3,6 +3,7 @@ import type { CourseContentBlock } from "../../course.types";
 import { ChartBlock } from "./ChartBlock";
 import { DiagramBlock } from "./DiagramBlock";
 import { ImageBlock } from "./ImageBlock";
+import { WidgetBlock } from "./WidgetBlock";
 import {
   Callout,
   CodeSnippetBlock,
@@ -45,6 +46,8 @@ export function renderBlock(block: CourseContentBlock): ReactNode {
       return block.chart ? <ChartBlock chart={block.chart} /> : null;
     case "image":
       return block.image ? <ImageBlock image={block.image} caption={block.image_caption} /> : null;
+    case "widget":
+      return block.widget?.html?.trim() ? <WidgetBlock widget={block.widget} /> : null;
     default:
       return null;
   }
