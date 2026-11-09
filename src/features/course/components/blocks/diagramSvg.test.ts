@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { stripStyleDirectives } from "./diagramSvg";
+import { quoteFlowchartLabels, stripStyleDirectives } from "./diagramSvg";
 
 describe("stripStyleDirectives", () => {
   it("retire une directive style qui fait buter le parseur Mermaid (bug reproduit)", () => {
@@ -35,5 +35,36 @@ describe("stripStyleDirectives", () => {
     const source = "sequenceDiagram\nClient->>Serveur: requête\nServeur-->>Client: réponse";
 
     expect(stripStyleDirectives(source)).toBe(source);
+  });
+});
+
+describe("quoteFlowchartLabels", () => {
+  it("met entre guillemets un libellé avec parenthèses (bug reproduit : f(s1) rendait tout le schéma invalide)", () => {
+    const source =
+      "flowchart TD; A[Solution Actuelle s] -->|Opérateur de voisinage| B(Voisin s1); B --> D[Évaluation f(s1)]; " +
+      "D --> F{Sélection}; E[Évaluation f(s2)] --> F;";
+
+    expect(quoteFlowchartLabels(source)).toBe(
+      'flowchart TD; A[Solution Actuelle s] -->|Opérateur de voisinage| B(Voisin s1); B --> D["Évaluation f(s1)"]; ' +
+        'D --> F{Sélection}; E["Évaluation f(s2)"] --> F;',
+    );
+  });
+
+  it("gère les losanges et les libellés d'arête avec parenthèses", () => {
+    expect(quoteFlowchartLabels("flowchart TD\nA{f(x) > 0} -->|oui (cas 1)| B[Fin]")).toBe(
+      'flowchart TD\nA{"f(x) > 0"} -->|"oui (cas 1)"| B[Fin]',
+    );
+  });
+
+  it("laisse intacts les libellés déjà entre guillemets, sans parenthèses et les formes spéciales", () => {
+    const source = 'flowchart TD\nA["f(x)"] --> B[Texte simple]\nB --> C[(Base de données)]\nC --> D[[Sous-programme]]';
+
+    expect(quoteFlowchartLabels(source)).toBe(source);
+  });
+
+  it("ne touche pas aux autres types de diagrammes", () => {
+    const source = "sequenceDiagram\nClient->>Serveur: appel f(x)";
+
+    expect(quoteFlowchartLabels(source)).toBe(source);
   });
 });

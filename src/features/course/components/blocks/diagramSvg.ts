@@ -24,6 +24,36 @@ export function stripStyleDirectives(source: string): string {
 }
 
 /**
+ * Entoure de guillemets les libellés de flowchart qui contiennent des parenthèses.
+ *
+ * Mermaid lit `(`, `)` dans `D[Évaluation f(s1)]` comme le début d'une autre forme de nœud et rejette
+ * tout le diagramme (« syntaxe invalide »). Un libellé entre guillemets est toujours accepté :
+ * `D["Évaluation f(s1)"]`. Les modèles de langage oublient souvent ces guillemets sur les noms de
+ * fonctions (`f(x)`, `O(n)`), d'où cette correction côté client, qui répare aussi les cours déjà
+ * enregistrés. Ne touche que les flowcharts, les nœuds `[...]` et `{...}` simples (pas `[(...)]`,
+ * `[[...]]`, `{{...}}`, `[/.../]`) et les libellés d'arête `|...|` ; un libellé déjà entre guillemets
+ * est laissé tel quel.
+ *
+ * @example quoteFlowchartLabels('flowchart TD; A[f(x)] --> B') // 'flowchart TD; A["f(x)"] --> B'
+ */
+export function quoteFlowchartLabels(source: string): string {
+  if (!/^\s*(flowchart|graph)\b/i.test(source)) return source;
+  const quote = (text: string) => `"${text.replace(/"/g, "#quot;")}"`;
+  const hasParen = (text: string) => /[()]/.test(text);
+  // Formes spéciales : cylindre `[(base)]`, sous-programme `[[...]]`, parallélogramme `[/.../]`, trapèze (le texte interne
+  // commence par `(`, `[`, `/` ou `\`), laissées telles quelles.
+  const isSpecialShape = (text: string) => "([/\\".includes(text.charAt(0));
+  return source
+    .replace(/(\b[A-Za-z_][\w-]*)\[([^\]"\n]*)\]/g, (all, id: string, text: string) =>
+      hasParen(text) && !isSpecialShape(text) ? `${id}[${quote(text)}]` : all,
+    )
+    .replace(/(\b[A-Za-z_][\w-]*)\{([^}"\n]*)\}/g, (all, id: string, text: string) =>
+      hasParen(text) && !text.startsWith("{") ? `${id}{${quote(text)}}` : all,
+    )
+    .replace(/\|([^|"\n]*)\|/g, (all, text: string) => (hasParen(text) ? `|${quote(text)}|` : all));
+}
+
+/**
  * Éléments SVG jamais acceptés dans un schéma généré par un LLM (contenu non fiable).
  *
  * `style` et `foreignobject` sont volontairement absents : `DiagramBlock` appelle Mermaid avec

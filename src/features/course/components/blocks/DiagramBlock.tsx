@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import type { CourseDiagram } from "../../course.types";
-import { sanitizeSvg, stripStyleDirectives } from "./diagramSvg";
+import { quoteFlowchartLabels, sanitizeSvg, stripStyleDirectives } from "./diagramSvg";
 
 /** Même borne que le backend (`DIAGRAM_SOURCE_MAX`) : au-delà, on n'appelle pas Mermaid. */
 export const DIAGRAM_SOURCE_MAX = 4000;
@@ -30,7 +30,7 @@ export function DiagramBlock({ diagram }: { diagram: CourseDiagram }) {
           securityLevel: "strict",
           flowchart: { htmlLabels: false },
         });
-        const { svg } = await mermaid.render(`diagram-${reactId}`, stripStyleDirectives(diagram.mermaid));
+        const { svg } = await mermaid.render(`diagram-${reactId}`, quoteFlowchartLabels(stripStyleDirectives(diagram.mermaid)));
         if (cancelled) return;
         const node = sanitizeSvg(svg);
         if (!node) throw new Error("SVG invalide");
