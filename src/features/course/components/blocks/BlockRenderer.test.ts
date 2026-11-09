@@ -46,6 +46,23 @@ describe("BlockRenderer", () => {
     expect(html([{ type: "diagram", diagram: { kind: "flowchart", caption: "Flux", mermaid: "flowchart TD; A-->B" } }])).toContain("Flux");
   });
 
+  it("rend un widget dans une iframe sandboxée sans allow-same-origin", () => {
+    const out = html([
+      { type: "widget", widget: { title: "Simulateur", description: "d", html: "<p>x</p>", height_hint: 400 } },
+    ]);
+
+    expect(out).toContain("<iframe");
+    expect(out).toContain('sandbox="allow-scripts"');
+    expect(out).not.toContain("allow-same-origin");
+    expect(out).toContain('title="Simulateur"');
+    expect(out).toContain("Recharger le widget");
+  });
+
+  it("un widget sans html ne rend rien", () => {
+    expect(html([{ type: "widget", widget: { title: "t", description: "d", html: "  " } }])).toBe("");
+    expect(html([{ type: "widget" }, { type: "widget", widget: null }])).toBe("");
+  });
+
   it("ne rend rien pour un ancien bloc graph et laisse le reste de la section intact", () => {
     const out = html([
       { type: "graph", graph: { layout: "graph", directed: true, nodes: [{ id: "A", label: "A" }], edges: [] } } as unknown as CourseContentBlock,

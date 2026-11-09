@@ -128,6 +128,15 @@ export interface CourseImage {
   attribution?: CourseImageAttribution | null;
 }
 
+/** Widget interactif : fragment HTML/CSS/JS généré, affiché dans une iframe sandboxée. */
+export interface CourseWidget {
+  title: string;
+  /** Texte alternatif, aussi affiché si le widget ne se charge pas. */
+  description: string;
+  html: string;
+  height_hint?: number | null;
+}
+
 /**
  * Bloc de contenu typé (contrat par blocs). `type` reste une chaîne : un type inconnu (backend plus
  * récent que le front) est ignoré par `BlockRenderer` au lieu de casser la page.
@@ -148,6 +157,7 @@ export interface CourseContentBlock {
   pitfall?: { description: string; why_it_happens?: string; how_to_avoid?: string } | null;
   diagram?: CourseDiagram | null;
   chart?: CourseChart | null;
+  widget?: CourseWidget | null;
 }
 
 export interface CourseSubsection {

@@ -137,6 +137,15 @@ const courseContentBlockSchema = z.object({
     })
     .nullish()
     .catch(null),
+  widget: z
+    .object({
+      title: z.string().optional().default(""),
+      description: z.string().optional().default(""),
+      html: z.string(),
+      height_hint: z.number().nullish(),
+    })
+    .nullish()
+    .catch(null), // un widget invalide est ignoré, il ne doit pas invalider tout le cours
 });
 
 const courseSubsectionSchema = z.object({
