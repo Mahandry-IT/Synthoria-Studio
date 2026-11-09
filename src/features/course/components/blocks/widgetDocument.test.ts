@@ -48,7 +48,7 @@ describe("parseWidgetMessage", () => {
   it("accepte une hauteur valide et la borne", () => {
     expect(parseWidgetMessage(ok)).toEqual({ type: "height", height: 400 });
     expect(parseWidgetMessage({ ...ok, height: 10 })).toEqual({ type: "height", height: 160 });
-    expect(parseWidgetMessage({ ...ok, height: 99999 })).toEqual({ type: "height", height: 720 });
+    expect(parseWidgetMessage({ ...ok, height: 99999 })).toEqual({ type: "height", height: 1100 });
   });
 
   it("accepte un message d'erreur", () => {
