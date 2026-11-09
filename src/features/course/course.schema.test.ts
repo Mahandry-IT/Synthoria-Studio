@@ -410,13 +410,7 @@ describe("courseResponseSchema — sous-sections par blocs", () => {
     expect(blocks[1].type).toBe("hologram");
   });
 
-  it("parse un bloc graphe, complète les étapes absentes et ignore un graphe invalide", () => {
-    const graph = {
-      layout: "tree",
-      directed: true,
-      nodes: [{ id: "A", label: "A" }, { id: "B", label: "B" }],
-      edges: [{ id: "e1", source: "A", target: "B" }],
-    };
+  it("tolère un ancien bloc graph : le cours se parse, le bloc est conservé sans champ graph", () => {
     const parsed = courseResponseSchema.parse({
       ...base,
       sections: [
@@ -426,9 +420,11 @@ describe("courseResponseSchema — sous-sections par blocs", () => {
             {
               title: "Quoi",
               blocks: [
-                { type: "graph", graph },
-                { type: "graph", graph: { ...graph, steps: [{ caption: "Départ", highlight_nodes: ["A"] }] } },
-                { type: "graph", graph: { ...graph, layout: "spirale" } },
+                {
+                  type: "graph",
+                  graph: { layout: "tree", directed: true, nodes: [{ id: "A", label: "A" }], edges: [] },
+                },
+                { type: "text", text: "Suite" },
               ],
             },
           ],
@@ -436,10 +432,10 @@ describe("courseResponseSchema — sous-sections par blocs", () => {
       ],
     });
     const blocks = parsed.sections?.[0].subsections?.[0].blocks ?? [];
-    expect(blocks[0].graph?.steps).toEqual([]);
-    expect(blocks[0].graph?.caption).toBe("");
-    expect(blocks[1].graph?.steps[0]).toEqual({ caption: "Départ", highlight_nodes: ["A"], highlight_edges: [] });
-    expect(blocks[2].graph).toBeNull();
+    expect(blocks).toHaveLength(2);
+    expect(blocks[0].type).toBe("graph");
+    expect(blocks[0]).not.toHaveProperty("graph");
+    expect(blocks[1].text).toBe("Suite");
   });
 
   it("parse un bloc image ré-hébergé avec attribution", () => {
