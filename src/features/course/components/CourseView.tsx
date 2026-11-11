@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { CourseTabs } from "./CourseTabs";
+import { chooseInitialTab, readStoredTab, storeTab, subscribeTab, type CourseTabId } from "../courseTabs";
 import { CourseMetaHeader } from "./CourseMetaHeader";
 import { SourcesList } from "./SourcesList";
 import { useSectionProgress } from "../hooks/useSectionProgress";
@@ -92,6 +94,11 @@ function CourseContent({ data, sessionId: sessionIdProp, onCourseRegenerated }: 
     }));
   }
 
+  // Onglet actif : « Leçons » au rendu serveur, puis l'onglet mémorisé une fois monté
+  const hasQuiz = quiz.length > 0;
+  const storedTab = useSyncExternalStore(subscribeTab, readStoredTab, () => null);
+  const tab = chooseInitialTab(storedTab, hasQuiz);
+
   const quizOnOwnPage = quizFlow.phase !== "intro";
 
   useEffect(() => {
@@ -119,64 +126,84 @@ function CourseContent({ data, sessionId: sessionIdProp, onCourseRegenerated }: 
 
       {sessionId && <SessionPodcast sessionId={sessionId} />}
 
-      {data.introduction && (
-        <Card className="p-5">
-          <div className="text-sm text-gray-700 leading-relaxed space-y-2">
-            {typeof data.introduction === "object" ? (
-              Object.entries(data.introduction).map(([key, value]) => (
-                <p key={key}>
-                  <span className="font-medium">{key}:</span> {value}
-                </p>
-              ))
-            ) : (
-              <p>{data.introduction}</p>
-            )}
-          </div>
-        </Card>
-      )}
+      <CourseTabs
+        active={tab}
+        onChange={storeTab}
+        panels={{
+          lessons: (
+            <div className="space-y-6">
+              {data.introduction && (
+                <Card className="p-5">
+                  <div className="text-sm text-gray-700 leading-relaxed space-y-2">
+                    {typeof data.introduction === "object" ? (
+                      Object.entries(data.introduction).map(([key, value]) => (
+                        <p key={key}>
+                          <span className="font-medium">{key}:</span> {value}
+                        </p>
+                      ))
+                    ) : (
+                      <p>{data.introduction}</p>
+                    )}
+                  </div>
+                </Card>
+              )}
 
-      <SourcesList sources={data.sources ?? []} />
+              <SourcesList sources={data.sources ?? []} />
 
-      {data.answer && (
-        <Card className="p-5">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Réponse directe
-          </h2>
-          <AnswerBlock answer={data.answer} />
-        </Card>
-      )}
+              {data.answer && (
+                <Card className="p-5">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                    Réponse directe
+                  </h2>
+                  <AnswerBlock answer={data.answer} />
+                </Card>
+              )}
 
-      {sections.length > 0 && (
-        <SectionsList
-          sections={sections}
-          sessionId={sessionId}
-          courseKey={sessionId ?? data.meta?.title ?? "cours"}
-          videosBySection={videos.bySection}
-          onVideoNoteSaved={saveNote}
-          missingWrapUp={isMissingWrapUp(data)}
-          onCourseRegenerated={onCourseRegenerated}
-        />
-      )}
+              {sections.length > 0 && (
+                <SectionsList
+                  sections={sections}
+                  sessionId={sessionId}
+                  courseKey={sessionId ?? data.meta?.title ?? "cours"}
+                  videosBySection={videos.bySection}
+                  onVideoNoteSaved={saveNote}
+                  missingWrapUp={isMissingWrapUp(data)}
+                  onCourseRegenerated={onCourseRegenerated}
+                />
+              )}
 
-      {data.common_pitfalls && data.common_pitfalls.length > 0 && (
-        <PitfallsList pitfalls={data.common_pitfalls} />
-      )}
+              {data.common_pitfalls && data.common_pitfalls.length > 0 && (
+                <PitfallsList pitfalls={data.common_pitfalls} />
+              )}
 
-      {quiz.length > 0 && <QuizPanel questions={quiz} flow={quizFlow} />}
+              {data.summary && <SummaryBlock summary={data.summary} />}
 
-      {data.summary && <SummaryBlock summary={data.summary} />}
+              {nextSteps.length > 0 && <NextStepsList steps={nextSteps} />}
 
-      {nextSteps.length > 0 && <NextStepsList steps={nextSteps} />}
-
-      {sessionId && (
-        <div className="flex justify-center">
-          <AddCourseContentButton
-            sessionId={sessionId}
-            hasNextSteps={nextSteps.length > 0}
-            onAdded={handleContentAdded}
-          />
-        </div>
-      )}
+              {sessionId && (
+                <div className="flex justify-center">
+                  <AddCourseContentButton
+                    sessionId={sessionId}
+                    hasNextSteps={nextSteps.length > 0}
+                    onAdded={handleContentAdded}
+                  />
+                </div>
+              )}
+            </div>
+          ),
+          exercises: (
+            <p className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">
+              Les exercices corrigés arrivent bientôt.
+            </p>
+          ),
+          quiz: hasQuiz ? (
+            <QuizPanel questions={quiz} flow={quizFlow} />
+          ) : (
+            <p className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">
+              Ce cours n&apos;a pas de quiz.
+            </p>
+          ),
+        }}
+      />
 
       {/* Le quiz en page propre (retour anticipé plus haut) masque le chat */}
       {sessionId && <ChatLauncher sessionId={sessionId} sectionId={chatSectionId} />}

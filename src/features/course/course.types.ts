@@ -210,9 +210,23 @@ export interface CoursePitfall {
   tip?: string | null;
 }
 
+/** Format d'une question ; `choice` pour les anciennes questions (champ absent) et les formats inconnus. */
+export type QuizQuestionKind = "choice" | "numeric" | "matching";
+
 export interface QuizQuestion {
+  /** Absent sur les anciennes questions : traité comme `choice`. */
+  kind?: QuizQuestionKind;
   question: string;
+  /** `choice` : choix proposés ; `matching` : éléments à associer aux sujets ; `numeric` : vide. */
   options: string[];
+  /** `numeric` : valeur attendue (null avant correction). */
+  expected_value?: number | null;
+  /** `numeric` : unité affichée à côté du champ. */
+  unit?: string | null;
+  /** `matching` : sujets à relier à une option. */
+  subjects?: string[];
+  /** `matching` : indice d'option attendu par sujet (vide avant correction). */
+  correct_matches?: number[];
   /** Indices 0-based des bonnes réponses (1 = unique, >1 = QCM multiple) */
   correct_option_indices: number[];
   /** Niveau de difficulté */
@@ -234,8 +248,16 @@ export type QuizPhase = "intro" | "in_progress" | "results" | "aborted";
 
 export interface QuizUserAnswer {
   questionIndex: number;
+  /** `choice` : indices cochés (vide pour les autres formats). */
   selectedOptionIndices: number[];
+  /** `numeric` : valeur saisie, null si vide. */
+  numericValue?: number | null;
+  /** `matching` : indice d'option choisi par sujet, null si le sujet est laissé vide. */
+  matches?: (number | null)[];
 }
+
+/** Réponse à une question, avant son enregistrement dans la liste des réponses. */
+export type QuizAnswerInput = Omit<QuizUserAnswer, "questionIndex">;
 
 // ─── Request ────────────────────────────────────────────────
 

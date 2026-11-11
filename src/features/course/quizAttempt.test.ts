@@ -24,6 +24,53 @@ function question(points: number, correct: number[] = [0]): QuizQuestion {
   };
 }
 
+const numeric: QuizQuestion = { ...question(1), kind: "numeric", options: [], expected_value: 4, unit: "m" };
+const matching: QuizQuestion = {
+  ...question(1),
+  kind: "matching",
+  subjects: ["a", "b", "c"],
+  options: ["X", "Y", "Z"],
+  correct_matches: [2, 0, 1],
+};
+const noExplanation = { correct_option_indices: [], explanation: "", explanation_per_choice: [], points_earned: 10 };
+
+describe("quizAttempt multi-format", () => {
+  it("toSubmittedAnswers : valeur numérique, [] si vide, null par sujet vide", () => {
+    const answers = [
+      { questionIndex: 0, selectedOptionIndices: [], numericValue: 3.5 },
+      { questionIndex: 2, selectedOptionIndices: [], matches: [1, null, 0] },
+    ];
+    expect(toSubmittedAnswers([numeric, numeric, matching], answers)).toEqual([[3.5], [], [1, null, 0]]);
+    expect(toSubmittedAnswers([matching], [])).toEqual([[null, null, null]]);
+  });
+
+  it("gradeLocally note chaque format", () => {
+    const grade = gradeLocally(
+      [numeric, matching, matching],
+      [
+        { questionIndex: 0, selectedOptionIndices: [], numericValue: 4 },
+        { questionIndex: 1, selectedOptionIndices: [], matches: [2, 0, 1] },
+        { questionIndex: 2, selectedOptionIndices: [], matches: [2, 0, null] },
+      ],
+    );
+    expect(grade.items.map((i) => i.correct)).toEqual([true, true, false]);
+  });
+
+  it("gradeFromServer reprend la correction numérique et l'appariement", () => {
+    const grade = gradeFromServer([{ ...numeric, expected_value: null }, { ...matching, correct_matches: [] }], {
+      score: 20,
+      max_score: 20,
+      status: "completed",
+      results: [
+        { ...noExplanation, kind: "numeric", expected_value: 4, unit: "m" },
+        { ...noExplanation, kind: "matching", correct_matches: [2, 0, 1], subjects: ["a", "b", "c"] },
+      ],
+    });
+    expect(grade.questions[0].expected_value).toBe(4);
+    expect(grade.questions[1].correct_matches).toEqual([2, 0, 1]);
+  });
+});
+
 describe("quizAttempt.schema", () => {
   it("démarrage : questions sans bonnes réponses, id normalisé en chaîne", () => {
     const parsed = quizAttemptStartSchema.parse({
@@ -40,8 +87,9 @@ describe("quizAttempt.schema", () => {
 
   it("soumission : refuse des indices négatifs ou non entiers", () => {
     expect(quizAttemptSubmitRequestSchema.safeParse({ answers: [[0, 2], []] }).success).toBe(true);
-    expect(quizAttemptSubmitRequestSchema.safeParse({ answers: [[-1]] }).success).toBe(false);
-    expect(quizAttemptSubmitRequestSchema.safeParse({ answers: [[1.5]] }).success).toBe(false);
+    // numérique : valeur décimale ou négative ; appariement : null pour un sujet vide
+    expect(quizAttemptSubmitRequestSchema.safeParse({ answers: [[-1.5], [0, null]] }).success).toBe(true);
+    expect(quizAttemptSubmitRequestSchema.safeParse({ answers: [["a"]] }).success).toBe(false);
   });
 
   it("réponse : note nullable (tentative interrompue), max 20 par défaut", () => {
@@ -60,7 +108,7 @@ describe("quizAttempt — réponses", () => {
   });
 
   it("toSubmittedAnswers : une entrée par question, vide si non répondue, sans doublon", () => {
-    expect(toSubmittedAnswers(3, [{ questionIndex: 2, selectedOptionIndices: [1, 1, 0] }])).toEqual([[], [], [1, 0]]);
+    expect(toSubmittedAnswers([question(1), question(1), question(1)], [{ questionIndex: 2, selectedOptionIndices: [1, 1, 0] }])).toEqual([[], [], [1, 0]]);
   });
 });
 

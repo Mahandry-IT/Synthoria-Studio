@@ -194,9 +194,20 @@ const coursePitfallSchema = z.object({
   tip: z.string().optional(),
 });
 
+export const quizQuestionKindSchema = z.enum(["choice", "numeric", "matching"]);
+
 export const quizQuestionSchema = z.object({
+  /** Absent (anciennes questions) ou inconnu : retombe sur `choice` sans casser la lecture. */
+  kind: quizQuestionKindSchema.catch("choice"),
   question: z.string(),
-  options: z.array(z.string()).min(2),
+  /** Vide pour une question numérique. */
+  options: z.array(z.string()).default([]),
+  /** Numérique : valeur attendue, renseignée seulement dans la correction. */
+  expected_value: z.number().nullable().optional().catch(null),
+  unit: z.string().nullable().optional().catch(null),
+  /** Appariement : sujets, et option attendue par sujet (vide avant correction). */
+  subjects: z.array(z.string()).optional().catch([]),
+  correct_matches: z.array(z.number()).optional().catch([]),
   /** Indices 0-based des bonnes réponses (1 = unique, >1 = QCM multiple) */
   correct_option_indices: z.array(z.number()).default([]),
   /** Niveau de difficulté */

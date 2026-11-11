@@ -1,5 +1,5 @@
-import type { QuizQuestion, QuizUserAnswer } from "./course.types";
-import { isAnswerCorrect } from "./quizGrading";
+import type { QuizAnswerInput, QuizQuestion, QuizUserAnswer } from "./course.types";
+import { isQuestionCorrect, questionKind } from "./quizGrading";
 import type { QuizAttemptSubmitResponse } from "./quizAttempt.schema";
 
 /** Correction d'une question, quelle que soit sa source (serveur ou repli local). */
@@ -17,19 +17,33 @@ export interface QuizGrade {
   questions: QuizQuestion[];
 }
 
-/** Remplace (ou ajoute) la réponse de la question `questionIndex`. */
-export function upsertAnswer(answers: QuizUserAnswer[], questionIndex: number, indices: number[]): QuizUserAnswer[] {
+/** Remplace (ou ajoute) la réponse de la question `questionIndex` (une liste d'indices vaut une réponse `choice`). */
+export function upsertAnswer(
+  answers: QuizUserAnswer[],
+  questionIndex: number,
+  input: number[] | QuizAnswerInput,
+): QuizUserAnswer[] {
+  const value: QuizAnswerInput = Array.isArray(input) ? { selectedOptionIndices: input } : input;
   const others = answers.filter((a) => a.questionIndex !== questionIndex);
-  return [...others, { questionIndex, selectedOptionIndices: indices }].sort((a, b) => a.questionIndex - b.questionIndex);
+  return [...others, { questionIndex, ...value }].sort((a, b) => a.questionIndex - b.questionIndex);
 }
 
-function selectedFor(answers: QuizUserAnswer[], index: number): number[] {
-  return answers.find((a) => a.questionIndex === index)?.selectedOptionIndices ?? [];
-}
+/** Une réponse au format de la soumission : indices, `[]`/`[valeur]`, ou un indice (ou null) par sujet. */
+export type SubmittedAnswer = (number | null)[];
 
-/** Réponses au format de la soumission : une liste d'indices sans doublon par question (vide si non répondue). */
-export function toSubmittedAnswers(total: number, answers: QuizUserAnswer[]): number[][] {
-  return Array.from({ length: total }, (_, i) => [...new Set(selectedFor(answers, i))]);
+/** Réponses au format de la soumission, une entrée par question (vide si non répondue). */
+export function toSubmittedAnswers(questions: QuizQuestion[], answers: QuizUserAnswer[]): SubmittedAnswer[] {
+  return questions.map((question, i) => {
+    const answer = answers.find((a) => a.questionIndex === i);
+    switch (questionKind(question)) {
+      case "numeric":
+        return answer?.numericValue != null ? [answer.numericValue] : [];
+      case "matching":
+        return Array.from({ length: question.subjects?.length ?? 0 }, (_, s) => answer?.matches?.[s] ?? null);
+      default:
+        return [...new Set(answer?.selectedOptionIndices ?? [])];
+    }
+  });
 }
 
 /**
@@ -38,7 +52,7 @@ export function toSubmittedAnswers(total: number, answers: QuizUserAnswer[]): nu
  */
 export function gradeLocally(questions: QuizQuestion[], answers: QuizUserAnswer[]): QuizGrade {
   const items = questions.map((question, i) => {
-    const correct = isAnswerCorrect(question, selectedFor(answers, i));
+    const correct = isQuestionCorrect(question, answers.find((a) => a.questionIndex === i));
     return { correct, pointsEarned: correct ? question.points : 0 };
   });
   return {
@@ -57,6 +71,11 @@ export function gradeFromServer(questions: QuizQuestion[], response: QuizAttempt
     return {
       ...question,
       correct_option_indices: result.correct_option_indices,
+      kind: result.kind ?? question.kind,
+      expected_value: result.expected_value ?? question.expected_value,
+      unit: result.unit ?? question.unit,
+      subjects: result.subjects?.length ? result.subjects : question.subjects,
+      correct_matches: result.correct_matches?.length ? result.correct_matches : question.correct_matches,
       explanation: result.explanation || question.explanation,
       explanation_per_choice: result.explanation_per_choice.length
         ? result.explanation_per_choice

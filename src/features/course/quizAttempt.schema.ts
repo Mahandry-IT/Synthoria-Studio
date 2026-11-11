@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { quizQuestionSchema } from "./course.schema";
+import { quizQuestionKindSchema, quizQuestionSchema } from "./course.schema";
 
 /** Note maximale d'une tentative (les points sont recalculés côté serveur pour totaliser 20). */
 export const QUIZ_MAX_SCORE = 20;
@@ -14,16 +14,24 @@ export const quizAttemptStartSchema = z.object({
   questions: z.array(quizQuestionSchema).min(1),
 });
 
-/** Corps de `POST …/attempts/{aid}/submit` : indices choisis par question, dans l'ordre de la série. */
+/**
+ * Corps de `POST …/attempts/{aid}/submit`, dans l'ordre de la série : indices choisis (choice), `[]` ou
+ * `[valeur]` (numeric), un indice d'option ou null par sujet (matching).
+ */
 export const quizAttemptSubmitRequestSchema = z.object({
-  answers: z.array(z.array(z.number().int().min(0))),
+  answers: z.array(z.array(z.number().nullable())),
   aborted: z.boolean().optional(),
   abort_reason: z.string().max(QUIZ_ABORT_REASON_MAX_LENGTH).optional(),
 });
 
 /** Correction d'une question renvoyée par le serveur. */
 export const quizAttemptResultSchema = z.object({
-  correct_option_indices: z.array(z.number().int().min(0)),
+  correct_option_indices: z.array(z.number().int().min(0)).default([]),
+  kind: quizQuestionKindSchema.optional().catch(undefined),
+  expected_value: z.number().nullable().optional().catch(null),
+  correct_matches: z.array(z.number()).optional().catch([]),
+  subjects: z.array(z.string()).optional().catch([]),
+  unit: z.string().nullable().optional().catch(null),
   explanation: z.string().optional().default(""),
   explanation_per_choice: z.array(z.string()).optional().default([]),
   /** Points obtenus pour cette question (0 si fausse). */
