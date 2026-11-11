@@ -94,6 +94,23 @@ const courseAnswerSchema = z.object({
   tables: z.array(courseTableSchema).optional().default([]),
 });
 
+const CHART_STEPS_MAX = 8;
+
+const chartStepSchema = z.object({
+  caption: z.string(),
+  highlight_labels: z.array(z.number().int().min(0)).optional().default([]),
+  highlight_series: z.array(z.number().int().min(0)).optional().default([]),
+});
+
+/** Étapes tolérantes : tout ce qui n'est pas une étape valide est écarté (le graphique reste affiché sans). */
+function parseChartSteps(raw: unknown): z.infer<typeof chartStepSchema>[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    const parsed = chartStepSchema.safeParse(item);
+    return parsed.success && parsed.data.caption.trim() ? [parsed.data] : [];
+  }).slice(0, CHART_STEPS_MAX);
+}
+
 const courseContentBlockSchema = z.object({
   type: z.string(),
   text: z.string().nullish(),
@@ -134,6 +151,7 @@ const courseContentBlockSchema = z.object({
       caption: z.string().optional().default(""),
       labels: z.array(z.string()),
       series: z.array(z.object({ name: z.string(), values: z.array(z.number()) })),
+      steps: z.unknown().transform(parseChartSteps),
     })
     .nullish()
     .catch(null),

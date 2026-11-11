@@ -103,11 +103,19 @@ export interface CourseDiagram {
   mermaid: string;
 }
 
+/** Étape de pas-à-pas d'un graphique : indices base 0 dans `labels` / `series`, listes vides = rien de particulier. */
+export interface CourseChartStep {
+  caption: string;
+  highlight_labels: number[];
+  highlight_series: number[];
+}
+
 export interface CourseChart {
   kind: "bar" | "line" | "pie";
   caption?: string;
   labels: string[];
   series: { name: string; values: number[] }[];
+  steps?: CourseChartStep[];
 }
 
 /** Attribution obligatoire pour les licences CC BY / CC BY-SA (jamais affichée sans elle). */

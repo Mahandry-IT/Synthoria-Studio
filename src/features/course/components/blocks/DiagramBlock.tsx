@@ -2,6 +2,9 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import type { CourseDiagram } from "../../course.types";
+import { Button } from "@/components/Button";
+import { ZOOM_DEFAULT, ZOOM_MAX, ZOOM_MIN, nextZoom } from "./diagramZoom";
+import { MERMAID_CONFIG } from "./mermaidConfig";
 import { quoteFlowchartLabels, sanitizeSvg, stripStyleDirectives } from "./diagramSvg";
 
 /** Même borne que le backend (`DIAGRAM_SOURCE_MAX`) : au-delà, on n'appelle pas Mermaid. */
@@ -18,6 +21,7 @@ export function DiagramBlock({ diagram }: { diagram: CourseDiagram }) {
   const container = useRef<HTMLDivElement>(null);
   const tooLarge = diagram.mermaid.length > DIAGRAM_SOURCE_MAX;
   const [error, setError] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(ZOOM_DEFAULT);
 
   useEffect(() => {
     if (tooLarge) return;
@@ -25,11 +29,7 @@ export function DiagramBlock({ diagram }: { diagram: CourseDiagram }) {
     (async () => {
       try {
         const mermaid = (await import("mermaid")).default;
-        mermaid.initialize({
-          startOnLoad: false,
-          securityLevel: "strict",
-          flowchart: { htmlLabels: false },
-        });
+        mermaid.initialize(MERMAID_CONFIG);
         const { svg } = await mermaid.render(`diagram-${reactId}`, quoteFlowchartLabels(stripStyleDirectives(diagram.mermaid)));
         if (cancelled) return;
         const node = sanitizeSvg(svg);
@@ -60,7 +60,36 @@ export function DiagramBlock({ diagram }: { diagram: CourseDiagram }) {
           )}
         </div>
       ) : (
-        <div ref={container} className="overflow-x-auto [&_svg]:mx-auto [&_svg]:h-auto [&_svg]:max-w-full" />
+        <>
+          <div role="group" aria-label="Zoom du schéma" className="mb-2 flex flex-wrap items-center gap-2">
+            <Button type="button" variant="secondary" size="sm" aria-label="Zoom arrière" disabled={zoom <= ZOOM_MIN} onClick={() => setZoom((z) => nextZoom(z, -1))}>
+              −
+            </Button>
+            <span aria-live="polite" className="min-w-12 text-center text-xs tabular-nums text-gray-600">
+              {zoom} %
+            </span>
+            <Button type="button" variant="secondary" size="sm" aria-label="Zoom avant" disabled={zoom >= ZOOM_MAX} onClick={() => setZoom((z) => nextZoom(z, 1))}>
+              +
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              aria-label={zoom === ZOOM_DEFAULT ? "Taille réelle" : "Ajuster à la largeur"}
+              disabled={zoom === ZOOM_DEFAULT}
+              onClick={() => setZoom(ZOOM_DEFAULT)}
+            >
+              Ajuster
+            </Button>
+          </div>
+          <div className="max-h-[70vh] overflow-auto rounded border border-gray-100">
+            <div
+              ref={container}
+              style={{ width: `${zoom}%` }}
+              className="mx-auto [&_svg]:mx-auto [&_svg]:block [&_svg]:h-auto [&_svg]:w-full"
+            />
+          </div>
+        </>
       )}
     </figure>
   );

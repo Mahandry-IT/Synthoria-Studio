@@ -1,5 +1,10 @@
+"use client";
+
+import { useState } from "react";
 import type { CourseChart } from "../../course.types";
 import { axisMax, pieSlices } from "./chartGeometry";
+import { DIMMED_OPACITY, hasHighlight, isHighlighted } from "./chartHighlight";
+import { ChartStepControls } from "./ChartStepControls";
 
 const PALETTE = ["#4f46e5", "#0891b2", "#d97706", "#db2777"];
 const W = 480;
@@ -18,6 +23,15 @@ function arcPath(cx: number, cy: number, r: number, start: number, end: number):
 
 /** Graphique en SVG pur (barres, courbes, secteurs) : aucune dépendance, aucune injection HTML. */
 export function ChartBlock({ chart }: { chart: CourseChart }) {
+  const steps = chart.steps ?? [];
+  const [stepIndex, setStepIndex] = useState(0);
+  const safeIndex = Math.min(stepIndex, Math.max(steps.length - 1, 0));
+  const current = steps[safeIndex];
+  const dimming = hasHighlight(current);
+  const opacityOf = (labelIndex: number, seriesIndex: number) =>
+    isHighlighted(current, labelIndex, seriesIndex) ? undefined : DIMMED_OPACITY;
+  const accent = (labelIndex: number, seriesIndex: number) =>
+    dimming && isHighlighted(current, labelIndex, seriesIndex) ? { stroke: "#111827", strokeWidth: 2 } : {};
   const max = axisMax(chart.series.map((s) => s.values));
   const step = plotW / Math.max(chart.labels.length, 1);
   const y = (v: number) => PAD.top + plotH - (Math.max(v, 0) / max) * plotH;
@@ -34,7 +48,11 @@ export function ChartBlock({ chart }: { chart: CourseChart }) {
         >
           {chart.kind === "pie" ? (
             pieSlices(chart.series[0]?.values ?? []).map((slice, i) => (
-              <path key={i} d={arcPath(W / 2, H / 2, H / 2 - 12, slice.start, slice.end)} fill={colorOf(i)} stroke="#fff">
+              <path key={i} d={arcPath(W / 2, H / 2, H / 2 - 12, slice.start, slice.end)} fill={colorOf(i)}
+                stroke="#fff"
+                opacity={opacityOf(i, -1)}
+                {...accent(i, -1)}
+              >
                 <title>{`${chart.labels[i] ?? ""} : ${slice.value}`}</title>
               </path>
             ))
@@ -71,6 +89,8 @@ export function ChartBlock({ chart }: { chart: CourseChart }) {
                         width={barW}
                         height={PAD.top + plotH - y(v)}
                         fill={colorOf(si)}
+                        opacity={opacityOf(i, si)}
+                        {...accent(i, si)}
                       >
                         <title>{`${s.name} — ${chart.labels[i] ?? ""} : ${v}`}</title>
                       </rect>
@@ -79,13 +99,18 @@ export function ChartBlock({ chart }: { chart: CourseChart }) {
                 : chart.series.map((s, si) => (
                     <g key={si}>
                       <polyline
+                        opacity={current && current.highlight_series.length > 0 && !current.highlight_series.includes(si) ? DIMMED_OPACITY : undefined}
                         fill="none"
                         stroke={colorOf(si)}
                         strokeWidth="2"
                         points={s.values.map((v, i) => `${PAD.left + step * i + step / 2},${y(v)}`).join(" ")}
                       />
                       {s.values.map((v, i) => (
-                        <circle key={i} cx={PAD.left + step * i + step / 2} cy={y(v)} r="3" fill={colorOf(si)}>
+                        <circle key={i} cx={PAD.left + step * i + step / 2} cy={y(v)} r={dimming && isHighlighted(current, i, si) ? 4.5 : 3}
+                          fill={colorOf(si)}
+                          opacity={opacityOf(i, si)}
+                          {...accent(i, si)}
+                        >
                           <title>{`${s.name} — ${chart.labels[i] ?? ""} : ${v}`}</title>
                         </circle>
                       ))}
@@ -103,6 +128,15 @@ export function ChartBlock({ chart }: { chart: CourseChart }) {
           </li>
         ))}
       </ul>
+      {current && (
+        <ChartStepControls
+          index={safeIndex}
+          total={steps.length}
+          caption={current.caption}
+          onPrevious={() => setStepIndex(Math.max(safeIndex - 1, 0))}
+          onNext={() => setStepIndex(Math.min(safeIndex + 1, steps.length - 1))}
+        />
+      )}
     </figure>
   );
 }

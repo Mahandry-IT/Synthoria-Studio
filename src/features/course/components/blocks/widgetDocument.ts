@@ -80,7 +80,7 @@ ${html}
 }
 
 export const WIDGET_MIN_HEIGHT = 160;
-export const WIDGET_MAX_HEIGHT = 720;
+export const WIDGET_MAX_HEIGHT = 1100;
 export const WIDGET_DEFAULT_HEIGHT = 320;
 
 export function clampWidgetHeight(value: number): number {
