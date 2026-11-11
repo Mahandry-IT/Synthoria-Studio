@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/Skeleton";
 import { LatexText } from "@/shared/utils/latex";
 import type { QuizQuestion, QuizUserAnswer } from "../course.types";
 import { formatScore, scoreAppreciation, type QuizGrade, type QuizGradeItem } from "../quizAttempt";
+import { questionKind } from "../quizGrading";
 import { formatSectionRefs } from "../quizSections";
 
 interface QuizResultsProps {
@@ -64,7 +65,7 @@ export function QuizResults({ grade, answers, grading, gradingError, onRetryGrad
               question={question}
               index={qIdx}
               item={grade.items[qIdx]}
-              selected={answers.find((a) => a.questionIndex === qIdx)?.selectedOptionIndices ?? []}
+              answer={answers.find((a) => a.questionIndex === qIdx)}
             />
           ))}
         </div>
@@ -88,12 +89,11 @@ interface QuestionResultProps {
   question: QuizQuestion;
   index: number;
   item: QuizGradeItem | undefined;
-  selected: number[];
+  answer: QuizUserAnswer | undefined;
 }
 
-function QuestionResult({ question, index, item, selected }: QuestionResultProps) {
+function QuestionResult({ question, index, item, answer }: QuestionResultProps) {
   const isCorrect = item?.correct ?? false;
-  const correctIndices = question.correct_option_indices ?? [];
   const sectionRefs = formatSectionRefs(question.section_refs);
 
   return (
@@ -115,25 +115,7 @@ function QuestionResult({ question, index, item, selected }: QuestionResultProps
       </div>
 
       <div className="space-y-2 ml-8">
-        {question.options.map((option, optIdx) => {
-          const isUserChoice = selected.includes(optIdx);
-          const isCorrectOption = correctIndices.includes(optIdx);
-          const ringClass = isCorrectOption
-            ? "ring-2 ring-green-500 bg-green-50"
-            : isUserChoice
-              ? "ring-2 ring-red-500 bg-red-50"
-              : "";
-
-          return (
-            <div key={optIdx} className={["flex items-center gap-3 rounded-lg border p-3 text-sm", ringClass].join(" ")}>
-              <span className="flex-1 text-gray-700">
-                <LatexText text={option} autoMath />
-              </span>
-              {isCorrectOption && <span className="text-green-600 font-medium text-xs">✓ Correct</span>}
-              {isUserChoice && !isCorrectOption && <span className="text-red-600 font-medium text-xs">✗ Ta réponse</span>}
-            </div>
-          );
-        })}
+        <QuestionCorrection question={question} answer={answer} />
 
         {question.explanation && (
           <p className="text-sm text-gray-600 bg-white rounded-lg p-3 border border-gray-100">
@@ -143,6 +125,84 @@ function QuestionResult({ question, index, item, selected }: QuestionResultProps
 
         {sectionRefs && <p className="text-xs text-gray-500">{sectionRefs}</p>}
       </div>
+    </div>
+  );
+}
+
+const valueFormat = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 6 });
+
+function formatValue(value: number | null | undefined, unit: string | null | undefined): string {
+  if (value == null) return "—";
+  return unit ? `${valueFormat.format(value)} ${unit}` : valueFormat.format(value);
+}
+
+/** Correction détaillée d'une question, selon son format. */
+function QuestionCorrection({ question, answer }: { question: QuizQuestion; answer: QuizUserAnswer | undefined }) {
+  const kind = questionKind(question);
+
+  if (kind === "numeric") {
+    return (
+      <dl className="space-y-1 text-sm text-gray-700">
+        <div className="flex gap-2">
+          <dt className="font-medium">Ta réponse :</dt>
+          <dd>{answer?.numericValue != null ? formatValue(answer.numericValue, question.unit) : "Aucune réponse"}</dd>
+        </div>
+        <div className="flex gap-2">
+          <dt className="font-medium text-green-700">Bonne valeur :</dt>
+          <dd>{formatValue(question.expected_value, question.unit)}</dd>
+        </div>
+      </dl>
+    );
+  }
+
+  if (kind === "matching") {
+    const expected = question.correct_matches ?? [];
+    return (
+      <ul className="space-y-2">
+        {(question.subjects ?? []).map((subject, i) => {
+          const given = answer?.matches?.[i] ?? null;
+          const ok = given != null && given === expected[i];
+          return (
+            <li key={i} className="rounded-lg border p-3 text-sm bg-white">
+              <p className="text-gray-700">
+                <LatexText text={subject} autoMath />
+              </p>
+              <p className="text-green-700">
+                <span className="font-medium">Attendu :</span> {question.options[expected[i]] ?? "—"}
+              </p>
+              <p className={ok ? "text-green-700" : "text-red-700"}>
+                <span className="font-medium">Ta réponse :</span> {given != null ? (question.options[given] ?? "—") : "Aucune réponse"}
+              </p>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
+
+  const selected = answer?.selectedOptionIndices ?? [];
+  const correctIndices = question.correct_option_indices ?? [];
+  return (
+    <div className="space-y-2">
+  {question.options.map((option, optIdx) => {
+            const isUserChoice = selected.includes(optIdx);
+            const isCorrectOption = correctIndices.includes(optIdx);
+            const ringClass = isCorrectOption
+              ? "ring-2 ring-green-500 bg-green-50"
+              : isUserChoice
+                ? "ring-2 ring-red-500 bg-red-50"
+                : "";
+
+            return (
+              <div key={optIdx} className={["flex items-center gap-3 rounded-lg border p-3 text-sm", ringClass].join(" ")}>
+                <span className="flex-1 text-gray-700">
+                  <LatexText text={option} autoMath />
+                </span>
+                {isCorrectOption && <span className="text-green-600 font-medium text-xs">✓ Correct</span>}
+                {isUserChoice && !isCorrectOption && <span className="text-red-600 font-medium text-xs">✗ Ta réponse</span>}
+              </div>
+            );
+          })}
     </div>
   );
 }

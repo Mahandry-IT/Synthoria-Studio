@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toastError, toastWarning } from "@/shared/ui/toast";
-import type { QuizQuestion, QuizPhase, QuizUserAnswer } from "../course.types";
+import type { QuizAnswerInput, QuizQuestion, QuizPhase, QuizUserAnswer } from "../course.types";
 import { startQuizAttempt, submitQuizAttempt } from "../quizAttempt.api";
 import type { QuizAttemptSubmitRequest } from "../quizAttempt.schema";
 import { gradeFromServer, gradeLocally, toSubmittedAnswers, upsertAnswer, type QuizGrade } from "../quizAttempt";
@@ -26,7 +26,7 @@ export interface UseQuizFlowReturn {
   /** Démarre une nouvelle tentative (nouvelle série) : « Commencer » et « Recommencer ». */
   start: () => void;
   /** Enregistre la réponse à la question courante et passe à la suivante (ou aux résultats). */
-  submitAnswer: (indices: number[]) => void;
+  submitAnswer: (answer: QuizAnswerInput) => void;
   retryGrading: () => void;
   /** Revient à l'intro (« Retour au cours »). */
   reset: () => void;
@@ -112,15 +112,15 @@ export function useQuizFlow(courseQuestions: QuizQuestion[], sessionId: string |
         setLocalGrade(gradeLocally(courseQuestions, finalAnswers));
         return;
       }
-      submit({ attempt, payload: { answers: toSubmittedAnswers(attempt.questions.length, finalAnswers) } });
+      submit({ attempt, payload: { answers: toSubmittedAnswers(attempt.questions, finalAnswers) } });
     },
     [attempt, courseQuestions, submit],
   );
 
   const submitAnswer = useCallback(
-    (indices: number[]) => {
+    (answer: QuizAnswerInput) => {
       if (phase !== "in_progress") return;
-      const nextAnswers = upsertAnswer(answers, currentIndex, indices);
+      const nextAnswers = upsertAnswer(answers, currentIndex, answer);
       setAnswers(nextAnswers);
       if (currentIndex < total - 1) {
         setCurrentIndex(currentIndex + 1);
@@ -144,7 +144,7 @@ export function useQuizFlow(courseQuestions: QuizQuestion[], sessionId: string |
       setAbortReason(reason);
       if (!attempt) return;
       const payload = {
-        answers: toSubmittedAnswers(attempt.questions.length, answers),
+        answers: toSubmittedAnswers(attempt.questions, answers),
         aborted: true,
         abort_reason: reason,
       };

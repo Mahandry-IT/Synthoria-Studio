@@ -3,13 +3,16 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { LatexText } from "@/shared/utils/latex";
 import { CircularTimer } from "./CircularTimer";
-import type { QuizQuestion } from "../course.types";
+import type { QuizAnswerInput, QuizQuestion } from "../course.types";
+import { parseNumericInput, questionKind } from "../quizGrading";
+import { QuizQuestionMatching } from "./QuizQuestionMatching";
+import { QuizQuestionNumeric } from "./QuizQuestionNumeric";
 
 interface QuizQuestionStepProps {
   question: QuizQuestion;
   index: number;
   total: number;
-  onNext: (selectedIndices: number[]) => void;
+  onNext: (answer: QuizAnswerInput) => void;
   isActive: boolean;
 }
 
@@ -33,7 +36,7 @@ function DifficultyBadge({ difficulty }: { difficulty: string }) {
 }
 
 /**
- * Affiche une seule question QCM avec sélection multiple (checkboxes).
+ * Affiche une seule question : QCM (checkboxes), valeur numérique ou appariement selon `kind`.
  * - Pas de reveal correct/incorrect pendant le quiz
  * - Timer piloté par isActive (démarré uniquement quand la question est active)
  * - Bouton "Suivant" / "Voir les résultats"
@@ -45,7 +48,10 @@ export function QuizQuestionStep({
   onNext,
   isActive,
 }: QuizQuestionStepProps) {
+  const kind = questionKind(question);
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [numericText, setNumericText] = useState("");
+  const [matches, setMatches] = useState<(number | null)[]>(() => (question.subjects ?? []).map(() => null));
   const totalTime = question.time_limit_seconds ?? 0;
   const [timeLeft, setTimeLeft] = useState<number | null>(
     question.time_limit_seconds ?? null,
@@ -82,7 +88,7 @@ export function QuizQuestionStep({
   useEffect(() => {
     if (expiredRef.current) {
       expiredRef.current = false;
-      onNext([]);
+      onNext({ selectedOptionIndices: [] });
     }
   });
 
@@ -98,9 +104,18 @@ export function QuizQuestionStep({
     });
   }, []);
 
+  const handleMatch = useCallback((subjectIndex: number, optionIndex: number | null) => {
+    setMatches((prev) => prev.map((value, i) => (i === subjectIndex ? optionIndex : value)));
+  }, []);
+
+  // Numérique et appariement acceptent une réponse vide ; le QCM exige au moins un choix
+  const canContinue = kind !== "choice" || selected.size > 0;
+
   const handleNext = useCallback(() => {
-    onNext(Array.from(selected));
-  }, [onNext, selected]);
+    if (kind === "numeric") onNext({ selectedOptionIndices: [], numericValue: parseNumericInput(numericText) });
+    else if (kind === "matching") onNext({ selectedOptionIndices: [], matches });
+    else onNext({ selectedOptionIndices: Array.from(selected) });
+  }, [kind, onNext, selected, numericText, matches]);
 
   return (
     <fieldset
@@ -134,42 +149,52 @@ export function QuizQuestionStep({
         )}
       </div>
 
-      <div className="space-y-2">
-        {question.options.map((option, optIdx) => {
-          const isSelected = selected.has(optIdx);
+      {kind === "numeric" && (
+        <QuizQuestionNumeric question={question} value={numericText} onChange={setNumericText} disabled={!isActive} />
+      )}
 
-          return (
-            <label
-              key={optIdx}
-              className={[
-                "flex items-center gap-3 rounded-lg border p-3 text-sm cursor-pointer transition-colors",
-                !isSelected && "hover:bg-gray-50",
-                isSelected && "bg-indigo-50 border-indigo-300",
-              ].join(" ")}
-            >
-              <input
-                type="checkbox"
-                checked={isSelected}
-                onChange={() => handleChange(optIdx)}
-                disabled={!isActive}
-                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-              />
-              <span className="flex-1 text-gray-700">
-                <LatexText text={option} autoMath />
-              </span>
-            </label>
-          );
-        })}
-      </div>
+      {kind === "matching" && (
+        <QuizQuestionMatching question={question} selections={matches} onChange={handleMatch} disabled={!isActive} />
+      )}
+
+      {kind === "choice" && (
+        <div className="space-y-2">
+          {question.options.map((option, optIdx) => {
+            const isSelected = selected.has(optIdx);
+
+            return (
+              <label
+                key={optIdx}
+                className={[
+                  "flex items-center gap-3 rounded-lg border p-3 text-sm cursor-pointer transition-colors",
+                  !isSelected && "hover:bg-gray-50",
+                  isSelected && "bg-indigo-50 border-indigo-300",
+                ].join(" ")}
+              >
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => handleChange(optIdx)}
+                  disabled={!isActive}
+                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <span className="flex-1 text-gray-700">
+                  <LatexText text={option} autoMath />
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      )}
 
       <div className="mt-4 flex justify-end">
         <button
           type="button"
           onClick={handleNext}
-          disabled={selected.size === 0}
+          disabled={!canContinue}
           className={[
             "inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
-            selected.size > 0
+            canContinue
               ? "bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
               : "bg-gray-100 text-gray-400 cursor-not-allowed",
           ].join(" ")}
