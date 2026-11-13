@@ -183,6 +183,23 @@ const recallPromptSchema = z.object({
   expected_key_points: z.array(z.string()).optional().default([]),
 });
 
+const sectionPitfallSchema = z.object({
+  mistake: z.string().nullish().transform((v) => v ?? ""),
+  how_to_avoid: z.string().nullish().transform((v) => v ?? ""),
+});
+
+/** Tableau tolérant : un élément null/invalide est écarté sans faire échouer le cours entier. */
+const lenientArray = <T extends z.ZodTypeAny>(item: T) =>
+  z
+    .array(z.unknown())
+    .nullish()
+    .transform((arr) =>
+      (arr ?? []).flatMap((el) => {
+        const r = item.safeParse(el);
+        return r.success ? [r.data as z.output<T>] : [];
+      }),
+    );
+
 export const courseSectionSchema = z.object({
   id: z.string().optional(),
   /** Cycle pédagogique : tous optionnels (sessions historiques sans cycle) */
@@ -199,6 +216,9 @@ export const courseSectionSchema = z.object({
   comment: z.string().optional().default(""),
   worked_example: workedExampleSchema.optional(),
   key_points: z.array(z.string()).optional().default([]),
+  /** « Ce qu'il faut retenir » / « Ce qu'il faut éviter » : absents des cours antérieurs au lot 2 → []. */
+  key_takeaways: lenientArray(z.string()),
+  pitfalls_to_avoid: lenientArray(sectionPitfallSchema),
   tables: z.array(courseTableSchema).optional().default([]),
   incomplete: z.boolean().optional().default(false),
   note: z.string().optional().default(""),
