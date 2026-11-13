@@ -28,6 +28,7 @@ import {
   type LearningStepKind,
   type SectionProgress,
 } from "../sectionProgress";
+import { sectionAnchorId } from "@/features/exercises/exerciseLinks";
 import type { CourseSection, CourseVideo } from "../course.types";
 
 const STEP_LABELS: Record<LearningStepKind, string> = {
@@ -59,6 +60,8 @@ interface SectionReaderProps {
   onVideoNoteSaved?: (videoId: string, note: string) => void;
   /** Régénération groupée en cours : le bouton de régénération de la section est désactivé. */
   regenerationLocked?: boolean;
+  /** Fourni seulement si un exercice rédigé existe pour cette section et que la liste est prête (RG-7). */
+  onDoExercise?: () => void;
 }
 
 /** Contenu explicatif complet : blocs typés si présents, sinon rendu legacy quoi/pourquoi/comment. */
@@ -138,6 +141,7 @@ export function SectionReader({
   videos = [],
   onVideoNoteSaved = () => {},
   regenerationLocked = false,
+  onDoExercise,
 }: SectionReaderProps) {
   // Étapes repliées par l'apprenant (état d'affichage local, non persisté)
   const [collapsed, setCollapsed] = useState<string[]>([]);
@@ -173,6 +177,17 @@ export function SectionReader({
   );
 
   const fadedExample = section.faded_example;
+  // Lien vers l'exercice corrigé : en fin de section, après les encadrés et les vidéos.
+  const exerciseButton = onDoExercise ? (
+    <div className="mt-4 flex justify-end">
+      <Button type="button" variant="outline" onClick={onDoExercise}>
+        Faire l&apos;exercice
+      </Button>
+    </div>
+  ) : null;
+  // Cible de « Retour à la section » depuis l'exercice.
+  const anchorId = section.id ? sectionAnchorId(section.id) : undefined;
+
   const hiddenCount = fadedExample?.hidden_steps?.length ?? 0;
   const renderFaded = (hideTitle: boolean) =>
     fadedExample ? (
@@ -186,7 +201,7 @@ export function SectionReader({
 
   if (section.incomplete) {
     return (
-      <Card className="p-5">
+      <Card id={anchorId} className="p-5">
         {header}
         {sessionId && section.id ? (
           <RegenerateSectionButton
@@ -210,7 +225,7 @@ export function SectionReader({
     // Encadrés et vidéos après le quiz : sans question, rien à spoiler ; sinon une fois terminée.
     const atEnd = visible && (done || (section.check_questions ?? []).length === 0);
     return (
-      <Card className="p-5">
+      <Card id={anchorId} className="p-5">
         {header}
         <div className="space-y-4">
           {hasChallenge && !visible && (
@@ -237,6 +252,7 @@ export function SectionReader({
           )}
         </div>
         {atEnd && videosBlock}
+        {atEnd && exerciseButton}
       </Card>
     );
   }
@@ -296,7 +312,7 @@ export function SectionReader({
   };
 
   return (
-    <Card className="p-5">
+    <Card id={anchorId} className="p-5">
       {header}
       <p className="mb-3 text-xs text-gray-500" aria-live="polite">
         Étape {revealed} sur {total}
@@ -367,6 +383,7 @@ export function SectionReader({
         <>
           <SectionTakeaways section={section} idPrefix={`${domPrefix}-takeaways`} />
           {videosBlock}
+          {exerciseButton}
         </>
       )}
     </Card>

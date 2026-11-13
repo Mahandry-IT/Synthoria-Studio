@@ -45,7 +45,7 @@ describe("ExercisesPanelView", () => {
 
   it("done : titre, section par son titre, couverture, sans identifiant brut de section", () => {
     const data = list({
-      exercises: [{ id: ID, section_id: "s1", position: 1, title: "Produit matriciel", covers: "Savoir multiplier" }],
+      exercises: [{ id: ID, section_id: "s1", position: 1, title: "Produit matriciel", covers: "Savoir multiplier", duration_minutes: null }],
     });
     const html = panel(data);
     expect(html).toContain("Produit matriciel");
@@ -63,7 +63,7 @@ describe("ExercisesPanelView", () => {
   });
 
   it("échappe le texte (pas de HTML)", () => {
-    const data = list({ exercises: [{ id: ID, section_id: null, position: 1, title: "<img src=x onerror=1>", covers: "" }] });
+    const data = list({ exercises: [{ id: ID, section_id: null, position: 1, title: "<img src=x onerror=1>", covers: "", duration_minutes: null }] });
     expect(panel(data)).not.toContain("<img");
   });
 

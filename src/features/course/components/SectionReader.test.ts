@@ -31,7 +31,7 @@ const progressive: CourseSection = {
   pitfalls_to_avoid: [{ mistake: "Erreur X", how_to_avoid: "Faire Y" }],
 } as CourseSection;
 
-const render = (section: CourseSection, progress: SectionProgress = EMPTY_PROGRESS, videos: CourseVideo[] = []) =>
+const render = (section: CourseSection, progress: SectionProgress = EMPTY_PROGRESS, videos: CourseVideo[] = [], onDoExercise?: () => void) =>
   renderToStaticMarkup(
     createElement(
       QueryClientProvider,
@@ -45,6 +45,7 @@ const render = (section: CourseSection, progress: SectionProgress = EMPTY_PROGRE
         update: () => {},
         onOverride: () => {},
         videos,
+        onDoExercise,
       }),
     ),
   );
@@ -126,5 +127,32 @@ describe("SectionReader — vidéos de la section", () => {
 
   it("deux vidéos : titre au pluriel", () => {
     expect(render(legacy, EMPTY_PROGRESS, [video("aaaaaaaaaaa"), video("bbbbbbbbbbb")])).toContain("Vidéos de cette section");
+  });
+});
+
+describe("SectionReader : bouton « Faire l'exercice »", () => {
+  const done = { unlocked: ["s2"], done: ["s2"] };
+  const doExercise = () => {};
+
+  it("exercice disponible et section terminée : bouton affiché après les encadrés", () => {
+    const out = render(progressive, done, [], doExercise);
+    expect(out).toContain("Faire l&#x27;exercice");
+    expect(out.indexOf("Ce qu&#x27;il faut éviter")).toBeLessThan(out.indexOf("Faire l&#x27;exercice"));
+  });
+
+  it("section ancienne sans question : bouton affiché en fin de section", () => {
+    expect(render(legacy, EMPTY_PROGRESS, [], doExercise)).toContain("Faire l&#x27;exercice");
+  });
+
+  it("pas d'exercice pour la section (liste absente, en cours ou échouée) : aucun bouton", () => {
+    expect(render(progressive, done)).not.toContain("Faire l&#x27;exercice");
+  });
+
+  it("section progressive non terminée : pas de bouton", () => {
+    expect(render(progressive, EMPTY_PROGRESS, [], doExercise)).not.toContain("Faire l&#x27;exercice");
+  });
+
+  it("l'ancre de la section porte l'id attendu par « Retour à la section »", () => {
+    expect(render(progressive, done)).toContain('id="section-anchor-s2"');
   });
 });

@@ -35,9 +35,12 @@ interface SectionsListProps {
   missingWrapUp?: boolean;
   /** Le cours entier a été régénéré : le parent remplace le cours affiché. */
   onCourseRegenerated?: (course: CourseGenerationResponse) => void;
+  /** Exercice rédigé par section (liste prête seulement) : active « Faire l'exercice » en fin de section. */
+  sectionExercises?: ReadonlyMap<string, { id: string }>;
+  onDoExercise?: (exerciseId: string) => void;
 }
 
-const headingIdOf = (index: number) => `section-${index}-heading`;
+export const headingIdOf = (index: number) => `section-${index}-heading`;
 
 /**
  * Lecteur de cours, une section à la fois : navigation (état fait / en cours / à faire, Précédent /
@@ -52,6 +55,8 @@ export function SectionsList({
   onVideoNoteSaved,
   missingWrapUp = false,
   onCourseRegenerated,
+  sectionExercises,
+  onDoExercise,
 }: SectionsListProps) {
   const { progress, update } = useSectionProgress(courseKey);
   // Régénération et notes : appliquées en local par-dessus les sections reçues (comme la progression),
@@ -89,6 +94,7 @@ export function SectionsList({
     update((p) => setCurrentSection(p, key));
     focusAfterRender(headingIdOf(keys.indexOf(key)));
   };
+  const exercise = section.id ? sectionExercises?.get(section.id) : undefined;
   const previous = adjacentSection(keys, id, -1);
   const next = adjacentSection(keys, id, 1);
 
@@ -144,6 +150,7 @@ export function SectionsList({
             videos={section.id ? videosBySection?.get(section.id) : undefined}
             onVideoNoteSaved={onVideoNoteSaved}
             regenerationLocked={regenerating}
+            onDoExercise={exercise && onDoExercise ? () => onDoExercise(exercise.id) : undefined}
           />
 
           {sections.length > 1 && (

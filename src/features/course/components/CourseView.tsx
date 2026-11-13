@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { CourseTabs } from "./CourseTabs";
 import { chooseInitialTab, readStoredTab, storeTab, subscribeTab, type CourseTabId } from "../courseTabs";
 import { CourseMetaHeader } from "./CourseMetaHeader";
 import { SourcesList } from "./SourcesList";
 import { useSectionProgress } from "../hooks/useSectionProgress";
-import { SectionsList } from "./SectionsList";
+import { headingIdOf, SectionsList } from "./SectionsList";
+import { focusAfterRender } from "./SectionReader";
 import { PitfallsList } from "./PitfallsList";
 import { QuizPanel } from "./QuizPanel";
 import { useQuizFlow } from "../hooks/useQuizFlow";
@@ -23,6 +24,9 @@ import { Badge } from "@/components/Badge";
 import { SessionPodcast } from "@/features/podcast/components/SessionPodcast";
 import { ExercisesPanel } from "@/features/exercises/components/ExercisesPanel";
 import { isFreshCourse } from "@/features/exercises/exercise.state";
+import { buildSectionExerciseMap } from "@/features/exercises/exerciseLinks";
+import { useExercises } from "@/features/exercises/hooks/useExercises";
+import { setCurrentSection } from "../sectionProgress";
 import { ExercisesOffer } from "@/features/exercises/components/ExercisesOffer";
 import { ChatLauncher } from "@/features/chat/components/ChatLauncher";
 import type { AddCourseSectionsResponse, CourseGenerationResponse, CourseSection } from "../course.types";
@@ -70,7 +74,7 @@ function CourseContent({ data, sessionId: sessionIdProp, onCourseRegenerated }: 
   const quizFlow = useQuizFlow(quiz, sessionId);
   // Section en cours de lecture (même clé de progression que SectionsList) : transmise au chat pour
   // cibler le contexte du tuteur. Les clés de repli (« #n », section sans id) ne sont pas envoyées.
-  const { progress } = useSectionProgress(sessionId ?? data.meta?.title ?? "cours");
+  const { progress, update: updateProgress } = useSectionProgress(sessionId ?? data.meta?.title ?? "cours");
   const chatSectionId = progress.current && !progress.current.startsWith("#") ? progress.current : undefined;
 
   // Sections/next_steps ajoutées après coup (bouton « Ajouter du contenu ») : appliquées en local
@@ -103,6 +107,27 @@ function CourseContent({ data, sessionId: sessionIdProp, onCourseRegenerated }: 
   const tab = chooseInitialTab(storedTab, hasQuiz);
 
   const sectionTitles = Object.fromEntries(sections.flatMap((s) => (s.id ? [[s.id, s.title]] : [])));
+
+  // Exercices corrigés : table section → exercice (liste « done » seulement, RG-7) et exercice ouvert.
+  // Seul observateur qui relève la liste (polling) : l'onglet et la fenêtre d'offre lisent le même cache.
+  const exercisesQuery = useExercises(sessionId, { poll: true });
+  const sectionExercises = useMemo(() => buildSectionExerciseMap(exercisesQuery.data), [exercisesQuery.data]);
+  const [openExerciseId, setOpenExerciseId] = useState<string | null>(null);
+
+  function openExercise(exerciseId: string) {
+    setOpenExerciseId(exerciseId);
+    storeTab("exercises");
+  }
+
+  // « Retour à la section » : l'exercice est refermé (l'onglet Exercices retrouve la liste), onglet Leçons,
+  // section courante, puis focus et défilement vers son titre.
+  function backToSection(sectionId: string) {
+    setOpenExerciseId(null);
+    updateProgress((p) => setCurrentSection(p, sectionId));
+    storeTab("lessons");
+    const index = sections.findIndex((s) => s.id === sectionId);
+    if (index >= 0) focusAfterRender(headingIdOf(index));
+  }
 
   // La fenêtre « Générer les exercices ? » ne s'ouvre que sur un cours généré depuis moins d'1 h
   // (meta.generated_at) : pas sur tout l'historique. L'onglet garde le bouton de génération.
@@ -180,6 +205,8 @@ function CourseContent({ data, sessionId: sessionIdProp, onCourseRegenerated }: 
                   onVideoNoteSaved={saveNote}
                   missingWrapUp={isMissingWrapUp(data)}
                   onCourseRegenerated={onCourseRegenerated}
+                  sectionExercises={sectionExercises}
+                  onDoExercise={openExercise}
                 />
               )}
 
@@ -202,7 +229,15 @@ function CourseContent({ data, sessionId: sessionIdProp, onCourseRegenerated }: 
               )}
             </div>
           ),
-          exercises: <ExercisesPanel sessionId={sessionId} sectionTitles={sectionTitles} />,
+          exercises: (
+            <ExercisesPanel
+              sessionId={sessionId}
+              sectionTitles={sectionTitles}
+              openExerciseId={openExerciseId}
+              onOpenExercise={setOpenExerciseId}
+              onBackToSection={backToSection}
+            />
+          ),
           quiz: hasQuiz ? (
             <QuizPanel questions={quiz} flow={quizFlow} />
           ) : (
