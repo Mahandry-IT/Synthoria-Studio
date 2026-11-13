@@ -11,6 +11,10 @@ interface ExercisesPanelViewProps {
   onGenerate: () => void;
   /** Relance la lecture après une erreur de chargement. */
   onRetryLoad?: () => void;
+  /** Ouvre l'exercice choisi (carte « avant »). */
+  onOpen?: (exerciseId: string) => void;
+  /** Message au-dessus de la liste (ex. exercice introuvable). */
+  notice?: string | null;
 }
 
 const BOX = "rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-600";
@@ -26,6 +30,8 @@ export function ExercisesPanelView({
   sectionTitles,
   onGenerate,
   onRetryLoad,
+  onOpen,
+  notice,
 }: ExercisesPanelViewProps) {
   if (!data) {
     return loadError ? (
@@ -84,20 +90,45 @@ export function ExercisesPanelView({
         return <p className={BOX}>Ce cours ne demande aucun exercice supplémentaire.</p>;
       }
       return (
-        <ol className="space-y-3" aria-label="Exercices corrigés">
-          {[...data.exercises]
-            .sort((a, b) => a.position - b.position)
-            .map((exercise) => {
-              const section = exercise.section_id ? sectionTitles[exercise.section_id] : undefined;
-              return (
-                <li key={exercise.id} className="rounded-lg border border-gray-200 bg-white p-4">
-                  <h3 className="text-sm font-semibold text-gray-900">{exercise.title}</h3>
-                  {section && <p className="mt-0.5 text-xs text-indigo-700">Section : {section}</p>}
-                  {exercise.covers && <p className="mt-1 text-sm text-gray-600">{exercise.covers}</p>}
-                </li>
-              );
-            })}
-        </ol>
+        <div className="space-y-3">
+          {notice && (
+            <p role="alert" className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+              {notice}
+            </p>
+          )}
+          <ol className="space-y-3" aria-label="Exercices corrigés">
+            {[...data.exercises]
+              .sort((a, b) => a.position - b.position)
+              .map((exercise) => {
+                const section = exercise.section_id ? sectionTitles[exercise.section_id] : undefined;
+                const content = (
+                  <>
+                    <span className="block text-sm font-semibold text-gray-900">{exercise.title}</span>
+                    {section && <span className="mt-0.5 block text-xs text-indigo-700">Section : {section}</span>}
+                    {exercise.covers && <span className="mt-1 block text-sm text-gray-600">{exercise.covers}</span>}
+                    {exercise.duration_minutes !== null && (
+                      <span className="mt-1 block text-xs text-gray-500">Durée prévue : {exercise.duration_minutes} min</span>
+                    )}
+                  </>
+                );
+                return (
+                  <li key={exercise.id}>
+                    {onOpen ? (
+                      <button
+                        type="button"
+                        onClick={() => onOpen(exercise.id)}
+                        className="block min-h-11 w-full rounded-lg border border-gray-200 bg-white p-4 text-left transition-colors hover:border-indigo-300 hover:bg-indigo-50/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                      >
+                        {content}
+                      </button>
+                    ) : (
+                      <div className="rounded-lg border border-gray-200 bg-white p-4">{content}</div>
+                    )}
+                  </li>
+                );
+              })}
+          </ol>
+        </div>
       );
   }
 }

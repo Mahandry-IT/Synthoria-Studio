@@ -17,6 +17,8 @@ export const exerciseSummarySchema = z.object({
   position: z.number().default(0),
   title: z.string().default(""),
   covers: z.string().default(""),
+  /** Durée prévue : absente de la liste actuelle du serveur (le détail la fournit). */
+  duration_minutes: z.number().nullish().transform((v) => v ?? null),
 });
 
 /** Réponse de GET /courses/{session_id}/exercises */
