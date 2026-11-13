@@ -111,7 +111,7 @@ function parseChartSteps(raw: unknown): z.infer<typeof chartStepSchema>[] {
   }).slice(0, CHART_STEPS_MAX);
 }
 
-const courseContentBlockSchema = z.object({
+export const courseContentBlockSchema = z.object({
   type: z.string(),
   text: z.string().nullish(),
   callout_variant: z.enum(["note", "warning", "tip"]).nullish().catch(null),

@@ -21,6 +21,9 @@ import { AddCourseContentButton } from "./learning/AddCourseContentButton";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
 import { SessionPodcast } from "@/features/podcast/components/SessionPodcast";
+import { ExercisesPanel } from "@/features/exercises/components/ExercisesPanel";
+import { isFreshCourse } from "@/features/exercises/exercise.state";
+import { ExercisesOffer } from "@/features/exercises/components/ExercisesOffer";
 import { ChatLauncher } from "@/features/chat/components/ChatLauncher";
 import type { AddCourseSectionsResponse, CourseGenerationResponse, CourseSection } from "../course.types";
 
@@ -99,6 +102,13 @@ function CourseContent({ data, sessionId: sessionIdProp, onCourseRegenerated }: 
   const storedTab = useSyncExternalStore(subscribeTab, readStoredTab, () => null);
   const tab = chooseInitialTab(storedTab, hasQuiz);
 
+  const sectionTitles = Object.fromEntries(sections.flatMap((s) => (s.id ? [[s.id, s.title]] : [])));
+
+  // La fenêtre « Générer les exercices ? » ne s'ouvre que sur un cours généré depuis moins d'1 h
+  // (meta.generated_at) : pas sur tout l'historique. L'onglet garde le bouton de génération.
+  const [mountedAt] = useState(() => Date.now());
+  const isFresh = isFreshCourse(data.meta?.generated_at, mountedAt);
+
   const quizOnOwnPage = quizFlow.phase !== "intro";
 
   useEffect(() => {
@@ -125,6 +135,8 @@ function CourseContent({ data, sessionId: sessionIdProp, onCourseRegenerated }: 
       <VideoCards videos={videos.general} sessionId={sessionId} onNoteSaved={saveNote} />
 
       {sessionId && <SessionPodcast sessionId={sessionId} />}
+
+      {sessionId && hasQuiz && isFresh && <ExercisesOffer sessionId={sessionId} />}
 
       <CourseTabs
         active={tab}
@@ -190,11 +202,7 @@ function CourseContent({ data, sessionId: sessionIdProp, onCourseRegenerated }: 
               )}
             </div>
           ),
-          exercises: (
-            <p className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">
-              Les exercices corrigés arrivent bientôt.
-            </p>
-          ),
+          exercises: <ExercisesPanel sessionId={sessionId} sectionTitles={sectionTitles} />,
           quiz: hasQuiz ? (
             <QuizPanel questions={quiz} flow={quizFlow} />
           ) : (
