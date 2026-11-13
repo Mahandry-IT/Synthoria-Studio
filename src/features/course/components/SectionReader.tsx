@@ -13,6 +13,7 @@ import { RecallBox } from "./learning/RecallBox";
 import { RegenerateSectionButton } from "./learning/RegenerateSectionButton";
 import { SectionCheck } from "./learning/SectionCheck";
 import { SectionNoteButton } from "./learning/SectionNoteButton";
+import { SectionTakeaways } from "./SectionTakeaways";
 import { SectionVideos } from "./SectionVideos";
 import {
   buildLearningSteps,
@@ -164,8 +165,11 @@ export function SectionReader({
           )}
         </div>
       </div>
-      <SectionVideos videos={videos} sessionId={sessionId} onNoteSaved={onVideoNoteSaved} />
     </>
+  );
+  // Vidéos de la section : en fin de section, après les encadrés ; rien sans vidéo.
+  const videosBlock = (
+    <SectionVideos videos={videos} sessionId={sessionId} onNoteSaved={onVideoNoteSaved} />
   );
 
   const fadedExample = section.faded_example;
@@ -194,6 +198,7 @@ export function SectionReader({
         ) : (
           <SectionExplanation section={section} />
         )}
+        {videosBlock}
       </Card>
     );
   }
@@ -202,6 +207,8 @@ export function SectionReader({
   if (!isProgressive(section)) {
     const hasChallenge = Boolean(section.challenge);
     const visible = isExplanationVisible(progress, id, hasChallenge);
+    // Encadrés et vidéos après le quiz : sans question, rien à spoiler ; sinon une fois terminée.
+    const atEnd = visible && (done || (section.check_questions ?? []).length === 0);
     return (
       <Card className="p-5">
         {header}
@@ -225,9 +232,11 @@ export function SectionReader({
               {canRecall && section.id && section.recall_prompt && (
                 <RecallBox sessionId={sessionId as string} sectionId={section.id} prompt={section.recall_prompt} />
               )}
+              {atEnd && <SectionTakeaways section={section} idPrefix={`${domPrefix}-takeaways`} />}
             </>
           )}
         </div>
+        {atEnd && videosBlock}
       </Card>
     );
   }
@@ -237,6 +246,7 @@ export function SectionReader({
   const total = steps.length;
   const revealed = revealedStepCount(progress, id, total);
   const hasCheck = steps.some((s) => s.kind === "verifie");
+  const atEnd = revealed >= total && done;
   const lastSubsectionStep = [...steps].reverse().find((s) => s.subsectionIndex !== undefined);
   const stepDomId = (step: LearningStep) => `${domPrefix}-${step.key}`;
 
@@ -352,6 +362,13 @@ export function SectionReader({
           );
         })}
       </ol>
+      {/* Encadrés et vidéos : uniquement une fois la dernière étape terminée (pas de spoil du quiz). */}
+      {atEnd && (
+        <>
+          <SectionTakeaways section={section} idPrefix={`${domPrefix}-takeaways`} />
+          {videosBlock}
+        </>
+      )}
     </Card>
   );
 }

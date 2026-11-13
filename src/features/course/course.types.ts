@@ -185,6 +185,12 @@ export interface RecallPrompt {
   expected_key_points?: string[];
 }
 
+/** Erreur fréquente d'une section et manière de l'éviter (texte brut, jamais du HTML). */
+export interface SectionPitfall {
+  mistake: string;
+  how_to_avoid: string;
+}
+
 export interface CourseSection {
   id?: string;
   /** Cycle pédagogique (défi → … → À toi → Vérifie → reformulation) ; absent des sessions historiques. */
@@ -202,6 +208,10 @@ export interface CourseSection {
   comment?: string;
   worked_example?: WorkedExample;
   key_points?: string[];
+  /** 2 à 4 idées à retenir, en fin de section ; absent des cours antérieurs au lot 2. */
+  key_takeaways?: string[];
+  /** 1 à 2 erreurs à éviter, en fin de section ; absent des cours antérieurs au lot 2. */
+  pitfalls_to_avoid?: SectionPitfall[];
   tables?: CourseTable[];
   answer?: CourseAnswer;
   /** Génération de cette section échouée (erreur temporaire) : seule une section incomplète peut être régénérée. */

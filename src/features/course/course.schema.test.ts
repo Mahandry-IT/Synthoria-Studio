@@ -530,3 +530,45 @@ describe("courseResponseSchema — bloc widget", () => {
     expect(blocks[1].text).toBe("ok");
   });
 });
+
+describe("encadrés de section (key_takeaways, pitfalls_to_avoid)", () => {
+  const parse = (sections: unknown[]) =>
+    courseResponseSchema.parse({ mode: "question_only", format: "focused_answer", meta: {}, sources: [], sections }).sections ?? [];
+
+  it("lus s'ils existent", () => {
+    const [s] = parse([
+      { id: "1", title: "A", key_takeaways: ["a", "b"], pitfalls_to_avoid: [{ mistake: "m", how_to_avoid: "h" }] },
+    ]);
+    expect(s.key_takeaways).toEqual(["a", "b"]);
+    expect(s.pitfalls_to_avoid).toEqual([{ mistake: "m", how_to_avoid: "h" }]);
+  });
+
+  it("absents, null ou incomplets : tolérés, défaut vide", () => {
+    const [old, nul, partial] = parse([
+      { id: "1", title: "A" },
+      { id: "2", title: "B", key_takeaways: null, pitfalls_to_avoid: null },
+      { id: "3", title: "C", pitfalls_to_avoid: [{ mistake: "m" }] },
+    ]);
+    expect(old.key_takeaways).toEqual([]);
+    expect(old.pitfalls_to_avoid).toEqual([]);
+    expect(nul.key_takeaways).toEqual([]);
+    expect(nul.pitfalls_to_avoid).toEqual([]);
+    expect(partial.pitfalls_to_avoid).toEqual([{ mistake: "m", how_to_avoid: "" }]);
+  });
+
+  it("élément null ou invalide dans les tableaux : écarté sans faire échouer le cours", () => {
+    const [s] = parse([
+      {
+        id: "1",
+        title: "A",
+        key_takeaways: ["a", null, 3, "b"],
+        pitfalls_to_avoid: [null, { mistake: null, how_to_avoid: "h" }, { mistake: "m", how_to_avoid: null }],
+      },
+    ]);
+    expect(s.key_takeaways).toEqual(["a", "b"]);
+    expect(s.pitfalls_to_avoid).toEqual([
+      { mistake: "", how_to_avoid: "h" },
+      { mistake: "m", how_to_avoid: "" },
+    ]);
+  });
+});
