@@ -257,3 +257,6 @@ export function toSafeHttpUrl(reference: string): string | null {
     return null;
   }
 }
+
+/** Délai (ms) après lequel le tiroir est démonté même sans `animationend` (> durée max du CSS, 400 ms). */
+export const DRAWER_CLOSE_FALLBACK_MS = 600;

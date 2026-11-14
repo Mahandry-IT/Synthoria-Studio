@@ -98,7 +98,7 @@ Règles : couleurs uniquement par les variables `--w-*` ; textes rendus en `text
 ### Chat du cours
 
 Chaque cours persisté (avec `session_id`) a un **tuteur** qui ne répond qu'aux questions sur sa leçon (`src/features/chat/`) :
-- **accès** : bouton flottant (bulle) juste au-dessus du bouton « remonter », qui ouvre un panneau latéral (plein écran sur mobile ; Échap ou ✕ pour fermer) ; ou la page **/chat** (entrée « Chat » de la barre latérale), où l'on choisit d'abord un cours. Le bouton est masqué pendant le quiz ;
+- **accès** : bouton flottant (bulle) juste au-dessus du bouton « remonter », qui ouvre un panneau latéral (plein écran sur mobile ; Échap, voile ou ✕ pour fermer ; ouverture 400 ms, sortie 220 ms, fondu de 120 ms sous « mouvement réduit ») ; ou la page **/chat** (entrée « Chat » de la barre latérale), où l'on choisit d'abord un cours (dès 1024 px, la liste « Vos cours » reste visible à droite). Le bouton est masqué pendant le quiz ;
 - **API** (via le rewrite `/api`) : `GET /courses/{session_id}/chat` (messages non supprimés + quota) ; `POST /courses/{session_id}/chat` `{ message, section_id?, parent_id? }` (timeout 60 s, sans retry pour ne pas consommer deux fois le quota) ; `DELETE /courses/{session_id}/chat/messages/{message_id}` (une question, sa réponse et leur suite) et `DELETE /courses/{session_id}/chat` (tout le chat), tous deux en 204. Le cours est lu côté serveur : seul le message est envoyé ;
 - **versions en arbre** : chaque message porte `parent_id` (réponse précédente pour une question, `null` à la racine ; question pour une réponse). Une nouvelle question a pour parent la dernière réponse du fil affiché ; **modifier** une question renvoie le `parent_id` de la question éditée, ce qui crée une version sœur (1 message du quota). Le fil affiché suit, à chaque niveau, la version choisie (par défaut la plus récente) ; la bulle d'une question propose Modifier (édition en ligne), Supprimer (avec confirmation) et, s'il y a plusieurs versions, la navigation `< i/X >`. Supprimer une version affiche sa voisine ; sans version restante, la branche disparaît. Un bouton de l'en-tête (tiroir et page /chat) supprime toute la conversation. Supprimer ne rend pas de quota. Logique pure dans `chat.logic.ts` (`resolveThread`, `selectionAfterDelete`, `removeMessageBranch`) ; un historique sans `parent_id` est lu comme une chaîne chronologique ;
 - **limites** (alignées sur le backend) : 1000 caractères par message (`CHAT_MESSAGE_MAX_LENGTH`), **15 messages par jour et par cours** (remis à zéro à minuit UTC). Le compteur « N messages restants aujourd'hui » vient du serveur ; le champ est désactivé une fois la limite atteinte. Un 429 affiche le message du backend tel quel ;
@@ -145,6 +145,8 @@ Les maquettes montrent des données que l'API n'expose pas encore. Les écrans n
 | Historique | numéro de cours, avancement de lecture, profondeur (express / standard / approfondi), podcast associé, recherche texte (paramètre `q`) |
 | Fichiers | nombre de pages d'un PDF, état d'indexation par fichier (seul le dernier import affiche « Indexé » / « Échec ») |
 | Nouveau cours | progression de génération (« section 8 sur 12 ») |
+| Révisions | effectif global par boîte (le panneau « Vos quatre boîtes » ne compte que les cartes de la série en cours), série de jours, durée estimée de la série |
+| Tuteur | matière du cours, nombre de messages et aperçu de conversation par cours, numéro et titre de section d'une source |
 
 ## Docker
 

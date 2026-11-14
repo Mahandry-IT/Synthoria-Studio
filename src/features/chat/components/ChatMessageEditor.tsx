@@ -52,7 +52,7 @@ export function ChatMessageEditor({ initialText, original, disabled, onCancel, o
   };
 
   return (
-    <div ref={containerRef} className="w-full rounded-2xl border border-indigo-200 bg-white p-2.5">
+    <div ref={containerRef} className="w-full rounded-card border border-primary bg-surface p-2.5">
       <label htmlFor={inputId} className="sr-only">
         Modifier la question
       </label>
@@ -64,10 +64,10 @@ export function ChatMessageEditor({ initialText, original, disabled, onCancel, o
         rows={1}
         maxLength={CHAT_MESSAGE_MAX_LENGTH}
         aria-describedby={counterId}
-        className="max-h-60 w-full overflow-y-auto rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className="max-h-60 w-full overflow-y-auto rounded-ctrl border border-line-strong bg-surface px-3 py-2 text-sm text-ink"
       />
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-        <span id={counterId} className={`text-xs ${isOverLimit ? "font-medium text-red-600" : "text-gray-500"}`}>
+        <span id={counterId} className={`font-mono text-xs ${isOverLimit ? "font-medium text-err" : "text-ink-2"}`}>
           {text.length} / {CHAT_MESSAGE_MAX_LENGTH}
         </span>
         <div className="flex gap-2">

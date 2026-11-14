@@ -221,6 +221,91 @@
 }
 
 /*
+ * Tiroir du chat d'un cours : montée depuis le bas en plein écran (< sm), glissement depuis la
+ * droite dès sm. Entrée 400 ms, sortie 220 ms (data-state="closing") ; translate et opacity seulement.
+ */
+@keyframes drawer-in-y {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes drawer-out-y {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
+}
+
+@keyframes drawer-in-x {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes drawer-out-x {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+@keyframes veil-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes veil-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.chat-drawer {
+  animation: drawer-in-y var(--d-slow) var(--ease-editorial) both;
+}
+
+.chat-drawer[data-state="closing"] {
+  animation: drawer-out-y var(--d-std) var(--ease-editorial) forwards;
+}
+
+.chat-drawer-veil {
+  animation: veil-in var(--d-slow) var(--ease-editorial) both;
+}
+
+.chat-drawer-veil[data-state="closing"] {
+  animation: veil-out var(--d-std) var(--ease-editorial) forwards;
+}
+
+@media (min-width: 640px) {
+  .chat-drawer {
+    animation-name: drawer-in-x;
+  }
+
+  .chat-drawer[data-state="closing"] {
+    animation-name: drawer-out-x;
+  }
+}
+
+/* Mouvement réduit : fondu seul de 120 ms, sans déplacement (spécificité > règle globale ci-dessus). */
+@media (prefers-reduced-motion: reduce) {
+  .chat-drawer.chat-drawer,
+  .chat-drawer-veil.chat-drawer-veil {
+    animation-name: veil-in;
+    animation-duration: var(--d-fast) !important;
+  }
+
+  .chat-drawer.chat-drawer[data-state="closing"],
+  .chat-drawer-veil.chat-drawer-veil[data-state="closing"] {
+    animation-name: veil-out;
+  }
+}
+
+/* Texte riche dans une bulle `primary` : fonds de code clairs sur fond sombre, liens lisibles. */
+.on-primary .rich-text code,
+.on-primary .rich-text pre {
+  background-color: color-mix(in srgb, var(--primary-ink) 18%, transparent);
+  color: var(--primary-ink);
+}
+
+.on-primary .rich-text a {
+  color: var(--primary-ink);
+}
+
+/*
  * Coloration syntaxique des boîtes de code (classes `hljs-*` émises par highlight.js).
  * Palette proche de VS Code « Light+ », assombrie là où le contraste sur le fond de la boîte
  * (gray-100, #f3f4f6) tombait sous 4,5:1 (WCAG AA) : tous les jetons sont ≥ 4,5:1.

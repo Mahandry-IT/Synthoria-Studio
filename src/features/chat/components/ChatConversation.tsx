@@ -134,11 +134,11 @@ export function ChatConversation({ sessionId, sectionId, className = "" }: ChatC
 
   return (
     <div className={`flex min-h-0 flex-col ${className}`}>
-      <div className="min-h-0 flex-1 overflow-y-auto p-3">
+      <div className="min-h-0 flex-1 overflow-y-auto p-4">
         {chat.isLoading && (
           <div className="space-y-3" aria-busy="true">
-            <Skeleton lines={2} />
-            <Skeleton lines={3} />
+            <div className="ml-auto w-2/3 rounded-card bg-sunken p-3"><Skeleton lines={2} /></div>
+            <div className="w-3/4 rounded-card border border-line bg-surface p-3"><Skeleton lines={3} /></div>
           </div>
         )}
         {chat.error && <ErrorState error={chat.error} onRetry={() => chat.refetch()} />}

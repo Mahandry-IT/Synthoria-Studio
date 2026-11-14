@@ -9,13 +9,13 @@ interface ReviewCorrectionProps {
   title?: string;
 }
 
-/** Bloc de correction d'une carte : bonne réponse en gras puis explication. */
+/** Bloc de correction d'une carte : bonne réponse en serif puis explication, filet gauche accent. */
 export function ReviewCorrection({ answer, explanation, title = "Réponse" }: ReviewCorrectionProps) {
   return (
-    <div className="rounded-xl bg-indigo-50 p-4 text-sm text-indigo-900">
-      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-indigo-500">{title}</p>
-      {answer && <RichText text={answer} className="block font-semibold" />}
-      {explanation && <RichText text={explanation} className="mt-2 block opacity-80" />}
+    <div className="rounded-card border-l-[3px] border-accent bg-primary-soft p-4 text-sm text-ink">
+      <p className="kicker mb-1.5">{title}</p>
+      {answer && <RichText text={answer} className="block font-serif text-lg text-ink" />}
+      {explanation && <RichText text={explanation} className="mt-2 block text-ink-2" />}
     </div>
   );
 }

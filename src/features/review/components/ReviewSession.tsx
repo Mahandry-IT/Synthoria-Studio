@@ -1,24 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/Badge";
+import { ButtonLink } from "@/components/ButtonLink";
 import { Card } from "@/components/Card";
+import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
+import { ProgressBar } from "@/components/ProgressBar";
 import { Skeleton } from "@/components/Skeleton";
 import { RichText } from "@/features/course/components/RichText";
-import { boxLabel, resolveCardMode, summarizeReview } from "../review.logic";
+import { boxLabel, boxToDelay, cardPositionLabel, resolveCardMode, summarizeReview } from "../review.logic";
 import type { ReviewResult } from "../review.schema";
 import { DUE_CARDS_KEY, useDueCards, useRecordReview } from "../hooks/useReview";
+import { ReviewBoxes } from "./ReviewBoxes";
 import { ReviewChoiceCard } from "./ReviewChoiceCard";
 import { ReviewFreeTextCard } from "./ReviewFreeTextCard";
 
-/** Couleur du badge de boîte : amber (à revoir bientôt) → gray (en cours) → green (maîtrisée). */
-function boxBadgeVariant(box: number): "amber" | "gray" | "green" {
-  if (box <= 0) return "amber";
-  if (box >= 3) return "green";
-  return "gray";
+/** Ton du badge de boîte : warn (à revoir bientôt) → neutral (en cours) → ok (maîtrisée). */
+function boxBadgeVariant(box: number): "warn" | "neutral" | "ok" {
+  if (box <= 0) return "warn";
+  if (box >= 3) return "ok";
+  return "neutral";
 }
 
 /**
@@ -36,36 +40,48 @@ export function ReviewSession() {
   // Résultat enregistré de la carte QCM courante (en attente de « Carte suivante »)
   const [recorded, setRecorded] = useState(false);
 
-  if (isLoading) return <Skeleton lines={4} />;
+  if (isLoading) {
+    return (
+      <Card className="space-y-5 p-6" aria-busy="true">
+        <Skeleton lines={1} className="w-1/3" />
+        <Skeleton lines={3} />
+        <Skeleton lines={2} />
+      </Card>
+    );
+  }
   if (error) return <ErrorState error={error} onRetry={() => refetch()} />;
 
   const cards = data?.cards ?? [];
   if (cards.length === 0) {
     return (
-      <Card className="p-6 text-center">
-        <p className="text-sm text-gray-600">Rien à réviser aujourd&apos;hui. Revenez demain !</p>
-        <Link href="/ask" className="mt-3 inline-block text-sm font-medium text-indigo-600 hover:underline">
-          Générer un cours
-        </Link>
-      </Card>
+      <EmptyState
+        icon={<EventAvailableIcon fontSize="small" />}
+        title="Rien à réviser aujourd'hui. Revenez demain !"
+        action={
+          <ButtonLink href="/ask" variant="secondary">
+            Générer un cours
+          </ButtonLink>
+        }
+      />
     );
   }
 
   if (index >= cards.length) {
     const summary = summarizeReview(results);
     return (
-      <Card className="space-y-3 p-6 text-center" role="status">
-        <p className="text-lg font-semibold text-gray-900">Session terminée</p>
-        <p className="text-sm text-gray-600">
+      <Card className="space-y-4 p-6 text-center sm:p-10" role="status">
+        <p className="kicker">Session terminée</p>
+        <p className="num text-[clamp(4.5rem,20vw,8.5rem)] text-primary">{summary.percent} %</p>
+        <p className="mx-auto max-w-md text-sm text-ink-2">
           {summary.correct}/{summary.total} cartes sues ({summary.percent} %). Les cartes ratées reviennent demain ; les cartes sues reviendront plus tard sous une autre formulation.
         </p>
-        <Link
+        <ButtonLink
           href="/"
           onClick={() => queryClient.invalidateQueries({ queryKey: [DUE_CARDS_KEY] })}
-          className="inline-block text-sm font-medium text-indigo-600 hover:underline"
+          className="w-full sm:w-auto"
         >
           Retour au tableau de bord
-        </Link>
+        </ButtonLink>
       </Card>
     );
   }
@@ -92,49 +108,48 @@ export function ReviewSession() {
     );
 
   return (
-    <Card className="space-y-5 p-6">
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-xs font-medium text-gray-500">
-          <span>
-            Carte {index + 1}/{cards.length}
-          </span>
-          <span>{Math.round((index / cards.length) * 100)} %</span>
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-10">
+      <Card className="min-w-0 space-y-5 p-5 sm:p-7">
+        <div className="space-y-2">
+          <p className="kicker">{cardPositionLabel(index, cards.length)}</p>
+          <ProgressBar value={index} max={cards.length} label="Progression de la série" />
         </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
-          <div
-            className="h-full rounded-full bg-indigo-600 transition-all duration-300"
-            style={{ width: `${(index / cards.length) * 100}%` }}
-          />
+
+        <div className="flex flex-wrap items-center gap-1.5">
+          {card.course_title && <Badge variant="info">{card.course_title}</Badge>}
+          <Badge variant={boxBadgeVariant(card.box)}>{boxLabel(card.box)}</Badge>
+          <span className="font-mono text-xs text-ink-3">{boxToDelay(card.box)}</span>
+          <Badge variant="neutral">{mode === "qcm" ? "QCM" : "Réponse libre"}</Badge>
         </div>
-      </div>
 
-      <div className="flex flex-wrap items-center gap-1.5">
-        {card.course_title && <Badge variant="indigo">{card.course_title}</Badge>}
-        <Badge variant={boxBadgeVariant(card.box)}>{boxLabel(card.box)}</Badge>
-        <Badge variant="gray">{mode === "qcm" ? "QCM" : "Réponse libre"}</Badge>
-      </div>
+        <div>
+          <p className="kicker">Question</p>
+          <RichText text={card.front} className="mt-2 block font-serif text-[clamp(1.375rem,4vw,2rem)] leading-snug text-ink" />
+        </div>
 
-      <div>
-        <RichText text={card.front} className="text-base font-medium leading-relaxed text-gray-900" />
-      </div>
-
-      {mode === "qcm" ? (
-        <ReviewChoiceCard
-          key={`${card.session_id}:${card.card_id}:${index}`}
-          card={card}
-          recording={record.isPending}
-          recorded={recorded}
-          onValidate={(result) => recordResult(result, false)}
-          onNext={goNext}
-        />
-      ) : (
-        <ReviewFreeTextCard
-          key={`${card.session_id}:${card.card_id}:${index}`}
-          card={card}
-          recording={record.isPending}
-          onAnswer={(result) => recordResult(result, true)}
-        />
-      )}
-    </Card>
+        <div className="border-t border-line pt-5">
+          {mode === "qcm" ? (
+            <ReviewChoiceCard
+              key={`${card.session_id}:${card.card_id}:${index}`}
+              card={card}
+              recording={record.isPending}
+              recorded={recorded}
+              onValidate={(result) => recordResult(result, false)}
+              onNext={goNext}
+            />
+          ) : (
+            <ReviewFreeTextCard
+              key={`${card.session_id}:${card.card_id}:${index}`}
+              card={card}
+              recording={record.isPending}
+              onAnswer={(result) => recordResult(result, true)}
+            />
+          )}
+        </div>
+      </Card>
+      <aside aria-label="Boîtes de révision" className="min-w-0">
+        <ReviewBoxes cards={cards} currentBox={card.box} />
+      </aside>
+    </div>
   );
 }

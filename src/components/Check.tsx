@@ -60,18 +60,31 @@ export const Check = forwardRef<HTMLInputElement, CheckProps>(({ label, ...props
 ));
 Check.displayName = "Check";
 
+/** Ton d'une option corrigée : bonne réponse (`ok`) ou choix erroné (`err`). */
+type OptionTone = "ok" | "err";
+
+const OPTION_TONE_CLASSES: Record<OptionTone, string> = {
+  ok: "border-ok bg-ok-soft",
+  err: "border-err bg-err-soft",
+};
+
+interface OptionProps extends CheckProps {
+  /** État après validation ; remplace le style « coché ». Le sens doit aussi passer par le libellé. */
+  tone?: OptionTone;
+}
+
 /** Option en carte sélectionnable (radio par défaut) : bordure et fond `primary` quand elle est cochée. */
-export const Option = forwardRef<HTMLInputElement, CheckProps>(({ label, type = "radio", ...props }, ref) => (
+export const Option = forwardRef<HTMLInputElement, OptionProps>(({ label, type = "radio", tone, ...props }, ref) => (
   <label
     className={cx(
-      "flex min-h-11 w-full cursor-pointer items-start gap-3.5 rounded-card border border-line bg-bg px-4 py-3.5",
+      "flex min-h-11 w-full cursor-pointer items-start gap-3.5 rounded-card border px-4 py-3.5",
       "text-left text-[15px] leading-normal text-ink",
-      "has-[:checked]:border-primary has-[:checked]:bg-primary-soft",
+      tone ? OPTION_TONE_CLASSES[tone] : "border-line bg-bg has-[:checked]:border-primary has-[:checked]:bg-primary-soft",
       "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent",
     )}
   >
     <Mark ref={ref} type={type} {...props} />
-    <span>{label}</span>
+    <span className="min-w-0 flex-1">{label}</span>
   </label>
 ));
 Option.displayName = "Option";
