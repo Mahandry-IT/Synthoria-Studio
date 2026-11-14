@@ -9,10 +9,12 @@ interface QuizQuestionNumericProps {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
+  /** Aide sous le champ ; par défaut, le quiz autorise une réponse vide. */
+  hint?: string;
 }
 
 /** Champ de réponse d'une question numérique ; une valeur vide est autorisée. */
-export function QuizQuestionNumeric({ question, value, onChange, disabled = false }: QuizQuestionNumericProps) {
+export function QuizQuestionNumeric({ question, value, onChange, disabled = false, hint = "Un nombre, avec une virgule ou un point. Tu peux laisser vide." }: QuizQuestionNumericProps) {
   const id = useId();
   const unitId = `${id}-unit`;
   const hintId = `${id}-hint`;
@@ -42,7 +44,7 @@ export function QuizQuestionNumeric({ question, value, onChange, disabled = fals
         )}
       </div>
       <p id={hintId} className="text-xs text-gray-500">
-        Un nombre, avec une virgule ou un point. Tu peux laisser vide.
+        {hint}
       </p>
     </div>
   );

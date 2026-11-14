@@ -3,9 +3,13 @@
 import { useState } from "react";
 import { Button } from "@/components/Button";
 import { SectionNav } from "./SectionNav";
+import { CycleReader } from "./cycle/CycleReader";
 import { focusAfterRender, SectionReader } from "./SectionReader";
 import { IncompleteCourseBanner } from "./learning/IncompleteCourseBanner";
 import { countIncompleteSections } from "../incompleteCourse";
+import { cycleDurationLabel } from "../cycleDuration";
+import { hasCycle } from "../cycleFormat";
+import { useCycleProgress } from "../hooks/useCycleProgress";
 import { useSectionProgress } from "../hooks/useSectionProgress";
 import {
   adjacentSection,
@@ -59,6 +63,7 @@ export function SectionsList({
   onDoExercise,
 }: SectionsListProps) {
   const { progress, update } = useSectionProgress(courseKey);
+  const { cycleProgress, updateCycle } = useCycleProgress(courseKey);
   // Régénération et notes : appliquées en local par-dessus les sections reçues (comme la progression),
   // sans dépendre d'un état mutable détenu par le parent (page Ask ou historique).
   const [overrides, setOverrides] = useState<Record<string, Partial<CourseSection>>>({});
@@ -94,6 +99,8 @@ export function SectionsList({
     update((p) => setCurrentSection(p, key));
     focusAfterRender(headingIdOf(keys.indexOf(key)));
   };
+  const onOverride = (patch: Partial<CourseSection>) =>
+    setOverrides((current) => ({ ...current, [id]: { ...current[id], ...patch } }));
   const exercise = section.id ? sectionExercises?.get(section.id) : undefined;
   const previous = adjacentSection(keys, id, -1);
   const next = adjacentSection(keys, id, 1);
@@ -128,6 +135,7 @@ export function SectionsList({
             items={sections.map((s, i) => ({
               key: keys[i],
               title: ({ ...s, ...overrides[keys[i]] }.title ?? "").replace(/^\d+\.\s*/, ""),
+              duration: cycleDurationLabel({ ...s, ...overrides[keys[i]] }),
               status: sectionStatus({ ...progress, current: id }, keys[i]),
             }))}
             currentKey={id}
@@ -137,21 +145,40 @@ export function SectionsList({
         </div>
 
         <div className="min-w-0 space-y-4">
-          <SectionReader
-            key={id}
-            section={section}
-            index={currentIndex}
-            progressKey={id}
-            headingId={headingIdOf(currentIndex)}
-            sessionId={sessionId}
-            progress={progress}
-            update={update}
-            onOverride={(patch) => setOverrides((current) => ({ ...current, [id]: { ...current[id], ...patch } }))}
-            videos={section.id ? videosBySection?.get(section.id) : undefined}
-            onVideoNoteSaved={onVideoNoteSaved}
-            regenerationLocked={regenerating}
-            onDoExercise={exercise && onDoExercise ? () => onDoExercise(exercise.id) : undefined}
-          />
+          {hasCycle(section) && section.cycle ? (
+            <CycleReader
+              key={id}
+              section={{ ...section, cycle: section.cycle }}
+              index={currentIndex}
+              progressKey={id}
+              headingId={headingIdOf(currentIndex)}
+              sessionId={sessionId}
+              progress={progress}
+              update={update}
+              cycleProgress={cycleProgress}
+              updateCycle={updateCycle}
+              onOverride={onOverride}
+              videos={section.id ? videosBySection?.get(section.id) : undefined}
+              onVideoNoteSaved={onVideoNoteSaved}
+              onDoExercise={exercise && onDoExercise ? () => onDoExercise(exercise.id) : undefined}
+            />
+          ) : (
+            <SectionReader
+              key={id}
+              section={section}
+              index={currentIndex}
+              progressKey={id}
+              headingId={headingIdOf(currentIndex)}
+              sessionId={sessionId}
+              progress={progress}
+              update={update}
+              onOverride={onOverride}
+              videos={section.id ? videosBySection?.get(section.id) : undefined}
+              onVideoNoteSaved={onVideoNoteSaved}
+              regenerationLocked={regenerating}
+              onDoExercise={exercise && onDoExercise ? () => onDoExercise(exercise.id) : undefined}
+            />
+          )}
 
           {sections.length > 1 && (
             <div className="flex items-center justify-between gap-2">

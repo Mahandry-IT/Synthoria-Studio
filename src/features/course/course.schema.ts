@@ -11,7 +11,17 @@ import {
   SECTION_NOTE_MAX_LENGTH,
   VIDEO_NOTE_MAX_LENGTH,
 } from "@/shared/utils/constants";
+import {
+  courseChartSchema,
+  courseDiagramSchema,
+  courseTableSchema,
+  courseWidgetSchema,
+  quizQuestionSchema,
+} from "./courseLeaf.schema";
+import { parseSectionCycle } from "./cycleSchema";
 import { COURSE_DEPTHS, DEFAULT_COURSE_DEPTH } from "./courseDepth";
+
+export { quizQuestionKindSchema, quizQuestionSchema } from "./courseLeaf.schema";
 
 /** Niveau de détail choisi dans le formulaire. */
 export const courseDepthSchema = z.enum(COURSE_DEPTHS);
@@ -31,12 +41,6 @@ const workedExampleSchema = z.object({
   statement: z.string().optional().default(""),
   steps: z.array(stepSchema).optional().default([]),
   result: z.string().optional().default(""),
-});
-
-const courseTableSchema = z.object({
-  caption: z.string().optional().default(""),
-  headers: z.array(z.string()),
-  rows: z.array(z.array(z.string())),
 });
 
 /** Attribution obligatoire pour les licences CC BY / CC BY-SA (jamais affichée sans elle). */
@@ -94,23 +98,6 @@ const courseAnswerSchema = z.object({
   tables: z.array(courseTableSchema).optional().default([]),
 });
 
-const CHART_STEPS_MAX = 8;
-
-const chartStepSchema = z.object({
-  caption: z.string(),
-  highlight_labels: z.array(z.number().int().min(0)).optional().default([]),
-  highlight_series: z.array(z.number().int().min(0)).optional().default([]),
-});
-
-/** Étapes tolérantes : tout ce qui n'est pas une étape valide est écarté (le graphique reste affiché sans). */
-function parseChartSteps(raw: unknown): z.infer<typeof chartStepSchema>[] {
-  if (!Array.isArray(raw)) return [];
-  return raw.flatMap((item) => {
-    const parsed = chartStepSchema.safeParse(item);
-    return parsed.success && parsed.data.caption.trim() ? [parsed.data] : [];
-  }).slice(0, CHART_STEPS_MAX);
-}
-
 export const courseContentBlockSchema = z.object({
   type: z.string(),
   text: z.string().nullish(),
@@ -137,33 +124,9 @@ export const courseContentBlockSchema = z.object({
       how_to_avoid: z.string().optional().default(""),
     })
     .nullish(),
-  diagram: z
-    .object({
-      kind: z.enum(["flowchart", "sequence", "hierarchy", "cycle"]),
-      caption: z.string().optional().default(""),
-      mermaid: z.string(),
-    })
-    .nullish()
-    .catch(null), // un visuel invalide est ignoré, il ne doit pas invalider tout le cours
-  chart: z
-    .object({
-      kind: z.enum(["bar", "line", "pie"]),
-      caption: z.string().optional().default(""),
-      labels: z.array(z.string()),
-      series: z.array(z.object({ name: z.string(), values: z.array(z.number()) })),
-      steps: z.unknown().transform(parseChartSteps),
-    })
-    .nullish()
-    .catch(null),
-  widget: z
-    .object({
-      title: z.string().optional().default(""),
-      description: z.string().optional().default(""),
-      html: z.string(),
-      height_hint: z.number().nullish(),
-    })
-    .nullish()
-    .catch(null), // un widget invalide est ignoré, il ne doit pas invalider tout le cours
+  diagram: courseDiagramSchema.nullish().catch(null), // un visuel invalide est ignoré, il ne doit pas invalider tout le cours
+  chart: courseChartSchema.nullish().catch(null),
+  widget: courseWidgetSchema.nullish().catch(null), // un widget invalide est ignoré, il ne doit pas invalider tout le cours
 });
 
 const courseSubsectionSchema = z.object({
@@ -222,6 +185,8 @@ export const courseSectionSchema = z.object({
   tables: z.array(courseTableSchema).optional().default([]),
   incomplete: z.boolean().optional().default(false),
   note: z.string().optional().default(""),
+  /** Format cycle : tolérant, un cycle absent ou invalide donne une section sans cycle (jamais d'erreur). */
+  cycle: z.unknown().optional().transform(parseSectionCycle),
 });
 
 const coursePitfallSchema = z.object({
@@ -230,35 +195,6 @@ const coursePitfallSchema = z.object({
   how_to_avoid: z.string().optional().default(""),
   title: z.string().optional(),
   tip: z.string().optional(),
-});
-
-export const quizQuestionKindSchema = z.enum(["choice", "numeric", "matching"]);
-
-export const quizQuestionSchema = z.object({
-  /** Absent (anciennes questions) ou inconnu : retombe sur `choice` sans casser la lecture. */
-  kind: quizQuestionKindSchema.catch("choice"),
-  question: z.string(),
-  /** Vide pour une question numérique. */
-  options: z.array(z.string()).default([]),
-  /** Numérique : valeur attendue, renseignée seulement dans la correction. */
-  expected_value: z.number().nullable().optional().catch(null),
-  unit: z.string().nullable().optional().catch(null),
-  /** Appariement : sujets, et option attendue par sujet (vide avant correction). */
-  subjects: z.array(z.string()).optional().catch([]),
-  correct_matches: z.array(z.number()).optional().catch([]),
-  /** Indices 0-based des bonnes réponses (1 = unique, >1 = QCM multiple) */
-  correct_option_indices: z.array(z.number()).default([]),
-  /** Niveau de difficulté */
-  difficulty: z.enum(["facile", "normale", "difficile"]).default("normale"),
-  /** Points alloués (calculé côté serveur, total = 20/20) */
-  points: z.number().min(0).default(1),
-  explanation: z.string().optional().default(""),
-  /** Retour par option (bonne réponse ou distracteur), dans l'ordre des options */
-  explanation_per_choice: z.array(z.string()).optional().default([]),
-  /** Sections (position 1-based) mobilisées par la question (quiz final) */
-  section_refs: z.array(z.number()).optional().default([]),
-  /** 45s par défaut, 80s si la question implique un calcul */
-  time_limit_seconds: z.number().default(45),
 });
 
 const courseSourceSchema = z.object({

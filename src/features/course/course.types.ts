@@ -218,6 +218,114 @@ export interface CourseSection {
   incomplete?: boolean;
   /** Note libre de l'apprenant sur cette section (pense-bête, idées) ; jamais générée par le modèle. */
   note?: string;
+  /** Format « cycle » (Défi, Sous le capot, Le mot juste, Pièges, Épreuve) ; absent des anciens cours. */
+  cycle?: SectionCycle;
+}
+
+// ─── Format « cycle » d'une section ─────────────────────────
+// Miroir de `ApiSectionCycle` (backend). Les ordres d'options sont déjà mélangés côté serveur.
+
+export interface CycleChallenge {
+  question: string;
+  options: string[];
+  /** Indices des bonnes options (au moins une, jamais toutes). */
+  correct_indices: number[];
+  feedback: string;
+}
+
+/** Case d'un tableau : `row` indexe `table.rows`, `col` indexe `table.headers`. */
+export interface CycleCellRef {
+  row: number;
+  col: number;
+}
+
+export interface ClassifyCase {
+  label: string;
+  category_index: number;
+}
+
+export interface MatchPair {
+  left: string;
+  right: string;
+}
+
+/** Support léger d'une mini-étape, discriminé par `kind`. */
+export type StepSupport =
+  | { kind: "chart"; caption: string; chart: CourseChart }
+  | { kind: "diagram"; caption: string; diagram: CourseDiagram }
+  | { kind: "table"; caption: string; table: CourseTable }
+  | { kind: "fill_table"; caption: string; table: CourseTable; blanks: CycleCellRef[]; distractors: string[] }
+  | { kind: "classify"; caption: string; categories: string[]; cases: ClassifyCase[] }
+  /** `order_items` est dans le BON ordre : c'est au client de le mélanger. */
+  | { kind: "order"; caption: string; order_items: string[]; order_criterion: string }
+  | { kind: "match"; caption: string; match_pairs: MatchPair[] };
+
+export type StepSupportKind = StepSupport["kind"];
+
+/** Prédiction posée avant la manipulation (jamais notée). */
+export interface StepPrediction {
+  kind: "choice" | "value";
+  question: string;
+  options: string[];
+  correct_index: number | null;
+  expected_value: number | null;
+  /** Tolérance absolue ; 0 si absente. */
+  tolerance: number;
+  unit: string;
+  outcome: string;
+}
+
+export interface CycleStep {
+  text: string;
+  action: string;
+  support?: StepSupport;
+  prediction?: StepPrediction;
+  widget?: CourseWidget;
+}
+
+export interface VocabTerm {
+  term: string;
+  plain: string;
+  formula_latex: string;
+}
+
+export interface TrapEntry {
+  claim: string;
+  statements: string[];
+  wrong_index: number | null;
+  explanation: string;
+  rewrite_options: string[];
+  correct_rewrite_index: number | null;
+}
+
+export type TrapMode = "cards" | "spot" | "spot_rewrite";
+
+export interface CycleTraps {
+  mode: TrapMode;
+  entries: TrapEntry[];
+}
+
+export interface ExerciseCard {
+  statement: string;
+  hint: string;
+  steps: string[];
+  result: string;
+}
+
+export type CycleTrial =
+  | { kind: "qcm"; questions: QuizQuestion[] }
+  | { kind: "exercise_card"; card: ExerciseCard };
+
+export interface SectionCycle {
+  thread: string;
+  challenge: CycleChallenge;
+  steps: CycleStep[];
+  vocabulary: VocabTerm[];
+  traps?: CycleTraps;
+  trial?: CycleTrial;
+  /** Durée estimée (minutes), calculée côté serveur ; absente des anciennes sections. */
+  minutes_min?: number;
+  minutes_max?: number;
 }
 
 export interface CoursePitfall {

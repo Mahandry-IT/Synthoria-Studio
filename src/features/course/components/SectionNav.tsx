@@ -8,6 +8,8 @@ export interface SectionNavItem {
   key: string;
   title: string;
   status: SectionStatus;
+  /** Durée estimée (« ~5 min », « 4–6 min ») ; absente des sections sans cycle. */
+  duration?: string | null;
 }
 
 const STATUS_LABELS: Record<SectionStatus, string> = {
@@ -80,6 +82,12 @@ export function SectionNav({ items, currentKey, onSelect, summary }: SectionNavP
                 <span className="min-w-0 flex-1">
                   <span className="mr-1 text-gray-400">{i + 1}.</span>
                   <LatexText text={item.title} />
+                  {item.duration && (
+                    <span className="ml-2 whitespace-nowrap text-xs text-gray-500">
+                      <span aria-hidden="true">{item.duration}</span>
+                      <span className="sr-only"> (durée estimée {item.duration})</span>
+                    </span>
+                  )}
                   <span className="sr-only"> ({STATUS_LABELS[item.status]})</span>
                 </span>
               </button>
