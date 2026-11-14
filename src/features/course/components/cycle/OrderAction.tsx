@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { buttonBaseClassName } from "@/components/Button";
+import { cx } from "@/shared/utils/cx";
 import { LatexText } from "@/shared/utils/latex";
 import type { StepSupport } from "../../course.types";
 import { checkOrder, initialOrder, moveItem, orderSolution } from "../../cycleActions";
@@ -15,8 +17,7 @@ interface OrderActionProps {
   onAnswer: (record: CycleAnswerRecord) => void;
 }
 
-const MOVE_BUTTON =
-  "inline-flex h-11 w-11 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-40";
+const MOVE_BUTTON = cx(buttonBaseClassName("secondary", "icon"), "shrink-0 disabled:cursor-not-allowed disabled:opacity-45");
 
 /**
  * Remettre des éléments dans l'ordre avec des boutons « Monter » / « Descendre » (clavier et tactile,
@@ -55,9 +56,9 @@ export function OrderAction({ support, answer, onAnswer }: OrderActionProps) {
       {({ wrong, locked }) => (
         <ol className="space-y-2">
           {order.map((item, position) => (
-            <li key={item} className={`flex items-center gap-2 rounded-lg border p-2 ${wrongBorder(wrong.includes(position))}`}>
-              <span className="w-6 shrink-0 text-center text-xs font-semibold text-gray-500">{position + 1}</span>
-              <span className="min-w-0 flex-1 text-sm text-gray-800">
+            <li key={item} className={`flex items-center gap-2 rounded-ctrl border p-2 ${wrongBorder(wrong.includes(position))}`}>
+              <span className="w-7 shrink-0 text-center font-mono text-xs text-ink-3">{position + 1}</span>
+              <span className="min-w-0 flex-1 text-sm text-ink">
                 <LatexText text={items[item]} />
               </span>
               <WrongFlag show={wrong.includes(position)} />

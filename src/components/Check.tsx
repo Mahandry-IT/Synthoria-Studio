@@ -18,7 +18,7 @@ const Mark = forwardRef<HTMLInputElement, CheckInputProps>(({ type = "checkbox",
       type={type}
       className={cx(
         "peer h-full w-full cursor-pointer appearance-none border-[1.5px] border-line-strong bg-surface",
-        "checked:border-primary checked:bg-primary disabled:cursor-not-allowed disabled:opacity-45",
+        "checked:border-primary checked:bg-primary disabled:cursor-not-allowed disabled:not-checked:opacity-45",
         type === "radio" ? "rounded-full" : "rounded-[4px]",
         className,
       )}

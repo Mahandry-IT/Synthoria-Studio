@@ -1,13 +1,13 @@
 "use client";
 
 import { useId, useMemo, useState } from "react";
+import { CONTROL_CLASSES } from "@/components/Input";
 import { LatexText } from "@/shared/utils/latex";
 import type { StepSupport } from "../../course.types";
 import { buildMatch, checkMatch, matchSolution } from "../../cycleActions";
 import type { CycleAnswerRecord } from "../../cycleProgress";
 import { availableOptions } from "../../quizGrading";
 import { ActionFrame, WrongFlag, wrongBorder } from "./ActionFrame";
-import { TOUCH_TARGET } from "./cycleUi";
 
 type MatchSupport = Extract<StepSupport, { kind: "match" }>;
 
@@ -38,8 +38,8 @@ export function MatchAction({ support, answer, onAnswer }: MatchActionProps) {
       {({ wrong, locked }) => (
         <ul className="space-y-3">
           {support.match_pairs.map((pair, i) => (
-            <li key={i} className={`rounded-lg border p-3 ${wrongBorder(wrong.includes(i))}`}>
-              <label htmlFor={`${base}-${i}`} className="mb-1 flex items-center gap-2 text-sm font-medium text-gray-900">
+            <li key={i} className={`rounded-ctrl border p-3 ${wrongBorder(wrong.includes(i))}`}>
+              <label htmlFor={`${base}-${i}`} className="mb-1.5 flex items-center gap-2 text-sm font-medium text-ink">
                 <LatexText text={pair.left} />
                 <WrongFlag show={wrong.includes(i)} />
               </label>
@@ -50,7 +50,8 @@ export function MatchAction({ support, answer, onAnswer }: MatchActionProps) {
                 onChange={(e) =>
                   setGiven((cur) => cur.map((v, k) => (k === i ? (e.target.value === "" ? null : Number(e.target.value)) : v)))
                 }
-                className={`${TOUCH_TARGET} w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+                aria-invalid={wrong.includes(i) ? true : undefined}
+                className={`${CONTROL_CLASSES} w-full`}
               >
                 <option value="">Choisir…</option>
                 {availableOptions(setup.options, given, i).map((option) => (

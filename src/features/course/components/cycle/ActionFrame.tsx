@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import { Button } from "@/components/Button";
 import type { ActionResult } from "../../cycleActions";
 import type { CycleAnswerRecord } from "../../cycleProgress";
-import { LiveNote, TOUCH_TARGET } from "./cycleUi";
+import { LiveNote } from "./cycleUi";
 
 export interface ActionView {
   /** Éléments à reprendre après une vérification ratée (indices propres à chaque action). */
@@ -52,15 +52,15 @@ export function ActionFrame({ instruction, answer, onAnswer, check, showSolution
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-3">
-      {instruction && <p className="mb-3 text-sm text-gray-700">{instruction}</p>}
+    <div className="rounded-card border border-line bg-surface p-3 sm:p-4">
+      {instruction && <p className="mb-3 text-sm text-ink-2">{instruction}</p>}
       {children({ wrong, locked })}
       {!locked && (
         <div className="mt-3 flex flex-wrap gap-2">
-          <Button type="button" className={TOUCH_TARGET} onClick={verify}>
+          <Button type="button" onClick={verify}>
             Vérifier
           </Button>
-          <Button type="button" variant="ghost" className={TOUCH_TARGET} onClick={reveal}>
+          <Button type="button" variant="ghost" onClick={reveal}>
             Voir la solution
           </Button>
         </div>
@@ -73,7 +73,7 @@ export function ActionFrame({ instruction, answer, onAnswer, check, showSolution
 /** Pastille « à revoir » (symbole + texte, pas seulement la couleur). */
 export function WrongFlag({ show }: { show: boolean }) {
   return show ? (
-    <span className="shrink-0 text-xs font-medium text-red-700">
+    <span className="shrink-0 text-xs font-semibold text-err">
       <span aria-hidden="true">⚠</span>
       <span className="sr-only"> à revoir</span>
     </span>
@@ -81,4 +81,4 @@ export function WrongFlag({ show }: { show: boolean }) {
 }
 
 /** Classe de bordure d'un élément à reprendre. */
-export const wrongBorder = (isWrong: boolean): string => (isWrong ? "border-red-400 bg-red-50" : "border-gray-200 bg-white");
+export const wrongBorder = (isWrong: boolean): string => (isWrong ? "border-err bg-err-soft" : "border-line bg-bg");

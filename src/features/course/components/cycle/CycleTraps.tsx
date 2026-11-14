@@ -1,13 +1,14 @@
 "use client";
 
 import { useId, useState } from "react";
+import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { LatexText } from "@/shared/utils/latex";
 import type { CycleTraps as CycleTrapsData, TrapEntry } from "../../course.types";
 import { isRewriteCorrect, isSpotCorrect, pickedOf } from "../../cycleAnswers";
 import { answerKey, type CycleAnswerRecord } from "../../cycleProgress";
 import { RichText } from "../RichText";
-import { ChoiceList, LiveNote, TOUCH_TARGET } from "./cycleUi";
+import { ChoiceList, LiveNote } from "./cycleUi";
 
 interface TrapProps {
   entry: TrapEntry;
@@ -20,7 +21,7 @@ interface TrapProps {
 function Explanation({ text }: { text: string }) {
   return (
     <>
-      <span className="font-medium">Pourquoi c&apos;est tentant : </span>
+      <span className="font-semibold">Pourquoi c&apos;est tentant : </span>
       <RichText text={text} />
     </>
   );
@@ -31,15 +32,15 @@ function TrapCard({ entry, index, getAnswer, onAnswer }: TrapProps) {
   const panelId = useId();
   const open = Boolean(getAnswer(answerKey.trapCard(index)));
   return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-      <p className="text-sm font-medium text-amber-950">
-        <span className="mr-1 text-xs font-semibold uppercase tracking-wide">Erreur courante</span>
+    <div className="rounded-card border border-line bg-surface p-3.5 sm:p-4">
+      <p className="text-[15px] font-medium leading-snug text-ink">
+        <Badge variant="warn" className="mr-2 align-middle">Erreur courante</Badge>
         <LatexText text={entry.claim} />
       </p>
       <Button
         type="button"
-        variant="outline"
-        className={`mt-3 ${TOUCH_TARGET}`}
+        variant="secondary"
+        className="mt-3"
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => onAnswer(answerKey.trapCard(index), { picked: [] })}
@@ -49,7 +50,7 @@ function TrapCard({ entry, index, getAnswer, onAnswer }: TrapProps) {
       </Button>
       <div id={panelId} aria-live="polite">
         {open && (
-          <div className="mt-3 rounded-lg bg-white px-3 py-2 text-sm text-gray-800">
+          <div className="mt-3 rounded-ctrl border-l-[3px] border-accent bg-primary-soft px-3.5 py-2.5 text-sm text-ink">
             <Explanation text={entry.explanation} />
           </div>
         )}
@@ -79,7 +80,7 @@ function TrapSpot({ entry, index, rewrite, getAnswer, onAnswer }: TrapProps & { 
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-3">
+    <div className="space-y-3 rounded-card border border-line bg-surface p-3.5 sm:p-4">
       <ChoiceList
         legend="Laquelle de ces affirmations est fausse ?"
         options={entry.statements}
@@ -92,7 +93,6 @@ function TrapSpot({ entry, index, rewrite, getAnswer, onAnswer }: TrapProps & { 
       {!spotDone && (
         <Button
           type="button"
-          className={TOUCH_TARGET}
           disabled={spotPick.length !== 1}
           onClick={() => onAnswer(answerKey.trapSpot(index), { picked: spotPick, correct: isSpotCorrect(entry, spotPick[0]) })}
         >
@@ -121,7 +121,6 @@ function TrapSpot({ entry, index, rewrite, getAnswer, onAnswer }: TrapProps & { 
           {!rewriteDone && (
             <Button
               type="button"
-              className={TOUCH_TARGET}
               disabled={rewritePick.length !== 1}
               onClick={() =>
                 onAnswer(answerKey.trapRewrite(index), { picked: rewritePick, correct: isRewriteCorrect(entry, rewritePick[0]) })
@@ -134,7 +133,7 @@ function TrapSpot({ entry, index, rewrite, getAnswer, onAnswer }: TrapProps & { 
       )}
       <div aria-live="polite">
         {finished && (
-          <div className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-950">
+          <div className="rounded-ctrl bg-warn-soft px-3.5 py-2.5 text-sm text-ink">
             <Explanation text={entry.explanation} />
           </div>
         )}

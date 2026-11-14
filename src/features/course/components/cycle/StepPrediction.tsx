@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { Button } from "@/components/Button";
+import { CONTROL_CLASSES } from "@/components/Input";
 import { LatexText } from "@/shared/utils/latex";
 import { RichText } from "../RichText";
 import type { StepPrediction as StepPredictionData } from "../../course.types";
@@ -16,7 +17,7 @@ import {
   type PredictionVerdict,
 } from "../../cycleAnswers";
 import type { CycleAnswerRecord } from "../../cycleProgress";
-import { ChoiceList, LiveNote, TOUCH_TARGET } from "./cycleUi";
+import { ChoiceList, LiveNote } from "./cycleUi";
 
 interface StepPredictionProps {
   prediction: StepPredictionData;
@@ -40,8 +41,8 @@ function ValueField({ prediction, value, onChange, disabled, invalid }: {
 }) {
   const id = useId();
   return (
-    <div className="space-y-1">
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700">
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="block text-sm font-medium text-ink">
         Ta valeur
       </label>
       <div className="flex items-center gap-2">
@@ -55,12 +56,12 @@ function ValueField({ prediction, value, onChange, disabled, invalid }: {
           aria-invalid={invalid}
           aria-describedby={invalid ? `${id}-error` : undefined}
           onChange={(e) => onChange(e.target.value)}
-          className={`${TOUCH_TARGET} w-40 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+          className={`${CONTROL_CLASSES} w-40`}
         />
-        {prediction.unit && <span className="text-sm text-gray-600">{prediction.unit}</span>}
+        {prediction.unit && <span className="text-sm text-ink-2">{prediction.unit}</span>}
       </div>
       {invalid && (
-        <p id={`${id}-error`} role="alert" className="text-xs font-medium text-red-700">
+        <p id={`${id}-error`} role="alert" className="text-xs font-medium text-err">
           Saisis un nombre (virgule ou point).
         </p>
       )}
@@ -89,9 +90,9 @@ export function StepPrediction({ prediction, answer, onAnswer }: StepPredictionP
   const unreadable = prediction.kind === "value" && !answer && text.trim() !== "" && parsed === null;
 
   return (
-    <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 p-3">
-      <p className="mb-2 text-sm font-medium text-gray-900">
-        <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-indigo-700">Prédis</span>
+    <div className="rounded-card border border-line bg-primary-soft p-3 sm:p-4">
+      <p className="mb-3 text-[15px] font-medium leading-snug text-ink">
+        <span className="kicker mr-2 text-primary">Prédis</span>
         <LatexText text={prediction.question} />
       </p>
       {prediction.kind === "choice" ? (
@@ -107,11 +108,11 @@ export function StepPrediction({ prediction, answer, onAnswer }: StepPredictionP
         <ValueField prediction={prediction} value={text} onChange={setText} disabled={Boolean(answer)} invalid={unreadable} />
       )}
       {!answer && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Button type="button" className={TOUCH_TARGET} disabled={!canSubmit} onClick={submit}>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button type="button" disabled={!canSubmit} onClick={submit}>
             Valider ma prédiction
           </Button>
-          <Button type="button" variant="ghost" className={TOUCH_TARGET} onClick={() => onAnswer(predictionToRecord({ kind: "skip" }))}>
+          <Button type="button" variant="ghost" onClick={() => onAnswer(predictionToRecord({ kind: "skip" }))}>
             Je ne sais pas
           </Button>
         </div>

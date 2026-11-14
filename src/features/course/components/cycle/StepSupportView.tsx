@@ -20,11 +20,11 @@ interface StepSupportViewProps {
   onAnswer: (record: CycleAnswerRecord) => void;
 }
 
-/** Support d'une mini-étape : graphique, schéma, tableau (blocs existants) ou action de reconstruction. */
-export function StepSupportView({ support, answer, onAnswer }: StepSupportViewProps) {
+/** Contenu du support : blocs existants (graphique, schéma, tableau) ou action de reconstruction. */
+function SupportContent({ support, answer, onAnswer }: StepSupportViewProps) {
   const caption =
     support.caption && support.kind !== "chart" && support.kind !== "diagram" && support.kind !== "table" ? (
-      <p className="mb-2 text-xs text-gray-500">
+      <p className="mb-2 text-xs text-ink-3">
         <LatexText text={support.caption} />
       </p>
     ) : null;
@@ -65,4 +65,13 @@ export function StepSupportView({ support, answer, onAnswer }: StepSupportViewPr
         </>
       );
   }
+}
+
+/** Support d'une mini-étape (graphique, schéma, tableau ou action de reconstruction) posé sur une carte `sunken`. */
+export function StepSupportView(props: StepSupportViewProps) {
+  return (
+    <div className="rounded-card bg-sunken p-2.5 sm:p-3">
+      <SupportContent {...props} />
+    </div>
+  );
 }

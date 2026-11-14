@@ -6,7 +6,7 @@ import { LatexText } from "@/shared/utils/latex";
 import type { CycleChallenge as CycleChallengeData } from "../../course.types";
 import { isChallengeCorrect, pickedOf } from "../../cycleAnswers";
 import type { CycleAnswerRecord } from "../../cycleProgress";
-import { ChoiceList, LiveNote, TOUCH_TARGET } from "./cycleUi";
+import { ChoiceList, LiveNote } from "./cycleUi";
 
 interface CycleChallengeProps {
   challenge: CycleChallengeData;
@@ -34,11 +34,11 @@ export function CycleChallenge({ challenge, answer, onAnswer }: CycleChallengePr
 
   return (
     <div>
-      <p className="mb-3 text-sm font-medium text-gray-900">
+      <p className="mb-4 font-serif text-[22px] font-medium leading-snug text-ink">
         <LatexText text={challenge.question} />
       </p>
       <ChoiceList
-        legend={<span className="text-xs font-normal text-gray-500">Coche ce qui te semble juste, sans te préoccuper du nombre.</span>}
+        legend={<span className="text-xs font-normal text-ink-3">Coche ce qui te semble juste, sans te préoccuper du nombre.</span>}
         options={challenge.options}
         selected={pickedOf(answer, picked)}
         onChange={setPicked}
@@ -46,16 +46,15 @@ export function CycleChallenge({ challenge, answer, onAnswer }: CycleChallengePr
         disabled={validated}
       />
       {!validated && (
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap gap-2">
           <Button
             type="button"
-            className={TOUCH_TARGET}
             disabled={picked.length === 0}
             onClick={() => onAnswer({ picked, correct: isChallengeCorrect(challenge, picked) })}
           >
             Valider ma réponse
           </Button>
-          <Button type="button" variant="ghost" className={TOUCH_TARGET} onClick={() => onAnswer({ skipped: true })}>
+          <Button type="button" variant="ghost" onClick={() => onAnswer({ skipped: true })}>
             Je ne sais pas
           </Button>
         </div>

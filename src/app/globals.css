@@ -294,6 +294,27 @@
   }
 }
 
+/*
+ * Temps du cycle nouvellement dévoilé (lecteur de cours) : fondu et glissement de 8 px en 220 ms.
+ * Appliqué seulement après un clic sur « Continuer », jamais à la reprise d'une section.
+ */
+@keyframes stage-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.stage-in {
+  animation: stage-in var(--d-std) var(--ease-editorial) backwards;
+}
+
+/* Mouvement réduit : fondu seul de 120 ms, sans déplacement. */
+@media (prefers-reduced-motion: reduce) {
+  .stage-in.stage-in {
+    animation-name: veil-in;
+    animation-duration: var(--d-fast) !important;
+  }
+}
+
 /* Texte riche dans une bulle `primary` : fonds de code clairs sur fond sombre, liens lisibles. */
 .on-primary .rich-text code,
 .on-primary .rich-text pre {
