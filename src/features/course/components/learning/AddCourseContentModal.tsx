@@ -45,19 +45,19 @@ export function AddCourseContentModal({ sessionId, hasNextSteps, onAdded, onClos
         }}
       >
         <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
             <AutoAwesomeIcon fontSize="small" />
           </span>
           <div className="min-w-0">
-            <h2 id="add-content-modal-title" className="text-base font-semibold text-gray-900">
+            <h2 id="add-content-modal-title" className="text-base font-semibold text-ink">
               Ajouter du contenu
             </h2>
-            <p className="mt-0.5 text-sm text-gray-500">Une ou plusieurs sections seront ajoutées au cours.</p>
+            <p className="mt-0.5 text-sm text-ink-3">Une ou plusieurs sections seront ajoutées au cours.</p>
           </div>
         </div>
 
-        <p className="mt-4 mb-1 block text-xs font-medium text-gray-600">
-          Sujet à développer <span className="font-normal text-gray-400">(facultatif)</span>
+        <p className="mt-4 mb-1 block text-xs font-medium text-ink-2">
+          Sujet à développer <span className="font-normal text-ink-3">(facultatif)</span>
         </p>
         <RichTextEditor
           id="add-course-content-instructions"
@@ -69,9 +69,9 @@ export function AddCourseContentModal({ sessionId, hasNextSteps, onAdded, onClos
           placeholder="Ex. : ajoute une section sur le régime transitoire, avec un exemple chiffré"
           invalid={isOverLimit}
         />
-        <p className="mt-1 flex items-center justify-between text-xs text-gray-500">
+        <p className="mt-1 flex items-center justify-between text-xs text-ink-3">
           <span>{emptyStateHint}</span>
-          <span className={isOverLimit ? "font-medium text-red-600" : "text-gray-400"}>
+          <span className={isOverLimit ? "font-medium text-err" : "text-ink-3"}>
             {instructions.length}/{PLAN_INSTRUCTIONS_MAX_LENGTH}
           </span>
         </p>

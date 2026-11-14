@@ -125,3 +125,48 @@ describe.each(Object.entries(themes))("contrastes non textuels du détail du cou
     expect(contrastRatio(t[fg], t[bg]), `${fg} sur ${bg}`).toBeGreaterThanOrEqual(3);
   });
 });
+
+/**
+ * Podcast et apprentissage (défi, rappel, exemple guidé, vérification, pièges, résumé, sources) :
+ * titres de verdict et textes courants sur leurs fonds `*-soft`, `sunken` et `surface`.
+ */
+const podcastLearningPairs: [string, string][] = [
+  ["ok", "ok-soft"],
+  ["err", "err-soft"],
+  ["warn", "warn-soft"],
+  ["ink", "ok-soft"],
+  ["ink", "err-soft"],
+  ["ink", "warn-soft"],
+  ["ink-2", "warn-soft"],
+  ["ok", "warn-soft"],
+  ["primary", "primary-soft"],
+  ["ink", "primary-soft"],
+  ["ink-2", "primary-soft"],
+  ["err", "primary-soft"],
+  ["ok", "sunken"],
+  ["primary", "sunken"],
+  ["ink", "sunken"],
+  ["ink-2", "sunken"],
+  ["ink-3", "sunken"],
+  ["ink-2", "surface"],
+  ["ink-3", "surface"],
+  ["primary", "surface"],
+  ["err", "surface"],
+];
+
+describe.each(Object.entries(themes))("contrastes du podcast et de l'apprentissage, thème %s", (_n, t) => {
+  it.each(podcastLearningPairs)("%s sur %s ≥ 4,5:1", (fg, bg) => {
+    expect(contrastRatio(t[fg], t[bg]), `${fg} sur ${bg}`).toBeGreaterThanOrEqual(4.5);
+  });
+
+  // Anneau de progression et icônes du podcast (accent / err), filets d'encadré (3:1, WCAG 1.4.11).
+  it.each([
+    ["accent", "surface"],
+    ["accent", "primary-soft"],
+    ["err", "surface"],
+    ["ok", "surface"],
+    ["warn", "warn-soft"],
+  ])("élément graphique %s sur %s ≥ 3:1", (fg, bg) => {
+    expect(contrastRatio(t[fg], t[bg]), `${fg} sur ${bg}`).toBeGreaterThanOrEqual(3);
+  });
+});

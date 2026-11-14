@@ -54,21 +54,21 @@ export function VideoCard({
         )}
       </div>
       <div className="p-3">
-        <p className="line-clamp-2 text-sm font-medium text-gray-900">{video.title}</p>
-        {video.channel && <p className="mt-0.5 text-xs text-gray-500">{video.channel}</p>}
+        <p className="line-clamp-2 text-sm font-medium text-ink">{video.title}</p>
+        {video.channel && <p className="mt-0.5 text-xs text-ink-3">{video.channel}</p>}
         {(video.category || video.level) && (
           <div className="mt-1.5 flex flex-wrap gap-1">
-            {video.category && <Badge variant="indigo">{CATEGORY_LABELS[video.category] ?? video.category}</Badge>}
-            {video.level && <Badge variant="gray">{LEVEL_LABELS[video.level] ?? video.level}</Badge>}
+            {video.category && <Badge variant="info">{CATEGORY_LABELS[video.category] ?? video.category}</Badge>}
+            {video.level && <Badge variant="neutral">{LEVEL_LABELS[video.level] ?? video.level}</Badge>}
           </div>
         )}
-        {video.relevance_reason && <p className="mt-1.5 text-xs italic text-gray-500">{video.relevance_reason}</p>}
+        {video.relevance_reason && <p className="mt-1.5 text-xs italic text-ink-2">{video.relevance_reason}</p>}
         <div className="mt-1 flex items-center justify-between gap-2">
           <a
             href={video.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block text-xs text-indigo-600 hover:underline"
+            className="inline-flex min-h-11 items-center text-xs text-primary underline underline-offset-2 hover:text-ink"
           >
             Ouvrir sur YouTube
           </a>

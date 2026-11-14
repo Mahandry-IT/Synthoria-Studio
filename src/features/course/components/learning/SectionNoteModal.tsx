@@ -54,20 +54,20 @@ export function SectionNoteModal({
         }}
       >
         <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
             <StickyNote2OutlinedIcon fontSize="small" />
           </span>
           <div className="min-w-0">
-            <h2 id={`note-modal-title-${sectionId}`} className="text-base font-semibold text-gray-900">
+            <h2 id={`note-modal-title-${sectionId}`} className="text-base font-semibold text-ink">
               {initialNote ? "Modifier ma note" : "Ajouter une note"}
             </h2>
-            <p className="mt-0.5 truncate text-sm text-gray-500" title={sectionTitle}>
+            <p className="mt-0.5 truncate text-sm text-ink-3" title={sectionTitle}>
               {sectionTitle || "Section sans titre"}
             </p>
           </div>
         </div>
 
-        <p className="mt-4 mb-1 block text-xs font-medium text-gray-600">Note personnelle</p>
+        <p className="mt-4 mb-1 block text-xs font-medium text-ink-2">Note personnelle</p>
         <RichTextEditor
           id={`note-${sectionId}`}
           ariaLabel="Note personnelle"
@@ -78,7 +78,7 @@ export function SectionNoteModal({
           placeholder="Pense-bête, idées à creuser…"
           invalid={isOverLimit}
         />
-        <p className={`mt-1 text-right text-xs ${isOverLimit ? "font-medium text-red-600" : "text-gray-400"}`}>
+        <p className={`mt-1 text-right text-xs ${isOverLimit ? "font-medium text-err" : "text-ink-3"}`}>
           {note.length}/{SECTION_NOTE_MAX_LENGTH}
         </p>
 

@@ -24,7 +24,7 @@ describe("podcastStatusMeta", () => {
       expect(meta.label).not.toBe("");
       expect(meta.icon).not.toBe("");
     }
-    expect(podcastStatusMeta("done").variant).toBe("green");
-    expect(podcastStatusMeta("failed").variant).toBe("red");
+    expect(podcastStatusMeta("done").variant).toBe("ok");
+    expect(podcastStatusMeta("failed").variant).toBe("err");
   });
 });

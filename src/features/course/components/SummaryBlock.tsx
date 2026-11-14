@@ -13,11 +13,11 @@ export function SummaryBlock({ summary }: SummaryBlockProps) {
   if (!summary || summary.trim().length === 0) return null;
 
   return (
-    <section aria-labelledby="summary-heading" className="rounded-lg bg-indigo-50 p-5">
-      <h2 id="summary-heading" className="text-sm font-semibold text-indigo-800 mb-2">
+    <section aria-labelledby="summary-heading" className="rounded-card bg-primary-soft p-5">
+      <h2 id="summary-heading" className="mb-2 text-sm font-semibold text-primary">
         Résumé
       </h2>
-      <p className="text-sm text-indigo-700 leading-relaxed">
+      <p className="font-serif text-base leading-relaxed text-ink">
         <RichText text={summary} />
       </p>
     </section>

@@ -22,20 +22,20 @@ export function PodcastMiniProgress({ progress, label, failed, onExpand }: Podca
       type="button"
       onClick={onExpand}
       aria-label={`Podcast : ${failed ? "échec" : `${label}, ${progress} %`}. Afficher le détail`}
-      className="fixed bottom-6 right-20 z-40 flex items-center gap-2 rounded-full border border-gray-200 bg-white py-1.5 pl-1.5 pr-4 shadow-lg transition-colors hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+      className="fixed bottom-6 right-20 z-40 flex min-h-11 items-center gap-2 rounded-full border border-line bg-surface py-1.5 pl-1.5 pr-4 text-ink shadow-lift transition-colors hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none"
     >
       <CircularProgressRing
         value={progress / 100}
         size={36}
         strokeWidth={3}
-        color={failed ? "#ef4444" : "#6366f1"}
+        color={failed ? "var(--err)" : "var(--accent)"}
         label="Progression du podcast"
       >
-        <span aria-hidden="true" className={`flex ${failed ? "text-red-500" : "text-indigo-600"}`}>
+        <span aria-hidden="true" className={`flex ${failed ? "text-err" : "text-accent"}`}>
           <GraphicEqIcon sx={{ fontSize: 16 }} />
         </span>
       </CircularProgressRing>
-      <span className="text-xs font-medium text-gray-700" aria-hidden="true">
+      <span className="font-mono text-xs font-medium text-ink-2" aria-hidden="true">
         {failed ? "Podcast : échec" : `Podcast ${progress} %`}
       </span>
     </button>

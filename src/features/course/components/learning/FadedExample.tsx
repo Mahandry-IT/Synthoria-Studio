@@ -24,17 +24,17 @@ export function FadedExample({ example, revealed, onReveal, hideTitle = false }:
   if (given.length === 0 && hidden.length === 0) return null;
 
   return (
-    <Card className="bg-amber-50 p-4 text-sm">
-      {!hideTitle && <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-700">À toi</p>}
-      {example.statement && <RichText text={example.statement} className="mb-3 font-medium text-gray-900" />}
-      <ol className="list-decimal space-y-2 pl-5 text-gray-700">
+    <Card className="border-l-[3px] border-l-warn bg-warn-soft p-4 text-sm">
+      {!hideTitle && <p className="kicker mb-1 font-semibold text-warn">À toi</p>}
+      {example.statement && <RichText text={example.statement} className="mb-3 font-medium text-ink" />}
+      <ol className="list-decimal space-y-2 pl-5 text-ink-2">
         {given.map((step, i) => (
           <li key={`g${i}`}>
             <RichText text={step} />
           </li>
         ))}
         {hidden.slice(0, shown).map((step, i) => (
-          <li key={`h${i}`} className="text-indigo-800">
+          <li key={`h${i}`} className="font-medium text-ink">
             <RichText text={step} />
           </li>
         ))}
@@ -44,16 +44,16 @@ export function FadedExample({ example, revealed, onReveal, hideTitle = false }:
       </p>
       {remaining > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-3">
-          <Button type="button" size="sm" variant="outline" onClick={onReveal}>
+          <Button type="button" size="sm" variant="secondary" onClick={onReveal}>
             Révéler l&apos;étape suivante
           </Button>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-ink-2">
             Essaie d&apos;abord : {remaining} étape{remaining > 1 ? "s" : ""} à trouver.
           </span>
         </div>
       )}
       {remaining === 0 && example.result && (
-        <p className="mt-3 font-medium text-green-700">
+        <p className="mt-3 font-medium text-ok">
           <RichText text={example.result} />
         </p>
       )}

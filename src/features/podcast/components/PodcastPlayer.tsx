@@ -20,11 +20,11 @@ export function PodcastPlayer({ jobId, title, durationSeconds }: PodcastPlayerPr
   const duration = formatDuration(durationSeconds);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3 rounded-card border border-line bg-sunken p-4">
       {(title || duration) && (
-        <p className="flex flex-wrap items-baseline gap-x-2 text-sm text-gray-700">
-          {title && <span className="line-clamp-2 font-medium">{title}</span>}
-          {duration && <span className="text-xs text-gray-500">Durée : {duration}</span>}
+        <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          {title && <span className="line-clamp-2 font-serif text-base font-medium text-ink">{title}</span>}
+          {duration && <span className="font-mono text-xs text-ink-2">Durée : {duration}</span>}
         </p>
       )}
 
@@ -45,7 +45,7 @@ export function PodcastPlayer({ jobId, title, durationSeconds }: PodcastPlayerPr
       <a
         href={audioUrl}
         download
-        className="inline-block text-xs font-medium text-indigo-700 underline underline-offset-2 hover:text-indigo-900"
+        className="inline-flex min-h-11 items-center text-sm font-medium text-primary underline underline-offset-2 hover:text-ink"
       >
         Télécharger l&apos;audio
       </a>

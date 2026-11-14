@@ -20,14 +20,14 @@ export function VideoCards({ videos, sessionId, onNoteSaved }: VideoCardsProps) 
 
   return (
     <section aria-labelledby="videos-heading">
-      <h2 id="videos-heading" className="mb-3 text-lg font-semibold text-gray-900">
+      <h2 id="videos-heading" className="mb-3 font-serif text-lg font-semibold text-ink">
         Vidéos pour aller plus loin
       </h2>
       <div className="space-y-5">
         {groups.map((group) => (
           <div key={group.category ?? "_"}>
             {group.category && (
-              <h3 className="mb-2 text-sm font-semibold text-gray-700">
+              <h3 className="mb-2 text-sm font-semibold text-ink-2">
                 {CATEGORY_LABELS[group.category] ?? group.category}
               </h3>
             )}

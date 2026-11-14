@@ -3,6 +3,7 @@
 import { useState } from "react";
 import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import StickyNote2OutlinedIcon from "@mui/icons-material/StickyNote2Outlined";
+import { Button } from "@/components/Button";
 import { VideoNoteModal } from "./VideoNoteModal";
 
 interface VideoNoteButtonProps {
@@ -23,15 +24,16 @@ export function VideoNoteButton({ sessionId, videoId, videoTitle, initialNote = 
 
   return (
     <>
-      <button
+      <Button
         type="button"
+        size="icon"
+        variant="ghost"
         aria-label={label}
         title={label}
         onClick={() => setOpen(true)}
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-indigo-600 hover:bg-indigo-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
       >
         {initialNote ? <StickyNote2Icon fontSize="small" /> : <StickyNote2OutlinedIcon fontSize="small" />}
-      </button>
+      </Button>
       {open && (
         <VideoNoteModal
           sessionId={sessionId}

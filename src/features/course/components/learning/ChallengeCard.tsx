@@ -2,15 +2,18 @@
 
 import { useId, useState } from "react";
 import { Button } from "@/components/Button";
+import { CONTROL_CLASSES } from "@/components/Input";
 import { CHALLENGE_ANSWER_MAX_LENGTH } from "@/shared/utils/constants";
+import { cx } from "@/shared/utils/cx";
 import type { ChallengeResponse } from "../../course.types";
 import { useChallengeFeedback } from "../../hooks/useChallengeFeedback";
 import { RichText } from "../RichText";
 
-const VERDICT_STYLES: Record<ChallengeResponse["verdict"], { box: string; label: string }> = {
-  on_track: { box: "bg-green-50 text-green-900", label: "Bonne piste !" },
-  partial: { box: "bg-amber-50 text-amber-900", label: "En partie — il manque encore quelque chose" },
-  off_track: { box: "bg-red-50 text-red-900", label: "Pas tout à fait — l'explication va t'aider" },
+/** Le verdict est porté par le libellé ; la couleur (encadré + filet) ne fait que le souligner. */
+const VERDICT_STYLES: Record<ChallengeResponse["verdict"], { box: string; head: string; label: string }> = {
+  on_track: { box: "border-ok bg-ok-soft", head: "text-ok", label: "Bonne piste !" },
+  partial: { box: "border-warn bg-warn-soft", head: "text-warn", label: "En partie — il manque encore quelque chose" },
+  off_track: { box: "border-err bg-err-soft", head: "text-err", label: "Pas tout à fait — l'explication va t'aider" },
 };
 
 interface ChallengeCardProps {
@@ -50,13 +53,13 @@ export function ChallengeCard({ challenge, sessionId, sectionId, answered = fals
   };
 
   return (
-    <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4 text-sm">
-      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-indigo-700">Défi</p>
-      <RichText text={challenge} className="font-medium text-gray-900" />
+    <div className="rounded-card border-l-[3px] border-accent bg-primary-soft p-4 text-sm text-ink">
+      <p className="kicker mb-1 font-semibold text-primary">Défi</p>
+      <RichText text={challenge} className="font-medium text-ink" />
 
       {!(answered && isEmpty) && (
         <>
-          <label className="mt-3 block text-xs text-gray-600" htmlFor={answerId}>
+          <label className="mt-3 block text-xs text-ink-2" htmlFor={answerId}>
             Votre réponse ou votre prédiction
           </label>
           <textarea
@@ -67,15 +70,15 @@ export function ChallengeCard({ challenge, sessionId, sectionId, answered = fals
             maxLength={CHALLENGE_ANSWER_MAX_LENGTH}
             readOnly={locked}
             aria-describedby={helpId}
-            className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 read-only:bg-gray-50"
+            className={cx(CONTROL_CLASSES, "mt-1 block w-full py-2 read-only:bg-sunken")}
           />
-          <p id={helpId} className="mt-1 flex flex-wrap justify-between gap-2 text-xs text-gray-500">
+          <p id={helpId} className="mt-1 flex flex-wrap justify-between gap-2 text-xs text-ink-2">
             <span>
               {canAnalyze
                 ? "En validant, votre réponse est envoyée au serveur pour être analysée par l'IA (elle n'est pas enregistrée). « Je ne sais pas » n'envoie rien."
                 : "Analyse indisponible pour ce cours : votre réponse n'est pas envoyée."}
             </span>
-            <span className={isOverLimit ? "font-medium text-red-600" : ""}>
+            <span className={isOverLimit ? "font-medium text-err" : ""}>
               {answer.length}/{CHALLENGE_ANSWER_MAX_LENGTH}
             </span>
           </p>
@@ -83,8 +86,8 @@ export function ChallengeCard({ challenge, sessionId, sectionId, answered = fals
       )}
 
       {result && style && (
-        <div role="status" className={`mt-3 rounded-lg p-3 ${style.box}`}>
-          <p className="font-semibold">{style.label}</p>
+        <div role="status" className={`mt-3 rounded-card border-l-[3px] p-3 text-ink ${style.box}`}>
+          <p className={`font-semibold ${style.head}`}>{style.label}</p>
           <p className="mt-1">{result.feedback}</p>
           {result.hint && (
             <p className="mt-2">
