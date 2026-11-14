@@ -128,6 +128,11 @@ describe("Modal, ConfirmDialog, LoadingModal", () => {
     expect(out).toContain('aria-labelledby="t"');
     expect(out).toContain("bg-veil");
   });
+  it("Modal : alertdialog, aria-describedby et voile non fermant en option", () => {
+    const out = html(h(Modal, { onClose: () => {}, labelledBy: "t", describedBy: "d", role: "alertdialog", closeOnOverlay: false, children: "x" }));
+    expect(out).toContain('role="alertdialog"');
+    expect(out).toContain('aria-describedby="d"');
+  });
   it("ConfirmDialog garde son id de titre", () => {
     const out = html(h(ConfirmDialog, { title: "T", description: "D", onConfirm: () => {}, onClose: () => {} }));
     expect(out).toContain('aria-labelledby="confirm-dialog-title"');

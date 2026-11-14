@@ -33,20 +33,20 @@ function CheckQuestion({ question, index, onChecked }: CheckQuestionProps) {
 
   return (
     <fieldset className="space-y-2">
-      <legend className="text-sm font-medium text-gray-900">
-        <span className="mr-2 text-xs text-gray-500">{index + 1}.</span>
+      <legend className="text-sm font-medium text-ink">
+        <span className="mr-2 font-mono text-xs text-ink-3">{index + 1}.</span>
         <LatexText text={question.question} />
       </legend>
-      {multiple && <p className="text-xs text-gray-500">Plusieurs réponses possibles.</p>}
+      {multiple && <p className="text-xs text-ink-3">Plusieurs réponses possibles.</p>}
       {question.options.map((option, i) => (
-        <label key={i} className="flex cursor-pointer items-start gap-2 text-sm text-gray-700">
+        <label key={i} className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm text-ink">
           <input
             type={multiple ? "checkbox" : "radio"}
             name={`check-${index}-${question.question.slice(0, 20)}`}
             checked={selected.includes(i)}
             disabled={validated}
             onChange={() => toggle(i)}
-            className="mt-1"
+            className="h-4 w-4 shrink-0 accent-primary"
           />
           <LatexText text={option} autoMath />
         </label>
@@ -56,8 +56,11 @@ function CheckQuestion({ question, index, onChecked }: CheckQuestionProps) {
           Vérifier
         </Button>
       ) : (
-        <div role="status" className={`rounded-lg p-3 text-sm ${correct ? "bg-green-50 text-green-900" : "bg-red-50 text-red-900"}`}>
-          <p className="font-semibold">{correct ? "Bonne réponse !" : "Pas tout à fait."}</p>
+        <div
+          role="status"
+          className={`rounded-card border-l-[3px] p-3 text-sm text-ink ${correct ? "border-ok bg-ok-soft" : "border-err bg-err-soft"}`}
+        >
+          <p className={`font-semibold ${correct ? "text-ok" : "text-err"}`}>{correct ? "Bonne réponse !" : "Pas tout à fait."}</p>
           <ul className="mt-1 space-y-1">
             {optionFeedback(question, selected).map((f) =>
               f.text ? (
@@ -69,7 +72,7 @@ function CheckQuestion({ question, index, onChecked }: CheckQuestionProps) {
             )}
           </ul>
           {question.explanation && (
-            <p className="mt-2 text-xs opacity-80">
+            <p className="mt-2 text-xs text-ink-2">
               <LatexText text={question.explanation} />
             </p>
           )}
@@ -100,8 +103,8 @@ export function SectionCheck({ questions, onComplete, hideTitle = false }: Secti
   };
 
   return (
-    <div className="space-y-4 rounded-lg border border-gray-200 p-4">
-      {!hideTitle && <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Vérifie</p>}
+    <div className="space-y-4 rounded-card border border-line bg-surface p-4">
+      {!hideTitle && <p className="kicker font-semibold">Vérifie</p>}
       {questions.map((q, i) => (
         <CheckQuestion key={i} question={q} index={i} onChecked={handleChecked} />
       ))}

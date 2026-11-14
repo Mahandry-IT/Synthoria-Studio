@@ -4,6 +4,8 @@ import { useRef } from "react";
 import GraphicEqIcon from "@mui/icons-material/GraphicEq";
 import { Button } from "@/components/Button";
 import { CircularProgressRing } from "@/components/CircularProgressRing";
+import { Modal } from "@/components/Modal";
+import { Stepper } from "@/components/Stepper";
 import { useFocusTrap } from "@/shared/hooks/useFocusTrap";
 import { PODCAST_STAGES, stageLabel } from "../podcast.progress";
 
@@ -39,78 +41,64 @@ export function PodcastProgressModal({
   onRetry,
   onClose,
 }: PodcastProgressModalProps) {
-  const dialogRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(dialogRef);
+  const contentRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(contentRef);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-4 backdrop-blur-sm">
-      <div
-        ref={dialogRef}
-        role="alertdialog"
-        aria-modal="true"
-        aria-labelledby="podcast-modal-title"
-        aria-describedby="podcast-modal-status"
-        tabIndex={-1}
-        onKeyDown={(e) => {
-          // Échap : uniquement réduire (jamais d'annulation implicite du job)
-          if (e.key === "Escape") (failed ? onClose : onMinimize)();
-        }}
-        className="w-full max-w-sm rounded-2xl bg-white p-8 text-center shadow-xl"
-      >
+    // Échap : uniquement réduire, jamais d'annulation implicite du job
+    <Modal
+      onClose={failed ? onClose : onMinimize}
+      labelledBy="podcast-modal-title"
+      describedBy="podcast-modal-status"
+      role="alertdialog"
+      closeOnOverlay={false}
+    >
+      <div ref={contentRef} tabIndex={-1} className="text-center outline-none">
         <div className="flex justify-center">
           <CircularProgressRing
             value={progress / 100}
             size={96}
             strokeWidth={6}
-            color={failed ? "#ef4444" : "#6366f1"}
+            color={failed ? "var(--err)" : "var(--accent)"}
             label={`Progression du podcast : ${progress} %`}
           >
             <span
               aria-hidden="true"
-              className={`flex ${failed ? "text-red-500" : "text-indigo-600 motion-safe:animate-pulse"}`}
+              className={`flex ${failed ? "text-err" : "text-accent motion-safe:animate-pulse"}`}
             >
               <GraphicEqIcon sx={{ fontSize: 36 }} />
             </span>
           </CircularProgressRing>
         </div>
 
-        <h2 id="podcast-modal-title" className="mt-5 text-lg font-semibold text-gray-900">
+        <h2 id="podcast-modal-title" className="mt-5 font-serif text-lg font-semibold text-ink">
           {failed ? "Le podcast n'a pas pu être généré" : "Génération du podcast"}
         </h2>
 
         <div id="podcast-modal-status" role="status" aria-live="polite" className="mt-2 space-y-1">
-          <p className="text-sm font-medium text-gray-700">
+          <p className="text-sm font-medium text-ink-2">
             {failed ? (errorMessage ?? label) : `${label} · ${progress} %`}
           </p>
           {!failed && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-ink-3">
               Votre cours est prêt : vous pouvez le lire pendant que l&apos;audio se prépare.
             </p>
           )}
         </div>
 
         {!failed && (
-          <ol className="mt-4 flex items-center justify-center gap-2 text-xs text-gray-500" aria-label="Étapes">
-            {PODCAST_STAGES.map((stage, i) => {
-              const state = i < stageIndex ? "done" : i === stageIndex ? "current" : "todo";
-              return (
-                <li
-                  key={stage}
-                  aria-current={state === "current" ? "step" : undefined}
-                  className={`rounded-full px-2.5 py-1 ${
-                    state === "current"
-                      ? "bg-indigo-100 font-medium text-indigo-800"
-                      : state === "done"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-500"
-                  }`}
-                >
-                  {state === "done" && <span aria-hidden="true">✓ </span>}
+          <div className="mt-4">
+            {stageIndex >= 0 && <Stepper label="Étapes" total={PODCAST_STAGES.length} current={stageIndex + 1} />}
+            {/* Noms des étapes : redondants avec le texte masqué du Stepper, donc cachés aux lecteurs d'écran */}
+            <ol aria-hidden="true" className="mt-1.5 flex gap-1.5 font-mono text-[11px] text-ink-3">
+              {PODCAST_STAGES.map((stage, i) => (
+                <li key={stage} className={`flex-1 ${i === stageIndex ? "font-semibold text-ink" : ""}`}>
+                  {i < stageIndex && "✓ "}
                   {stageLabel({ stage, status: stage })}
                 </li>
-              );
-            })}
-          </ol>
+              ))}
+            </ol>
+          </div>
         )}
 
         <div className="mt-6 flex justify-center gap-2">
@@ -124,12 +112,12 @@ export function PodcastProgressModal({
               </Button>
             </>
           ) : (
-            <Button type="button" variant="outline" onClick={onMinimize}>
+            <Button type="button" variant="secondary" onClick={onMinimize}>
               Continuer en arrière-plan
             </Button>
           )}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

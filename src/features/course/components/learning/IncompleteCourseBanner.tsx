@@ -53,8 +53,8 @@ export function IncompleteCourseBanner({
   ].filter(Boolean);
 
   return (
-    <div role="alert" className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-      <p className="font-medium">⚠️ Cours incomplet</p>
+    <div role="alert" className="mb-4 rounded-card border-l-[3px] border-warn bg-warn-soft p-4 text-sm text-ink">
+      <p className="font-medium text-warn">⚠️ Cours incomplet</p>
       <p className="mt-1">{problems.join(" et ")} : la génération a échoué (erreur temporaire).</p>
       <div className="mt-3 flex flex-wrap gap-2">
         {incompleteCount > 0 && (
@@ -68,7 +68,7 @@ export function IncompleteCourseBanner({
             Régénérer les sections incomplètes
           </Button>
         )}
-        <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setConfirming(true)}>
+        <Button type="button" size="sm" variant="secondary" disabled={busy} onClick={() => setConfirming(true)}>
           Régénérer le cours
         </Button>
       </div>

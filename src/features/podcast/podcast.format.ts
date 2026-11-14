@@ -11,7 +11,7 @@ export function formatDuration(seconds: number | null | undefined): string {
   return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${ss}` : `${m}:${ss}`;
 }
 
-type BadgeVariant = "indigo" | "green" | "amber" | "gray" | "red";
+type BadgeVariant = "info" | "ok" | "neutral" | "err";
 
 interface StatusMeta {
   label: string;
@@ -21,12 +21,12 @@ interface StatusMeta {
 }
 
 const STATUS_META: Record<PodcastStatus, StatusMeta> = {
-  pending: { label: "En attente", variant: "gray", icon: "⏳" },
-  scripting: { label: "Écriture du script", variant: "indigo", icon: "✍️" },
-  synthesizing: { label: "Synthèse des voix", variant: "indigo", icon: "🎙️" },
-  mixing: { label: "Montage audio", variant: "indigo", icon: "🎚️" },
-  done: { label: "Prêt", variant: "green", icon: "✓" },
-  failed: { label: "Échec", variant: "red", icon: "⚠" },
+  pending: { label: "En attente", variant: "neutral", icon: "⏳" },
+  scripting: { label: "Écriture du script", variant: "info", icon: "✍️" },
+  synthesizing: { label: "Synthèse des voix", variant: "info", icon: "🎙️" },
+  mixing: { label: "Montage audio", variant: "info", icon: "🎚️" },
+  done: { label: "Prêt", variant: "ok", icon: "✓" },
+  failed: { label: "Échec", variant: "err", icon: "⚠" },
 };
 
 /** Libellé, variante de badge et icône d'un statut de job. */

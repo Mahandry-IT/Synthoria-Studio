@@ -20,8 +20,8 @@ export function AnswerBlock({ answer }: AnswerBlockProps) {
   if (!hasContent) return null;
 
   return (
-    <div className="space-y-4 text-sm text-gray-700">
-      {answer.summary && <RichText text={answer.summary} className="text-base leading-relaxed text-gray-900" />}
+    <div className="space-y-4 text-sm text-ink-2">
+      {answer.summary && <RichText text={answer.summary} className="font-serif text-base leading-relaxed text-ink" />}
 
       {answer.blocks?.map((block, i) => (
         <div key={i}>
@@ -43,21 +43,21 @@ export function AnswerBlock({ answer }: AnswerBlockProps) {
 
       {answer.quoi && (
         <div>
-          <h4 className="font-medium text-gray-900 mb-1">Quoi</h4>
+          <h4 className="mb-1 font-medium text-ink">Quoi</h4>
           <RichText text={answer.quoi} className="leading-relaxed" />
         </div>
       )}
 
       {answer.pourquoi && (
         <div>
-          <h4 className="font-medium text-gray-900 mb-1">Pourquoi</h4>
+          <h4 className="mb-1 font-medium text-ink">Pourquoi</h4>
           <RichText text={answer.pourquoi} className="leading-relaxed" />
         </div>
       )}
 
       {answer.comment && (
         <div>
-          <h4 className="font-medium text-gray-900 mb-1">Comment</h4>
+          <h4 className="mb-1 font-medium text-ink">Comment</h4>
           <RichText text={answer.comment} className="leading-relaxed" />
         </div>
       )}
@@ -67,22 +67,22 @@ export function AnswerBlock({ answer }: AnswerBlockProps) {
       ))}
 
       {answer.worked_example && answer.worked_example.steps?.length > 0 && (
-        <Card className="bg-gray-50 p-4">
-          <h4 className="font-medium text-gray-900 mb-2">Exemple</h4>
+        <Card className="bg-sunken p-4">
+          <h4 className="mb-2 font-medium text-ink">Exemple</h4>
           {answer.worked_example.statement && (
-            <p className="text-gray-600 italic mb-3">
+            <p className="mb-3 italic text-ink-2">
               <RichText text={answer.worked_example.statement} />
             </p>
           )}
           <ol className="space-y-2 list-decimal list-inside">
             {answer.worked_example.steps.map((step, i) => (
-              <li key={step.id ?? i} className="text-gray-700">
+              <li key={step.id ?? i} className="text-ink-2">
                 <RichText text={step.content} />
               </li>
             ))}
           </ol>
           {answer.worked_example.result && (
-            <p className="mt-3 text-green-700 font-medium">
+            <p className="mt-3 font-medium text-ok">
               <RichText text={answer.worked_example.result} />
             </p>
           )}
@@ -91,10 +91,10 @@ export function AnswerBlock({ answer }: AnswerBlockProps) {
 
       {answer.key_points && answer.key_points.length > 0 && (
         <div>
-          <h4 className="font-medium text-gray-900 mb-1">Points clés</h4>
+          <h4 className="mb-1 font-medium text-ink">Points clés</h4>
           <ul className="list-disc list-inside space-y-1">
             {answer.key_points.map((point, i) => (
-              <li key={i} className="text-gray-600">
+              <li key={i} className="text-ink-2">
                 <RichText text={point} />
               </li>
             ))}

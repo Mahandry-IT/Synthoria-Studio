@@ -23,8 +23,8 @@ export function RegenerateSectionButton({
   const regenerate = useRegenerateSection(onRegenerated);
 
   return (
-    <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-      <p className="font-medium">⚠️ Section incomplète</p>
+    <div role="alert" className="rounded-card border-l-[3px] border-warn bg-warn-soft p-4 text-sm text-ink">
+      <p className="font-medium text-warn">⚠️ Section incomplète</p>
       <p className="mt-1">La génération de son contenu a échoué (erreur temporaire).</p>
       <Button
         type="button"

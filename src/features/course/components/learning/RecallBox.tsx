@@ -8,10 +8,11 @@ import type { RecallPrompt, RecallResponse } from "../../course.types";
 import { useRecallFeedback } from "../../hooks/useRecallFeedback";
 import { RichText } from "../RichText";
 
-const VERDICT_STYLES: Record<RecallResponse["verdict"], { box: string; label: string }> = {
-  correct: { box: "bg-green-50 text-green-900", label: "Très bien !" },
-  partiel: { box: "bg-amber-50 text-amber-900", label: "Presque — il manque quelques idées" },
-  incorrect: { box: "bg-red-50 text-red-900", label: "À revoir" },
+/** Le verdict est porté par le libellé ; la couleur (encadré + filet) ne fait que le souligner. */
+const VERDICT_STYLES: Record<RecallResponse["verdict"], { box: string; head: string; label: string }> = {
+  correct: { box: "border-ok bg-ok-soft", head: "text-ok", label: "Très bien !" },
+  partiel: { box: "border-warn bg-warn-soft", head: "text-warn", label: "Presque — il manque quelques idées" },
+  incorrect: { box: "border-err bg-err-soft", head: "text-err", label: "À revoir" },
 };
 
 interface RecallBoxProps {
@@ -32,11 +33,11 @@ export function RecallBox({ sessionId, sectionId, prompt, hideTitle = false }: R
   const isOverLimit = answer.length > RECALL_ANSWER_MAX_LENGTH;
 
   return (
-    <div className="space-y-3 rounded-lg border border-gray-200 p-4 text-sm">
+    <div className="space-y-3 rounded-card border border-line bg-surface p-4 text-sm text-ink">
       {!hideTitle && (
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Explique avec tes mots</p>
+        <p className="kicker font-semibold">Explique avec tes mots</p>
       )}
-      <RichText text={prompt.prompt} className="font-medium text-gray-900" />
+      <RichText text={prompt.prompt} className="font-medium text-ink" />
       <RichTextEditor
         ariaLabel="Votre explication"
         value={answer}
@@ -45,7 +46,7 @@ export function RecallBox({ sessionId, sectionId, prompt, hideTitle = false }: R
         invalid={isOverLimit}
       />
       <div className="flex items-center justify-between gap-3">
-        <span className={`text-xs ${isOverLimit ? "font-medium text-red-600" : "text-gray-400"}`}>
+        <span className={`text-xs ${isOverLimit ? "font-medium text-err" : "text-ink-3"}`}>
           {answer.length}/{RECALL_ANSWER_MAX_LENGTH}
         </span>
         <Button
@@ -59,8 +60,8 @@ export function RecallBox({ sessionId, sectionId, prompt, hideTitle = false }: R
         </Button>
       </div>
       {result && style && (
-        <div role="status" className={`rounded-lg p-3 ${style.box}`}>
-          <p className="font-semibold">{style.label}</p>
+        <div role="status" className={`rounded-card border-l-[3px] p-3 text-ink ${style.box}`}>
+          <p className={`font-semibold ${style.head}`}>{style.label}</p>
           <p className="mt-1">{result.feedback}</p>
           {result.missing_points.length > 0 && (
             <ul className="mt-2 list-disc space-y-1 pl-5">
