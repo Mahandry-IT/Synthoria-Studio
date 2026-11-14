@@ -15,7 +15,7 @@ export function InlineCode({ code }: { code: string }) {
   }
 
   return (
-    <code className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[0.85em] font-normal not-italic text-gray-800 [overflow-wrap:anywhere]">
+    <code className="rounded bg-sunken px-1.5 py-0.5 font-mono text-[0.85em] font-normal not-italic text-ink [overflow-wrap:anywhere]">
       {code}
     </code>
   );

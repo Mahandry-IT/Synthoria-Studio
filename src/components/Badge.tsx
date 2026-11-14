@@ -3,12 +3,9 @@ import { cx } from "@/shared/utils/cx";
 
 /** Tons du carnet éditorial. */
 type BadgeTone = "ok" | "warn" | "err" | "neutral" | "info";
-/** Anciens noms, conservés comme alias : indigo → info, green → ok, amber → warn, gray → neutral, red → err. */
-type LegacyBadgeVariant = "indigo" | "green" | "amber" | "gray" | "red";
-type BadgeVariant = BadgeTone | LegacyBadgeVariant;
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  variant?: BadgeVariant;
+  variant?: BadgeTone;
 }
 
 export const BADGE_TONE_CLASSES: Record<BadgeTone, string> = {
@@ -18,18 +15,6 @@ export const BADGE_TONE_CLASSES: Record<BadgeTone, string> = {
   neutral: "bg-transparent text-ink-2 border-line-2",
   info: "bg-primary-soft text-primary border-transparent",
 };
-
-export const BADGE_ALIASES: Record<LegacyBadgeVariant, BadgeTone> = {
-  indigo: "info",
-  green: "ok",
-  amber: "warn",
-  gray: "neutral",
-  red: "err",
-};
-
-function resolveTone(variant: BadgeVariant): BadgeTone {
-  return variant in BADGE_ALIASES ? BADGE_ALIASES[variant as LegacyBadgeVariant] : (variant as BadgeTone);
-}
 
 /**
  * Étiquette inline pour libellés, statuts et modes. Le sens passe par le texte, pas seulement la couleur.
@@ -41,7 +26,7 @@ const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
         ref={ref}
         className={cx(
           "inline-flex items-center gap-1.5 rounded-tag border px-2 py-[3px] text-xs font-medium",
-          BADGE_TONE_CLASSES[resolveTone(variant)],
+          BADGE_TONE_CLASSES[variant],
           className,
         )}
         {...props}

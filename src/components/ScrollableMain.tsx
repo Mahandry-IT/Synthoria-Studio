@@ -47,8 +47,8 @@ export function ScrollableMain({ children }: { children: React.ReactNode }) {
         tabIndex={visible ? 0 : -1}
         className={[
           "fixed bottom-6 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full",
-          "bg-indigo-600 text-white shadow-lg transition-all duration-200",
-          "hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600",
+          "bg-primary text-primary-ink shadow-lift transition-all duration-200 motion-reduce:transition-none",
+          "hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
           visible
             ? "translate-y-0 opacity-100"
             : "pointer-events-none translate-y-2 opacity-0",

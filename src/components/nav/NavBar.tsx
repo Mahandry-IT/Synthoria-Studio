@@ -46,7 +46,7 @@ export function NavBar({
     >
       <div className="flex items-center gap-1.5 pl-3.5">
         <Image
-          src="/logo-mark.svg"
+          src="/logo-mark.png"
           alt="Synthoria"
           width={32}
           height={32}

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { contrastRatio } from "@/shared/utils/contrast";
 import { THEME_TOKENS } from "@/test-utils/cssTokens";
@@ -168,5 +169,80 @@ describe.each(Object.entries(themes))("contrastes du podcast et de l'apprentissa
     ["warn", "warn-soft"],
   ])("élément graphique %s sur %s ≥ 3:1", (fg, bg) => {
     expect(contrastRatio(t[fg], t[bg]), `${fg} sur ${bg}`).toBeGreaterThanOrEqual(3);
+  });
+});
+
+/**
+ * Balayage final : texte sur `sunken` et `mark` (surligneur), éléments de formulaire
+ * (bordures de champs et de cases, anneau de focus) sur chaque fond où ils apparaissent.
+ */
+const sweepTextPairs: [string, string][] = [
+  ["ink", "mark"],
+  ["ink", "sunken"],
+  ["ink-2", "sunken"],
+  ["ink-3", "sunken"],
+  ["err", "sunken"],
+  ["warn", "sunken"],
+  ["ok", "sunken"],
+  ["primary", "sunken"],
+  ["ink", "primary-soft"],
+  ["ink-2", "primary-soft"],
+  ["primary", "primary-soft"],
+  ["accent-ink", "accent"],
+  ["primary-ink", "primary"],
+  ["primary-ink", "err"],
+];
+
+const sweepUiPairs: [string, string][] = [
+  // Bordures de champs, de cases et d'options : 3:1 (WCAG 1.4.11) sur tous les fonds de formulaire.
+  ["line-strong", "bg"],
+  ["line-strong", "surface"],
+  ["line-strong", "sunken"],
+  // Champ en erreur et anneau de focus (accent).
+  ["err", "bg"],
+  ["err", "surface"],
+  ["accent", "bg"],
+  ["accent", "surface"],
+  ["accent", "sunken"],
+  ["accent", "primary-soft"],
+];
+
+describe.each(Object.entries(themes))("contrastes du balayage final, thème %s", (_n, t) => {
+  it.each(sweepTextPairs)("texte %s sur %s ≥ 4,5:1", (fg, bg) => {
+    expect(contrastRatio(t[fg], t[bg]), `${fg} sur ${bg}`).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it.each(sweepUiPairs)("élément graphique %s sur %s ≥ 3:1", (fg, bg) => {
+    expect(contrastRatio(t[fg], t[bg]), `${fg} sur ${bg}`).toBeGreaterThanOrEqual(3);
+  });
+});
+
+/** `top` posé à `alpha` sur `base` (équivalent d'un `bg-ink/20` sur la couleur du toast). */
+function over(top: string, base: string, alpha: number): string {
+  const channel = (i: number) => Math.round(parseInt(top.slice(i, i + 2), 16) * alpha + parseInt(base.slice(i, i + 2), 16) * (1 - alpha));
+  return `#${[1, 3, 5].map((i) => channel(i).toString(16).padStart(2, "0")).join("")}`;
+}
+
+/** Toasts colorés (`ErrorToast`) : texte `bg` sur la couleur du toast, et sur les boutons / panneaux `bg-ink/20|30`. */
+describe.each(Object.entries(themes))("contrastes des toasts, thème %s", (_n, t) => {
+  it.each(["ok", "err", "warn", "primary"])("texte sur le toast %s, son bouton et son panneau ≥ 4,5:1", (tone) => {
+    expect(contrastRatio(t.bg, t[tone]), "toast").toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(t.bg, over(t.ink, t[tone], 0.2)), "panneau et bouton").toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(t.bg, over(t.ink, t[tone], 0.3)), "bouton au survol").toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+/**
+ * Coloration syntaxique claire (classes `hljs-*` de globals.css) sur le fond de la boîte de code
+ * (`sunken`) ; le thème sombre est couvert par designTokens.test.ts.
+ */
+describe("coloration syntaxique claire", () => {
+  const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
+  const light = css.slice(css.indexOf("Coloration syntaxique"), css.indexOf("Saisies riches"));
+  const colors = [...new Set([...light.matchAll(/color: (#[0-9a-f]{6});/g)].map((m) => m[1]))];
+
+  it("trouve les jetons", () => expect(colors.length).toBeGreaterThan(10));
+  it.each(colors)("%s ≥ 4,5:1 sur sunken", (color) => {
+    expect(contrastRatio(color, THEME_TOKENS.light.sunken)).toBeGreaterThanOrEqual(4.5);
   });
 });

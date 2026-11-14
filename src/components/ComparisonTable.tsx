@@ -60,44 +60,44 @@ export function ComparisonTable({
   return (
     <div className={`overflow-x-auto ${className}`}>
       {title && (
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
+        <h3 className="font-serif text-lg font-semibold text-ink mb-4">{title}</h3>
       )}
-      <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg overflow-hidden">
-        <thead className="bg-gray-50">
+      <table className="min-w-full divide-y divide-line border border-line rounded-card overflow-hidden">
+        <thead className="bg-sunken">
           <tr>
             <th
               scope="col"
-              className="px-4 py-3 text-left text-sm font-semibold text-gray-900"
+              className="px-4 py-3 text-left text-sm font-semibold text-ink"
             >
               Critère
             </th>
             <th
               scope="col"
-              className="px-4 py-3 text-left text-sm font-semibold text-gray-900"
+              className="px-4 py-3 text-left text-sm font-semibold text-ink"
             >
               PostgreSQL
             </th>
             <th
               scope="col"
-              className="px-4 py-3 text-left text-sm font-semibold text-gray-900"
+              className="px-4 py-3 text-left text-sm font-semibold text-ink"
             >
               MySQL (InnoDB)
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-200 bg-white">
+        <tbody className="divide-y divide-line bg-surface">
           {rows.map((row, idx) => (
             <tr
               key={idx}
-              className={idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"}
+              className={idx % 2 === 0 ? "bg-surface" : "bg-sunken/50"}
             >
-              <td className="px-4 py-3 text-sm font-medium text-gray-900 whitespace-nowrap">
+              <td className="px-4 py-3 text-sm font-medium text-ink whitespace-nowrap">
                 {row.criterion}
               </td>
-              <td className="px-4 py-3 text-sm text-gray-700">
+              <td className="px-4 py-3 text-sm text-ink-2">
                 {row.postgresql}
               </td>
-              <td className="px-4 py-3 text-sm text-gray-700">
+              <td className="px-4 py-3 text-sm text-ink-2">
                 {row.mysql}
               </td>
             </tr>

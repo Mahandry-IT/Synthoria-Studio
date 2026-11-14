@@ -1,7 +1,7 @@
 import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { BADGE_ALIASES, Badge } from "./Badge";
+import { BADGE_TONE_CLASSES, Badge } from "./Badge";
 import { Button } from "./Button";
 import { Card } from "./Card";
 import { Check, Option } from "./Check";
@@ -40,12 +40,11 @@ describe("Button", () => {
 });
 
 describe("Badge", () => {
-  it.each(Object.entries(BADGE_ALIASES))("alias %s → ton %s", (legacy, tone) => {
-    const aliased = html(h(Badge, { variant: legacy as keyof typeof BADGE_ALIASES }, "x"));
-    expect(aliased).toBe(html(h(Badge, { variant: tone }, "x")));
+  it.each(Object.keys(BADGE_TONE_CLASSES) as (keyof typeof BADGE_TONE_CLASSES)[])("ton %s → classes du ton", (tone) => {
+    expect(html(h(Badge, { variant: tone }, "x"))).toContain(BADGE_TONE_CLASSES[tone].split(" ")[0]);
   });
   it("accepte une variante issue d'une map dynamique", () => {
-    const map: Record<string, "indigo" | "green" | "amber" | "gray" | "red"> = { a: "indigo", b: "red" };
+    const map: Record<string, "ok" | "warn" | "err" | "neutral" | "info"> = { a: "info", b: "err" };
     expect(html(h(Badge, { variant: map.b }, "x"))).toContain("bg-err-soft");
   });
   it("utilise rounded-tag et neutral par défaut", () => {

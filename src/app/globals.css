@@ -4,7 +4,8 @@
 /*
  * Tokens « carnet éditorial » (valeurs du modèle de design). Thème clair par défaut ;
  * le sombre s'active par data-theme="dark" sur <html> (voir README, « Thème et design »).
- * Les anciennes classes gray-* / indigo-* restent valables tant que les écrans ne sont pas migrés.
+ * Aucune classe de palette Tailwind (gray-*, indigo-*…) dans src/ : un test garde-fou l'interdit
+ * (paletteGuard.test.ts). Les seules couleurs littérales sont Mermaid, graphiques et widgets (README).
  */
 :root {
   color-scheme: light;
@@ -346,13 +347,14 @@
 /*
  * Coloration syntaxique des boîtes de code (classes `hljs-*` émises par highlight.js).
  * Palette proche de VS Code « Light+ », assombrie là où le contraste sur le fond de la boîte
- * (gray-100, #f3f4f6) tombait sous 4,5:1 (WCAG AA) : tous les jetons sont ≥ 4,5:1.
+ * (token sunken clair, #efe7d8) tombait sous 4,5:1 (WCAG AA) : tous les jetons sont ≥ 4,5:1
+ * (vérifié par contrast.test.ts).
  */
 
 /* Commentaires */
 .code-highlight .hljs-comment,
 .code-highlight .hljs-quote {
-  color: #008000;
+  color: #007400;
 }
 
 /* Mots-clés, types primitifs (int, void…), true / false / null, this / self */
@@ -366,7 +368,7 @@
 /* Directives (#include, #define), décorateurs, shebang */
 .code-highlight .hljs-meta,
 .code-highlight .hljs-meta .hljs-keyword {
-  color: #af00db;
+  color: #a800d4;
 }
 
 .code-highlight .hljs-string,
@@ -379,7 +381,7 @@
 }
 
 .code-highlight .hljs-number {
-  color: #0b7a4f;
+  color: #0a7149;
 }
 
 /* Fonctions (définition et appel) */

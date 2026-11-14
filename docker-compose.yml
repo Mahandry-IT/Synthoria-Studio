@@ -6,6 +6,7 @@ services:
       target: runner
       args:
         - NEXT_PUBLIC_API_URL=http://api:8000   # inliné au build, dispo dans le bundle
+        - NEXT_PUBLIC_DARK_THEME=${NEXT_PUBLIC_DARK_THEME:-}   # "false" coupe le thème sombre (vide = actif)
     ports:
       - "3000:3000"
     env_file:

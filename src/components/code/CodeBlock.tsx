@@ -54,19 +54,19 @@ export function CodeBlock({ code, language }: CodeBlockProps) {
   }
 
   return (
-    <span className="my-2 block rounded-lg border border-gray-200 bg-gray-100 font-normal not-italic">
+    <span className="my-2 block rounded-card border border-line bg-sunken font-normal not-italic">
       {/* En-tête : langage à gauche, bouton copier à droite (jamais superposés au code) */}
-      <span className="flex items-center justify-between gap-2 px-3 pt-2">
-        <span className="min-w-0 truncate text-xs font-medium text-gray-500">{language}</span>
+      <span className="flex items-center justify-between gap-2 px-3 py-1">
+        <span className="min-w-0 truncate text-xs font-medium text-ink-3">{language}</span>
         <button
           type="button"
           onClick={handleCopy}
           aria-label={copied ? "Code copié" : "Copier le code"}
-          className="-mr-1.5 flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-800 focus-visible:outline-2 focus-visible:outline-indigo-500"
+          className="-my-2.5 -mr-2 flex min-h-11 shrink-0 items-center gap-1 rounded-ctrl px-2 text-xs text-ink-2 transition-colors hover:bg-line hover:text-ink focus-visible:outline-2 focus-visible:outline-accent"
         >
           {copied ? (
             <>
-              <CheckIcon sx={{ fontSize: 16 }} className="text-green-600" />
+              <CheckIcon sx={{ fontSize: 16 }} className="text-ok" />
               Copié
             </>
           ) : (
@@ -79,7 +79,7 @@ export function CodeBlock({ code, language }: CodeBlockProps) {
       </span>
       <code
         tabIndex={0}
-        className="code-highlight block overflow-x-auto whitespace-pre px-3 py-2.5 font-mono text-[13px] leading-relaxed text-gray-800 focus-visible:outline-2 focus-visible:outline-indigo-500"
+        className="code-highlight block overflow-x-auto whitespace-pre px-3 py-2.5 font-mono text-[13px] leading-relaxed text-ink focus-visible:outline-2 focus-visible:outline-accent"
       >
         {tokens ? renderTokens(tokens) : code}
       </code>

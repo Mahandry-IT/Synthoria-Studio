@@ -11,8 +11,8 @@ const COUNTDOWN_TICK_MS = 1_000;
 const COPIED_FEEDBACK_MS = 2_000;
 
 const ACTION_CLASS =
-  "rounded-md bg-white/20 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-white/30 " +
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:cursor-not-allowed disabled:opacity-60";
+  "min-h-11 rounded-ctrl bg-ink/20 px-3 py-1 text-xs font-medium text-bg transition-colors hover:bg-ink/30 " +
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bg disabled:cursor-not-allowed disabled:opacity-60";
 
 interface ErrorToastProps {
   info: ErrorInfo;
@@ -99,7 +99,7 @@ function ErrorDetails({ info, occurredAt, onPin }: { info: ErrorInfo; occurredAt
         {open ? "Masquer les détails" : "Voir détails"}
       </button>
       {open && (
-        <div id={panelId} className="mt-2 rounded-md bg-black/20 p-2 text-xs">
+        <div id={panelId} className="mt-2 rounded-ctrl bg-ink/20 p-2 text-xs">
           <dl className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 break-all">
             <DetailRow label="Statut" value={info.status?.toString()} />
             <DetailRow label="Requête" value={[info.method, info.url].filter(Boolean).join(" ")} />
@@ -108,7 +108,7 @@ function ErrorDetails({ info, occurredAt, onPin }: { info: ErrorInfo; occurredAt
             <DetailRow label="Date" value={occurredAt.toLocaleString("fr-FR")} />
           </dl>
           {info.debug !== undefined && (
-            <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-all rounded bg-black/20 p-1.5">
+            <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-all rounded-tag bg-ink/20 p-1.5">
               {JSON.stringify(info.debug, null, 2)}
             </pre>
           )}
