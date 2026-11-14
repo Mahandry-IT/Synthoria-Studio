@@ -315,6 +315,23 @@
   }
 }
 
+/*
+ * Fil des chapitres du lecteur : défilement horizontal sans barre (chevrons, tactile et clavier le
+ * remplacent) ; un fondu masque le bord droit tant que d'autres chapitres restent à découvrir.
+ */
+.chaps {
+  scrollbar-width: none;
+}
+
+.chaps::-webkit-scrollbar {
+  display: none;
+}
+
+.chaps[data-fade-end="true"] {
+  -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, #000 88%, transparent);
+}
+
 /* Texte riche dans une bulle `primary` : fonds de code clairs sur fond sombre, liens lisibles. */
 .on-primary .rich-text code,
 .on-primary .rich-text pre {

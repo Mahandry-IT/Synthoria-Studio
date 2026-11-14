@@ -15,7 +15,7 @@ export function SectionVideos({ videos, sessionId, onNoteSaved }: SectionVideosP
 
   return (
     <div className="mt-4">
-      <h4 className="mb-2 text-sm font-semibold text-gray-700">
+      <h4 className="mb-2 text-sm font-semibold text-ink-2">
         {videos.length > 1 ? "Vidéos de cette section" : "Vidéo de cette section"}
       </h4>
       <div className="grid gap-4 sm:grid-cols-2">

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/Button";
+import { SectionAside } from "./SectionAside";
 import { SectionNav } from "./SectionNav";
 import { CycleReader } from "./cycle/CycleReader";
 import { focusAfterRender, SectionReader } from "./SectionReader";
@@ -108,11 +109,11 @@ export function SectionsList({
   return (
     <section aria-labelledby="sections-heading">
       <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="sections-heading" className="text-lg font-semibold text-gray-900">
+        <h2 id="sections-heading" className="kicker">
           Sections
         </h2>
         {summary && (
-          <span className="text-sm text-gray-500" aria-live="polite">
+          <span className="font-mono text-xs text-ink-3" aria-live="polite">
             {summary}
           </span>
         )}
@@ -129,21 +130,21 @@ export function SectionsList({
         />
       )}
 
-      <div className="gap-6 lg:grid lg:grid-cols-[16rem_minmax(0,1fr)]">
-        <div className="mb-4 lg:sticky lg:top-4 lg:mb-0 lg:self-start">
-          <SectionNav
-            items={sections.map((s, i) => ({
-              key: keys[i],
-              title: ({ ...s, ...overrides[keys[i]] }.title ?? "").replace(/^\d+\.\s*/, ""),
-              duration: cycleDurationLabel({ ...s, ...overrides[keys[i]] }),
-              status: sectionStatus({ ...progress, current: id }, keys[i]),
-            }))}
-            currentKey={id}
-            onSelect={goTo}
-            summary={summary}
-          />
-        </div>
+      <div className="mb-5">
+        <SectionNav
+          items={sections.map((s, i) => ({
+            key: keys[i],
+            title: ({ ...s, ...overrides[keys[i]] }.title ?? "").replace(/^\d+\.\s*/, ""),
+            duration: cycleDurationLabel({ ...s, ...overrides[keys[i]] }),
+            status: sectionStatus({ ...progress, current: id }, keys[i]),
+          }))}
+          currentKey={id}
+          onSelect={goTo}
+        />
+      </div>
 
+      {/* La coquille reste en max-w-4xl : la colonne de repères n'apparaît qu'à partir de xl. */}
+      <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_13rem] xl:gap-8">
         <div className="min-w-0 space-y-4">
           {hasCycle(section) && section.cycle ? (
             <CycleReader
@@ -182,18 +183,25 @@ export function SectionsList({
 
           {sections.length > 1 && (
             <div className="flex items-center justify-between gap-2">
-              <Button type="button" variant="secondary" size="sm" disabled={previous === null} onClick={() => goTo(previous)}>
+              <Button type="button" variant="secondary" disabled={previous === null} onClick={() => goTo(previous)}>
                 ← Section précédente
               </Button>
-              <span className="text-xs text-gray-500">
+              {/* Sous sm, le numéro courant est déjà lisible dans le fil des chapitres : on garde la place aux deux boutons. */}
+              <span className="hidden font-mono text-xs text-ink-3 sm:inline">
                 {currentIndex + 1} / {sections.length}
               </span>
-              <Button type="button" variant="secondary" size="sm" disabled={next === null} onClick={() => goTo(next)}>
+              <Button type="button" variant="secondary" disabled={next === null} onClick={() => goTo(next)}>
                 Section suivante →
               </Button>
             </div>
           )}
         </div>
+        <SectionAside
+          index={currentIndex}
+          total={sections.length}
+          duration={cycleDurationLabel(section)}
+          summary={summary}
+        />
       </div>
     </section>
   );

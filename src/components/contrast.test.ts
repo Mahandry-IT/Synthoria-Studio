@@ -53,6 +53,12 @@ const screenPairs: [string, string][] = [
   ["primary-ink", "primary"],
   ["ink-2", "sunken"],
   ["ink-3", "surface"],
+  // Lecteur de cours : fil des chapitres (texte sur le fond de page), repères, encadrés et question posée.
+  ["ink", "bg"],
+  ["ink-2", "bg"],
+  ["ink-3", "bg"],
+  ["ink-3", "sunken"],
+  ["ok", "surface"],
 ];
 
 describe.each(Object.entries(themes))("contrastes des écrans Révisions et Tuteur, thème %s", (_n, t) => {

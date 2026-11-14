@@ -76,7 +76,7 @@ function SectionExplanation({ section }: { section: CourseSection }) {
       <div className="space-y-4">
         {subsections.map((sub, j) => (
           <div key={j}>
-            {sub.title && <h4 className="mb-1 text-sm font-medium text-gray-900">{sub.title}</h4>}
+            {sub.title && <h4 className="mb-1 font-serif text-base font-semibold text-ink">{sub.title}</h4>}
             <BlockRenderer blocks={sub.blocks} />
           </div>
         ))}
@@ -101,7 +101,7 @@ function SectionExplanation({ section }: { section: CourseSection }) {
     );
   }
   if (section.answer) return <AnswerBlock answer={section.answer} />;
-  return <p className="text-sm text-gray-500 italic">Pas de contenu disponible.</p>;
+  return <p className="text-sm italic text-ink-3">Pas de contenu disponible.</p>;
 }
 
 /** Titre affiché d'une étape : celui de la sous-section s'il existe, sinon le libellé du cycle. */
@@ -152,12 +152,12 @@ export function SectionReader({
   const header = (
     <>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 id={headingId} tabIndex={-1} className="text-base font-semibold text-indigo-600 focus:outline-none">
-          <span className="mr-2">{index + 1}.</span>
+        <h3 id={headingId} tabIndex={-1} className="font-serif text-xl font-semibold leading-snug text-ink">
+          <span className="mr-2 text-primary">{index + 1}.</span>
           <LatexText text={section.title.replace(/^\d+\.\s*/, "")} />
         </h3>
         <div className="flex items-center gap-2">
-          {done && <Badge variant="green">Terminée</Badge>}
+          {done && <Badge variant="ok">Terminée</Badge>}
           {sessionId && section.id && !section.incomplete && (
             <SectionNoteButton
               sessionId={sessionId}
@@ -180,7 +180,7 @@ export function SectionReader({
   // Lien vers l'exercice corrigé : en fin de section, après les encadrés et les vidéos.
   const exerciseButton = onDoExercise ? (
     <div className="mt-4 flex justify-end">
-      <Button type="button" variant="outline" onClick={onDoExercise}>
+      <Button type="button" variant="secondary" onClick={onDoExercise}>
         Faire l&apos;exercice
       </Button>
     </div>
@@ -201,7 +201,7 @@ export function SectionReader({
 
   if (section.incomplete) {
     return (
-      <Card id={anchorId} className="p-5">
+      <Card id={anchorId} className="p-4 sm:p-6">
         {header}
         {sessionId && section.id ? (
           <RegenerateSectionButton
@@ -225,7 +225,7 @@ export function SectionReader({
     // Encadrés et vidéos après le quiz : sans question, rien à spoiler ; sinon une fois terminée.
     const atEnd = visible && (done || (section.check_questions ?? []).length === 0);
     return (
-      <Card id={anchorId} className="p-5">
+      <Card id={anchorId} className="p-4 sm:p-6">
         {header}
         <div className="space-y-4">
           {hasChallenge && !visible && (
@@ -312,9 +312,9 @@ export function SectionReader({
   };
 
   return (
-    <Card id={anchorId} className="p-5">
+    <Card id={anchorId} className="p-4 sm:p-6">
       {header}
-      <p className="mb-3 text-xs text-gray-500" aria-live="polite">
+      <p className="kicker mb-4" aria-live="polite">
         Étape {revealed} sur {total}
       </p>
       <ol className="space-y-4">
@@ -342,33 +342,33 @@ export function SectionReader({
           const isCollapsed = collapsed.includes(step.key);
           const contentId = `${stepDomId(step)}-content`;
           return (
-            <li key={step.key} id={stepDomId(step)} className="rounded-lg border border-gray-100 p-3">
+            <li key={step.key} id={stepDomId(step)} className="rounded-card border border-line p-3 sm:p-4">
               <div className="flex items-center justify-between gap-2">
                 <h4
                   id={`${stepDomId(step)}-title`}
                   tabIndex={-1}
-                  className="text-sm font-semibold text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                  className="font-serif text-lg font-semibold leading-snug text-ink"
                 >
                   {stepTitle(step, section, i)}
                 </h4>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   aria-expanded={!isCollapsed}
                   aria-controls={contentId}
                   onClick={() => toggle(step.key)}
-                  className="rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                 >
                   {isCollapsed ? "Déplier" : "Replier"}
                   <span className="sr-only"> l&apos;étape {stepTitle(step, section, i)}</span>
-                </button>
+                </Button>
               </div>
               {/* `hidden` plutôt que démonter : les réponses en cours (Vérifie, Explique) sont conservées. */}
               <div id={contentId} hidden={isCollapsed} className="mt-2">
                 {renderStepContent(step)}
               </div>
               {canContinue && (
-                <div className="mt-3">
-                  <Button type="button" size="sm" onClick={() => continueTo(i + 1)}>
+                <div className="mt-4 flex flex-col gap-2 border-t border-line pt-4 sm:flex-row sm:justify-end">
+                  <Button type="button" className="w-full sm:w-auto" onClick={() => continueTo(i + 1)}>
                     Continuer
                     <span className="sr-only"> : {stepTitle(steps[i + 1], section, i + 1)}</span>
                   </Button>
