@@ -64,3 +64,15 @@ export function forgetPendingPlanId(planId: string): void {
     // stockage indisponible : rien à oublier
   }
 }
+
+/** Étapes affichées dans le fil de /ask (le podcast se lance ailleurs : pas de 4e étape). */
+export const ASK_STEP_LABELS = ["Sources", "Plan", "Cours"] as const;
+
+/**
+ * Étape courante du fil de /ask : 1 formulaire, 2 plan à valider (ou en cours de chargement),
+ * 3 génération du cours.
+ */
+export function askStep(phase: AskPhase, isGenerating: boolean, isLoadingPlan = false): 1 | 2 | 3 {
+  if (isGenerating) return 3;
+  return phase === "plan_review" || isLoadingPlan ? 2 : 1;
+}

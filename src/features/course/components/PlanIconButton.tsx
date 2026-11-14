@@ -5,7 +5,7 @@ interface PlanIconButtonProps {
   children: string;
 }
 
-/** Petit bouton textuel (↑ ↓ ＋ ✕) des actions d'une section du plan. */
+/** Bouton textuel (↑ ↓ ＋ ✕) des actions d'une section du plan : cible de 44 × 44 px. */
 export function PlanIconButton({ label, onClick, disabled, children }: PlanIconButtonProps) {
   return (
     <button
@@ -14,7 +14,7 @@ export function PlanIconButton({ label, onClick, disabled, children }: PlanIconB
       title={label}
       onClick={onClick}
       disabled={disabled}
-      className="rounded-md px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-30"
+      className="flex h-11 w-11 items-center justify-center rounded-ctrl text-base text-ink-2 transition-colors hover:bg-sunken disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-transparent motion-reduce:transition-none"
     >
       {children}
     </button>

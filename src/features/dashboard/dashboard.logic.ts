@@ -53,3 +53,9 @@ export function formatRelativeDate(iso: string, now: number): string {
   if (elapsed < 2 * DAY_MS) return "hier";
   return formatHistoryDate(iso);
 }
+
+/** Date du kicker du dashboard : « Samedi 14 novembre » (locale fr, majuscule initiale). */
+export function formatKickerDate(now: number): string {
+  const text = new Date(now).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}

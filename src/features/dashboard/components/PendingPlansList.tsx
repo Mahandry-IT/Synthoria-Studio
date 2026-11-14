@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import ScheduleIcon from "@mui/icons-material/Schedule";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
-import { Card } from "@/components/Card";
+import { ButtonLink } from "@/components/ButtonLink";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
 import { Pagination } from "@/components/Pagination";
+import { SectionHeading } from "@/components/PageHeader";
 import { useNow } from "@/shared/hooks/useNow";
 import { markdownToPlain } from "@/shared/utils/markdown";
 import { activePlans, formatCountdown, isExpiringSoon } from "../dashboard.logic";
@@ -17,7 +19,6 @@ import { useDeletePlan } from "../hooks/useDeletePlan";
 import { usePendingPlans } from "../hooks/usePendingPlans";
 import { useResumePlan } from "../hooks/useResumePlan";
 import { DashboardCardSkeleton } from "./DashboardCardSkeleton";
-
 
 /**
  * Plans en cours : proposés mais pas encore transformés en cours. Chaque plan affiche un compte
@@ -35,10 +36,12 @@ export function PendingPlansList() {
   if (isLoading) return <DashboardCardSkeleton label="plans en cours" />;
   if (error) {
     return (
-      <Card id="plans" className="scroll-mt-6 p-5">
-        <h2 className="mb-3 text-base font-semibold text-gray-900">Plans en cours</h2>
-        <ErrorState error={error} onRetry={() => refetch()} />
-      </Card>
+      <section id="plans" className="scroll-mt-6">
+        <SectionHeading title="Plans en cours" />
+        <div className="mt-4">
+          <ErrorState error={error} onRetry={() => refetch()} />
+        </div>
+      </section>
     );
   }
 
@@ -46,58 +49,62 @@ export function PendingPlansList() {
   const plans = activePlans(data?.data ?? [], now);
 
   return (
-    <Card id="plans" className="scroll-mt-6 p-5">
-      <div className="mb-3 flex items-center gap-2">
-        <ChecklistIcon fontSize="small" className="text-indigo-600" aria-hidden="true" />
-        <h2 className="text-base font-semibold text-gray-900">Plans en cours</h2>
-        {data && data.meta.total > 0 && <Badge variant="indigo">{data.meta.total}</Badge>}
-      </div>
+    <section id="plans" className="scroll-mt-6">
+      <SectionHeading
+        title="Plans en cours"
+        aside={data && data.meta.total > 0 ? <Badge variant="info">{data.meta.total}</Badge> : undefined}
+      />
 
       {plans.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center">
-          <p className="text-sm text-gray-600">Aucun plan en attente de validation.</p>
-          <Link
-            href="/ask"
-            className="mt-3 inline-block text-sm font-medium text-indigo-700 underline underline-offset-2 hover:text-indigo-900"
-          >
-            Poser une question
-          </Link>
-        </div>
+        <EmptyState className="mt-4"
+          icon={<ChecklistIcon fontSize="small" />}
+          title="Aucun plan en attente de validation."
+          action={
+            <ButtonLink href="/ask" variant="accent">
+              Poser une question
+            </ButtonLink>
+          }
+        />
       ) : (
-        <ul className="divide-y divide-gray-100">
-          {plans.map((plan) => {
+        <ul>
+          {plans.map((plan, index) => {
             const soon = isExpiringSoon(plan.expires_at, now);
+            const name = plan.title || markdownToPlain(plan.question);
 
             return (
-              <li key={plan.plan_id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
+              <li key={plan.plan_id} className="flex flex-wrap items-start gap-x-4 gap-y-3 border-b border-line py-4">
+                <span className="w-7 pt-1 font-mono text-xs text-ink-3" aria-hidden="true">
+                  {String((page - 1) * pageSize + index + 1).padStart(2, "0")}
+                </span>
                 <div className="min-w-0 flex-1 basis-48">
-                  <p className="line-clamp-1 text-sm font-medium text-gray-900">{plan.title || "Plan sans titre"}</p>
-                  <p className="line-clamp-2 text-xs text-gray-500">{markdownToPlain(plan.question)}</p>
-                  <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-                    <Badge variant="gray">
+                  <p className="line-clamp-2 font-serif text-lg leading-snug font-medium text-ink">
+                    {plan.title || "Plan sans titre"}
+                  </p>
+                  <p className="mt-1 line-clamp-2 text-sm text-ink-2">{markdownToPlain(plan.question)}</p>
+                  <p className="mt-2 flex flex-wrap items-center gap-2">
+                    <Badge variant="neutral">
                       {plan.sections_count} section{plan.sections_count > 1 ? "s" : ""}
                     </Badge>
-                    <span className={soon ? "font-medium text-amber-700" : "text-gray-500"}>
-                      <span aria-hidden="true">{soon ? "⚠ " : "⏱ "}</span>
+                    <Badge variant={soon ? "warn" : "neutral"}>
+                      <ScheduleIcon sx={{ fontSize: 14 }} aria-hidden="true" />
                       Expire dans {formatCountdown(plan.expires_at, now)}
-                    </span>
+                    </Badge>
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="ml-auto flex items-center gap-2">
                   <Button
                     type="button"
-                    size="sm"
-                    variant="outline"
-                    aria-label={`Reprendre le plan ${plan.title || markdownToPlain(plan.question)}`}
+                    variant="secondary"
+                    aria-label={`Reprendre le plan ${name}`}
                     onClick={() => resume(plan.plan_id)}
                   >
                     Reprendre
                   </Button>
                   <Button
                     type="button"
-                    size="sm"
+                    size="icon"
                     variant="danger"
-                    aria-label={`Supprimer le plan ${plan.title || markdownToPlain(plan.question)}`}
+                    aria-label={`Supprimer le plan ${name}`}
                     onClick={() => setConfirmingPlanId(plan.plan_id)}
                   >
                     <DeleteOutlineIcon fontSize="small" />
@@ -131,6 +138,6 @@ export function PendingPlansList() {
           onClose={() => setConfirmingPlanId(null)}
         />
       )}
-    </Card>
+    </section>
   );
 }

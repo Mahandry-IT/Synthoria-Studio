@@ -3,6 +3,7 @@ import type { PendingPlanItem } from "@/features/course/course.types";
 import {
   activePlans,
   formatCountdown,
+  formatKickerDate,
   formatRelativeDate,
   isExpiringSoon,
   pickRecent,
@@ -100,5 +101,15 @@ describe("formatRelativeDate", () => {
 
   it("au-delà de 2 jours : date JJ/MM/AAAA", () => {
     expect(formatRelativeDate(at(-5 * 24 * HOUR), NOW)).toMatch(/^\d{2}\/\d{2}\/\d{4}$/);
+  });
+});
+
+describe("formatKickerDate", () => {
+  it("jour de la semaine, jour et mois en français, majuscule initiale", () => {
+    expect(formatKickerDate(new Date(2026, 10, 14, 12).getTime())).toBe("Samedi 14 novembre");
+  });
+
+  it("jour du mois sans zéro initial", () => {
+    expect(formatKickerDate(new Date(2026, 0, 5, 12).getTime())).toBe("Lundi 5 janvier");
   });
 });

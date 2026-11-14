@@ -4,7 +4,7 @@ import { type ButtonHTMLAttributes, forwardRef } from "react";
 import { cx } from "@/shared/utils/cx";
 
 /** `outline` est l'ancien nom de `secondary` (conservé tant que les écrans ne sont pas migrés). */
-type ButtonVariant = "primary" | "accent" | "secondary" | "outline" | "ghost" | "danger";
+export type ButtonVariant = "primary" | "accent" | "secondary" | "outline" | "ghost" | "danger";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
@@ -32,6 +32,17 @@ const SIZE_CLASSES = {
   icon: "h-11 w-11 p-0 text-sm",
 } as const;
 
+/** Classes communes au bouton et au lien-bouton (`ButtonLink`) : forme, taille, variante. */
+export function buttonBaseClassName(variant: ButtonVariant, size: "md" | "sm" | "icon"): string {
+  return cx(
+    "inline-flex items-center justify-center gap-2 rounded-ctrl border font-semibold whitespace-nowrap",
+    "transition-[background-color,transform] duration-(--d-fast) ease-(--ease-editorial) motion-reduce:transition-none",
+    "hover:-translate-y-px motion-reduce:hover:translate-y-0 disabled:hover:translate-y-0",
+    SIZE_CLASSES[size],
+    BUTTON_VARIANT_CLASSES[variant],
+  );
+}
+
 /**
  * Bouton réutilisable : variantes, tailles (`md` 44 px, `sm`, `icon` 44 × 44) et état `loading`.
  * Le survol soulève le bouton d'1 px (désactivé sous `prefers-reduced-motion`).
@@ -46,12 +57,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isDisabled}
         suppressHydrationWarning
         className={cx(
-          "inline-flex items-center justify-center gap-2 rounded-ctrl border font-semibold whitespace-nowrap",
-          "transition-[background-color,transform] duration-(--d-fast) ease-(--ease-editorial)",
-          "enabled:hover:-translate-y-px motion-reduce:transition-none motion-reduce:enabled:hover:translate-y-0",
+          buttonBaseClassName(variant, size),
           "disabled:cursor-not-allowed disabled:opacity-45",
-          SIZE_CLASSES[size],
-          BUTTON_VARIANT_CLASSES[variant],
           className,
         )}
         {...props}

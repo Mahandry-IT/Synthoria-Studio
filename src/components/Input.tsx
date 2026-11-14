@@ -22,7 +22,7 @@ interface FieldExtras {
   fullWidth?: boolean;
 }
 
-const CONTROL_CLASSES =
+export const CONTROL_CLASSES =
   "min-h-11 rounded-ctrl border border-line-strong bg-surface px-3.5 text-sm text-ink " +
   "placeholder:text-ink-3 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent " +
   "aria-invalid:border-err disabled:cursor-not-allowed disabled:opacity-45";

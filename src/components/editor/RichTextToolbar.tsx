@@ -37,7 +37,7 @@ export function RichTextToolbar({ editor, tools, disabled = false }: RichTextToo
   });
 
   return (
-    <div role="toolbar" aria-label="Mise en forme" className="flex flex-wrap gap-0.5 border-b border-gray-200 px-1.5 py-1">
+    <div role="toolbar" aria-label="Mise en forme" className="flex flex-wrap gap-0.5 border-b border-line px-1.5 py-1">
       {tools.map((tool, i) => {
         const { label, Icon } = TOOL_META[tool];
         const isActive = active?.[i] ?? false;
@@ -54,9 +54,8 @@ export function RichTextToolbar({ editor, tools, disabled = false }: RichTextToo
             onClick={() => toggleTool(editor, tool)}
             className={[
               "flex h-7 w-7 items-center justify-center rounded-md transition-colors",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500",
-              "disabled:cursor-not-allowed disabled:opacity-40",
-              isActive ? "bg-indigo-100 text-indigo-700" : "text-gray-600 hover:bg-gray-100",
+              "disabled:cursor-not-allowed disabled:opacity-45",
+              isActive ? "bg-primary-soft text-primary" : "text-ink-2 hover:bg-sunken",
             ].join(" ")}
           >
             <Icon sx={{ fontSize: 18 }} />

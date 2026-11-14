@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, type ReactNode } from "react";
 import { useAllFiles } from "../hooks/useAllFiles";
 import { visibleFiles } from "../fileFolders";
+import { EmptyState } from "@/components/EmptyState";
 import { Skeleton } from "@/components/Skeleton";
 import { Pagination } from "@/components/Pagination";
 import type { FolderFilter } from "@/components/folders/folders.types";
@@ -31,6 +32,8 @@ interface FileListProps {
   pageSize?: number;
   /** Hauteur max de la liste (défilement interne) ; sans valeur, la page entière est affichée */
   scrollClassName?: string;
+  /** Action proposée quand aucun fichier n'est ingéré (ex. lien vers l'import). */
+  emptyAction?: ReactNode;
 }
 
 /** Clé stable d'une vue, pour repartir de la page 1 quand recherche ou dossier changent. */
@@ -54,6 +57,7 @@ export function FileList({
   draggable = false,
   pageSize: initialPageSize = DEFAULT_PAGE_SIZE,
   scrollClassName = "max-h-48 overflow-y-auto",
+  emptyAction,
 }: FileListProps) {
   // La page appartient à une vue (recherche + dossier) : quand elle change, on repart de la page 1 sans effet
   const key = viewKey(search, folderFilter);
@@ -75,12 +79,20 @@ export function FileList({
   );
 
   if (isLoading) {
-    return <Skeleton lines={3} className="p-4" />;
+    return (
+      <div role="status" aria-label="Chargement des fichiers" aria-busy="true">
+        {[0, 1, 2].map((row) => (
+          <div key={row} className="border-b border-line px-2 py-3">
+            <Skeleton lines={1} aria-hidden="true" />
+          </div>
+        ))}
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <p className="text-sm text-red-600">
+      <p role="alert" className="text-sm text-err">
         Impossible de charger la liste des fichiers.
       </p>
     );
@@ -88,15 +100,13 @@ export function FileList({
 
   if (allFiles.length === 0) {
     return (
-      <p className="text-sm text-gray-500">
-        Aucun fichier PDF ingesté. Uploadez-en un dans l&apos;onglet précédent.
-      </p>
+      <EmptyState className="mt-4" title="Aucun fichier PDF ingesté." action={emptyAction} />
     );
   }
 
   if (filteredData.length === 0) {
     return (
-      <p className="text-sm text-gray-500">
+      <p className="py-4 text-sm text-ink-2">
         {search.trim()
           ? `Aucun fichier ne correspond à « ${search.trim()} ».`
           : "Aucun fichier dans ce dossier."}
@@ -120,13 +130,14 @@ export function FileList({
   return (
     <div>
       <div className={scrollClassName}>
-        <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200" role="listbox" aria-label="Fichiers disponibles">
+        <ul className="border-t border-line" role="listbox" aria-label="Fichiers disponibles">
           {paginatedData.map((file) => (
             <FileRow
               key={file.id}
               file={file}
               isSelected={selected.includes(file.filename)}
               onToggle={() => toggle(file.filename)}
+              selectable={onSelect !== undefined}
               draggable={draggable}
               showFolder={folderFilter === null}
               onMove={onMove}

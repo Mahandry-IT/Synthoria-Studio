@@ -2,15 +2,18 @@
 
 import { useState, useCallback } from "react";
 import { Button } from "@/components/Button";
+import { Option } from "@/components/Check";
 import { RichTextEditor } from "@/components/editor/RichTextEditor";
 import { ContextFilePicker } from "@/features/ingestion/components/ContextFilePicker";
 import { COURSE_QUESTION_MAX_LENGTH } from "@/shared/utils/constants";
+import { cx } from "@/shared/utils/cx";
 import { questionInputSchema } from "../course.schema";
 import type { QuestionInputValues } from "../course.schema";
 import {
   COURSE_DEPTH_OPTIONS,
   DEFAULT_COURSE_DEPTH,
   isCourseDepth,
+  shortDepthHelp,
   type CourseDepth,
 } from "../courseDepth";
 
@@ -22,7 +25,8 @@ interface QuestionInputProps {
 /**
  * Champ de question (éditeur riche, Markdown) avec sélecteur de fichiers optionnel et compteur
  * de caractères (Markdown compris : c'est ce que le backend reçoit et limite).
- * Valide la question via Zod avant envoi.
+ * Valide la question via Zod avant envoi. Deux colonnes sur grand écran : question et niveau de
+ * détail à gauche (ordre de tabulation naturel), fichiers de contexte à droite.
  *
  * - Pas de `filename` → Mode 3 (recherche web)
  * - `filename` présent → Mode 2 (basé sur vos documents)
@@ -60,74 +64,83 @@ export function QuestionInput({ onSubmit, isPending }: QuestionInputProps) {
   );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <p className="block text-sm font-medium text-gray-700 mb-1">Votre question</p>
-        <RichTextEditor
-          id="question-input"
-          ariaLabel="Votre question"
-          value={question}
-          onChange={setQuestion}
-          placeholder="Posez votre question ici…"
-          disabled={isPending}
-          invalid={isOverLimit}
-          minRows={4}
-        />
-        <div className="mt-1 flex items-center justify-between text-xs">
-          <span className={isOverLimit ? "text-red-600 font-medium" : "text-gray-400"}>
-            {charCount} / {COURSE_QUESTION_MAX_LENGTH}
-          </span>
-          {selectedFiles.length > 0 ? (
-            <span className="text-indigo-600">
-              Mode 2 — basé sur vos documents
-            </span>
-          ) : (
-            <span className="text-gray-400">
-              Mode 3 — recherche web
-            </span>
-          )}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid gap-x-10 gap-y-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+        <div className="min-w-0 space-y-6">
+          <div>
+            <p className="mb-1.5 text-sm font-medium text-ink">Votre question</p>
+            <RichTextEditor
+              id="question-input"
+              ariaLabel="Votre question"
+              value={question}
+              onChange={setQuestion}
+              placeholder="Posez votre question ici…"
+              disabled={isPending}
+              invalid={isOverLimit}
+              minRows={4}
+            />
+            <div className="mt-1.5 flex items-center justify-between gap-3 text-xs">
+              <span className={cx("font-mono", isOverLimit ? "font-medium text-err" : "text-ink-3")}>
+                {charCount} / {COURSE_QUESTION_MAX_LENGTH}
+              </span>
+              {selectedFiles.length > 0 ? (
+                <span className="text-primary">Mode 2 — basé sur vos documents</span>
+              ) : (
+                <span className="text-ink-3">Mode 3 — recherche web</span>
+              )}
+            </div>
+          </div>
+
+          <fieldset disabled={isPending} aria-describedby="course-depth-help" className="min-w-0">
+            <legend className="mb-1.5 text-sm font-medium text-ink">Niveau de détail</legend>
+            <div className="grid gap-2">
+              {COURSE_DEPTH_OPTIONS.map((option) => (
+                <Option
+                  key={option.value}
+                  id={`course-depth-${option.value}`}
+                  name="course-depth"
+                  value={option.value}
+                  checked={depth === option.value}
+                  onChange={(e) => {
+                    if (isCourseDepth(e.target.value)) setDepth(e.target.value);
+                  }}
+                  label={
+                    <>
+                      <span className="block font-semibold">{option.label}</span>
+                      <span className="mt-0.5 block text-xs text-ink-2">{shortDepthHelp(option.help)}</span>
+                    </>
+                  }
+                />
+              ))}
+            </div>
+            <p id="course-depth-help" className="mt-2 text-xs text-ink-2">
+              {depthHelp}
+            </p>
+          </fieldset>
+        </div>
+
+        <div className="min-w-0">
+          <ContextFilePicker selected={selectedFiles} onChange={setSelectedFiles} />
         </div>
       </div>
 
-      <ContextFilePicker selected={selectedFiles} onChange={setSelectedFiles} />
-
-      <div>
-        <label htmlFor="course-depth" className="block text-sm font-medium text-gray-700 mb-1">
-          Niveau de détail
-        </label>
-        <select
-          id="course-depth"
-          value={depth}
-          onChange={(e) => {
-            if (isCourseDepth(e.target.value)) setDepth(e.target.value);
-          }}
-          disabled={isPending}
-          aria-describedby="course-depth-help"
-          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-60 sm:w-64"
-        >
-          {COURSE_DEPTH_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        <p id="course-depth-help" className="mt-1 text-xs text-gray-500">
-          {depthHelp}
-        </p>
-      </div>
-
       {validationError && (
-        <p className="text-sm text-red-600">{validationError}</p>
+        <p role="alert" className="text-sm text-err">
+          {validationError}
+        </p>
       )}
 
-      <Button
-        type="submit"
-        loading={isPending}
-        disabled={!question.trim() || isOverLimit}
-        className="w-full"
-      >
-        Générer le cours
-      </Button>
+      <div className="flex justify-end">
+        <Button
+          type="submit"
+          variant="accent"
+          loading={isPending}
+          disabled={!question.trim() || isOverLimit}
+          className="w-full sm:w-auto"
+        >
+          Générer le cours
+        </Button>
+      </div>
     </form>
   );
 }

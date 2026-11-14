@@ -5,15 +5,13 @@ import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { RichTextEditor } from "@/components/editor/RichTextEditor";
 import { INLINE_TOOLS } from "@/components/editor/richTextTools";
+import { CONTROL_CLASSES, Select } from "@/components/Input";
 import { SECTION_TYPE_LABELS, type EditableSection } from "../planEditing";
 import type { PlannedSectionType } from "../course.types";
 import { PlanIconButton } from "./PlanIconButton";
 
-const FIELD_CLASSES = [
-  "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm",
-  "placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500",
-  "disabled:opacity-50",
-].join(" ");
+/** Champ titre : mêmes tokens que `Input` (l'`AutoResizeTextarea` grandit avec son contenu). */
+const FIELD_CLASSES = `${CONTROL_CLASSES} block w-full py-2.5`;
 
 const SECTION_TYPES = Object.keys(SECTION_TYPE_LABELS) as PlannedSectionType[];
 
@@ -48,27 +46,30 @@ export function PlanSectionEditor({
   const id = section.key;
 
   return (
-    <Card className="p-4">
+    <Card className="p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-800">
-            {position}
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span
+            aria-hidden="true"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft font-mono text-xs font-medium text-primary"
+          >
+            {String(position).padStart(2, "0")}
           </span>
-          <select
+          <Select
             aria-label={`Type de la section ${position}`}
             value={section.type}
             disabled={disabled}
             onChange={(e) => onChange({ type: e.target.value as PlannedSectionType })}
-            className="rounded-lg border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+            fullWidth={false}
           >
             {SECTION_TYPES.map((type) => (
               <option key={type} value={type}>
                 {SECTION_TYPE_LABELS[type]}
               </option>
             ))}
-          </select>
+          </Select>
           {section.mastery === "known" && (
-            <Badge variant="green" title="Pré-test réussi : cette section sera condensée dans le cours">
+            <Badge variant="ok" title="Pré-test réussi : cette section sera condensée dans le cours">
               Déjà maîtrisée
             </Badge>
           )}
@@ -76,14 +77,14 @@ export function PlanSectionEditor({
         <div className="ml-auto flex shrink-0 items-center">
           <Button
             type="button"
-            size="sm"
+            size="icon"
             className="mr-1"
             aria-label={`Compléter la section ${position} avec l'IA`}
             title="Compléter cette section avec l'IA"
             disabled={disabled}
             onClick={onRefine}
           >
-            <AutoAwesomeIcon sx={{ fontSize: 16 }} />
+            <AutoAwesomeIcon sx={{ fontSize: 18 }} />
           </Button>
           <PlanIconButton label={`Monter la section ${position}`} onClick={() => onMove(-1)} disabled={disabled || isFirst}>
             ↑
@@ -100,9 +101,9 @@ export function PlanSectionEditor({
         </div>
       </div>
 
-      <div className="mt-3 space-y-3">
+      <div className="mt-4 space-y-4">
         <div>
-          <label htmlFor={`${id}-title`} className="mb-1 block text-xs font-medium text-gray-600">
+          <label htmlFor={`${id}-title`} className="mb-1.5 block text-sm font-medium text-ink">
             Titre
           </label>
           <AutoResizeTextarea
@@ -120,7 +121,7 @@ export function PlanSectionEditor({
           />
         </div>
         <div>
-          <p className="mb-1 block text-xs font-medium text-gray-600">Objectif</p>
+          <p className="mb-1.5 block text-sm font-medium text-ink">Objectif</p>
           <RichTextEditor
             id={`${id}-objective`}
             ariaLabel={`Objectif de la section ${position}`}
@@ -133,8 +134,8 @@ export function PlanSectionEditor({
           />
         </div>
         <div>
-          <p className="mb-1 block text-xs font-medium text-gray-600">
-            Sous-thèmes <span className="font-normal text-gray-400">(une puce par sous-thème)</span>
+          <p className="mb-1.5 block text-sm font-medium text-ink">
+            Sous-thèmes <span className="font-normal text-ink-3">(une puce par sous-thème)</span>
           </p>
           <RichTextEditor
             id={`${id}-subtopics`}

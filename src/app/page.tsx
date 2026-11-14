@@ -1,27 +1,37 @@
 "use client";
 
+import { ButtonLink } from "@/components/ButtonLink";
+import { PageHeader } from "@/components/PageHeader";
 import { PendingPlansList } from "@/features/dashboard/components/PendingPlansList";
 import { RecentPodcastsCard } from "@/features/dashboard/components/RecentPodcastsCard";
+import { useKickerDate } from "@/features/dashboard/hooks/useKickerDate";
 import { DueReviewCard } from "@/features/review/components/DueReviewCard";
 
 /**
- * Tableau de bord : derniers podcasts (une carte) et plans de cours en attente de validation.
- * Chaque carte charge et échoue indépendamment de l'autre.
+ * Tableau de bord : cartes à réviser, plans en attente de validation (colonne principale) et
+ * derniers podcasts. Chaque section charge et échoue indépendamment des autres.
  */
 export default function DashboardPage() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Tableau de bord</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Révisez vos cartes du jour, retrouvez vos derniers podcasts et reprenez les plans de cours que vous n&apos;avez pas encore validés.
-        </p>
-      </div>
+  const kicker = useKickerDate();
 
-      <div className="grid items-start gap-6 lg:grid-cols-2">
+  return (
+    <div className="space-y-10">
+      <PageHeader
+        // espace insécable : la ligne du kicker garde sa hauteur avant que la date soit connue
+        kicker={kicker || " "}
+        title="Tableau de bord"
+        description="Révisez vos cartes du jour, retrouvez vos derniers podcasts et reprenez les plans de cours que vous n'avez pas encore validés."
+        actions={
+          <ButtonLink href="/ask" variant="accent" className="w-full sm:w-auto">
+            Nouveau cours
+          </ButtonLink>
+        }
+      />
+
+      <div className="min-w-0 space-y-10">
         <DueReviewCard />
-        <RecentPodcastsCard />
         <PendingPlansList />
+        <RecentPodcastsCard />
       </div>
     </div>
   );

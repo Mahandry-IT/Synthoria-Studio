@@ -5,28 +5,30 @@ import { useDraggable } from "@dnd-kit/core";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import DriveFileMoveOutlinedIcon from "@mui/icons-material/DriveFileMoveOutlined";
 import { Badge } from "@/components/Badge";
+import { Button } from "@/components/Button";
 import { markdownToPlain } from "@/shared/utils/markdown";
+import { cx } from "@/shared/utils/cx";
 import { folderLabel } from "@/components/folders/folders.utils";
 import type { DragData } from "@/components/folders/folders.dnd";
 import type { CourseHistoryItem } from "../history.types";
+import { formatHistoryDateTime, historyModeLabel } from "../history.utils";
 
 interface HistoryItemProps {
   item: CourseHistoryItem;
   onDeleteClick: (id: string) => void;
   onMoveClick: (item: CourseHistoryItem) => void;
-  /** Affiche le badge de dossier — utile en vue « Tous les cours », redondant dans un dossier déjà filtré. */
+  /** Affiche le dossier — utile en vue « Tous les cours », redondant dans un dossier déjà filtré. */
   showFolder?: boolean;
+  /** Classe de grille des colonnes (à partir de `md`), fournie par la liste pour aligner l'en-tête. */
+  gridClassName: string;
 }
 
 /**
- * Ligne d'historique : question tronquée, badge mode, heure exacte, boutons déplacer/supprimer.
- * Le lien et les boutons sont des éléments cliquables distincts (jamais un bouton dans un lien).
+ * Ligne d'historique : titre et date, dossier, type, boutons déplacer/supprimer. Le lien et les
+ * boutons sont des éléments cliquables distincts (jamais un bouton dans un lien). En mobile, la
+ * ligne s'empile : titre et actions, puis dossier et type.
  */
-export function HistoryItem({ item, onDeleteClick, onMoveClick, showFolder = false }: HistoryItemProps) {
-  const time = new Date(item.created_at).toLocaleTimeString("fr-FR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+export function HistoryItem({ item, onDeleteClick, onMoveClick, showFolder = false, gridClassName }: HistoryItemProps) {
   const dragData: DragData<CourseHistoryItem> = { item };
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: item.id, data: dragData });
 
@@ -35,42 +37,48 @@ export function HistoryItem({ item, onDeleteClick, onMoveClick, showFolder = fal
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`group flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-gray-50 ${
-        isDragging ? "opacity-40" : ""
-      }`}
+      className={cx(
+        "group grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 rounded-ctrl px-2 py-3 transition-colors hover:bg-sunken motion-reduce:transition-none md:gap-y-0",
+        gridClassName,
+        isDragging && "opacity-40",
+      )}
     >
-      <Link href={`/history/${item.id}`} className="flex min-w-0 flex-1 items-center justify-between gap-3">
-        <div className="flex-1 truncate">
-          <span className="text-gray-900">{markdownToPlain(item.question)}</span>
-          <span className="ml-2 text-xs text-gray-400">{time}</span>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {showFolder && <Badge variant="gray">{folderLabel(item)}</Badge>}
-          <Badge variant={item.mode === "file_question" ? "indigo" : "green"}>
-            {item.mode === "file_question" ? "📄" : "🔍"}
-          </Badge>
-        </div>
+      <Link href={`/history/${item.id}`} className="col-start-1 row-start-1 block min-w-0 py-1">
+        <span className="line-clamp-2 font-serif text-lg leading-snug font-medium text-ink">
+          {markdownToPlain(item.question)}
+        </span>
+        <span className="mt-0.5 block font-mono text-xs text-ink-3">{formatHistoryDateTime(item.created_at)}</span>
       </Link>
-      <button
-        type="button"
-        aria-label="Déplacer vers un dossier"
-        title="Déplacer vers un dossier"
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={() => onMoveClick(item)}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-      >
-        <DriveFileMoveOutlinedIcon fontSize="small" />
-      </button>
-      <button
-        type="button"
-        aria-label="Supprimer ce cours"
-        title="Supprimer ce cours"
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={() => onDeleteClick(item.id)}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
-      >
-        <DeleteOutlineIcon fontSize="small" />
-      </button>
+      <div className="col-span-2 row-start-2 flex flex-wrap items-center gap-2 md:contents">
+        {showFolder && <span className="min-w-0 truncate text-sm text-ink-2">{folderLabel(item)}</span>}
+        <span>
+          <Badge variant={item.mode === "file_question" ? "info" : "neutral"}>{historyModeLabel(item.mode)}</Badge>
+        </span>
+      </div>
+      <div className="col-start-2 row-start-1 flex items-center justify-end gap-1 md:col-auto md:row-auto">
+        <Button
+          type="button"
+          size="icon"
+          variant="secondary"
+          aria-label="Déplacer vers un dossier"
+          title="Déplacer vers un dossier"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => onMoveClick(item)}
+        >
+          <DriveFileMoveOutlinedIcon fontSize="small" />
+        </Button>
+        <Button
+          type="button"
+          size="icon"
+          variant="danger"
+          aria-label="Supprimer ce cours"
+          title="Supprimer ce cours"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => onDeleteClick(item.id)}
+        >
+          <DeleteOutlineIcon fontSize="small" />
+        </Button>
+      </div>
     </div>
   );
 }

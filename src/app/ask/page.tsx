@@ -8,6 +8,10 @@ import { PlanReview } from "@/features/course/components/PlanReview";
 import { LoadingModal } from "@/components/LoadingModal";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
+import { PageHeader } from "@/components/PageHeader";
+import { Skeleton } from "@/components/Skeleton";
+import { AskStepper } from "@/features/course/components/AskStepper";
+import { askStep } from "@/features/course/askFlow";
 import { useAskFlow } from "@/features/course/hooks/useAskFlow";
 
 /**
@@ -20,6 +24,7 @@ export default function AskPage() {
   const flow = useAskFlow();
   const isBusy = flow.isPlanning || flow.isGenerating || flow.isOpeningCourse;
   const showResult = flow.view === "result" && (flow.phase === "plan_review" || flow.isLoadingPlan);
+  const step = askStep(flow.phase, flow.isGenerating, flow.isLoadingPlan);
 
   // Modals d'attente, communs aux deux écrans : plan → cours
   const loadingModals = (
@@ -46,10 +51,12 @@ export default function AskPage() {
 
   const resultScreen = (
     <div className="space-y-6">
+      <h1 className="sr-only">Plan du cours</h1>
+      <AskStepper step={step} />
       <div>
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           onClick={flow.backToForm}
           disabled={isBusy}
         >
@@ -57,7 +64,12 @@ export default function AskPage() {
         </Button>
       </div>
 
-      {flow.isLoadingPlan && <p className="text-sm text-gray-500">Chargement du plan…</p>}
+      {flow.isLoadingPlan && (
+        <div role="status" aria-busy="true">
+          <p className="mb-3 text-sm text-ink-2">Chargement du plan…</p>
+          <Skeleton lines={4} aria-hidden="true" />
+        </div>
+      )}
 
       {flow.pendingPlan && !flow.isPlanning && (
         <PlanReview
@@ -73,18 +85,17 @@ export default function AskPage() {
 
   const formScreen = (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Poser une question</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Demandez une explication sur un sujet. Vous pouvez sélectionner des
-          fichiers ingestés comme contexte. Un plan du cours vous est
-          d&apos;abord proposé : vous pouvez le valider ou le modifier.
-        </p>
-      </div>
+      <PageHeader
+        kicker="Nouveau cours"
+        title="Poser une question"
+        description="Demandez une explication sur un sujet. Vous pouvez sélectionner des fichiers ingestés comme contexte. Un plan du cours vous est d'abord proposé : vous pouvez le valider ou le modifier."
+      />
+
+      <AskStepper step={step} />
 
       {flow.phase !== "question" && (
         <Card className="flex flex-wrap items-center justify-between gap-3 p-4">
-          <p className="text-sm text-gray-700">
+          <p className="text-sm text-ink">
             {flow.phase === "plan_review"
               ? "Un plan de cours est en attente de validation."
               : "Votre dernier cours est disponible."}
@@ -108,28 +119,28 @@ export default function AskPage() {
       </Card>
 
       {flow.planFailed && !flow.isPlanning && flow.phase === "question" && (
-        <Card className="space-y-3 p-5">
-          <p className="text-sm text-gray-700">
+        <div role="alert" className="space-y-3 rounded-card border border-err bg-err-soft p-5">
+          <p className="text-sm text-ink">
             Le plan n&apos;a pas pu être généré. Vous pouvez réessayer ou
             générer directement le cours, sans étape de validation du plan.
           </p>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <Button
               type="button"
-              variant="secondary"
+              variant="primary"
               onClick={flow.regeneratePlan}
             >
               Réessayer le plan
             </Button>
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               onClick={flow.generateDirect}
             >
               Générer directement le cours
             </Button>
           </div>
-        </Card>
+        </div>
       )}
     </div>
   );

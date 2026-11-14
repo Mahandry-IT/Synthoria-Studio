@@ -8,17 +8,18 @@ import { Button } from "@/components/Button";
 import { DEFAULT_FOLDER, DEFAULT_SUBFOLDER } from "./folders.constants";
 import type { FolderPlacement, FolderSummary } from "./folders.types";
 
-/** Style du champ MUI pour matcher les inputs Tailwind du reste de l'app (rounded-lg, border-gray-300, focus indigo). */
+/** Style du champ MUI pour matcher les champs du carnet (tokens : surface, line-strong, focus accent). */
 const fieldSx = {
   "& .MuiOutlinedInput-root": {
-    borderRadius: "0.5rem",
+    borderRadius: "var(--r-md)",
     fontSize: "0.875rem",
-    backgroundColor: "#fff",
-    "& fieldset": { borderColor: "#d1d5db" },
-    "&:hover fieldset": { borderColor: "#d1d5db" },
-    "&.Mui-focused fieldset": { borderColor: "#6366f1", borderWidth: "1px" },
+    color: "var(--ink)",
+    backgroundColor: "var(--surface)",
+    "& fieldset": { borderColor: "var(--line-strong)" },
+    "&:hover fieldset": { borderColor: "var(--line-strong)" },
+    "&.Mui-focused fieldset": { borderColor: "var(--accent)", borderWidth: "2px" },
   },
-  "& .MuiOutlinedInput-input": { padding: "0.5rem 0.75rem" },
+  "& .MuiOutlinedInput-input": { padding: "0.5rem 0.875rem" },
 } as const;
 
 /** Trouve, parmi une liste de noms, celui qui correspond à `value` sans tenir compte de la casse. */
@@ -69,16 +70,16 @@ export function MoveToFolderDialog({ title, current, folders, loading = false, o
 
   return (
     <Modal onClose={onClose} labelledBy={titleId} size="md">
-      <h2 id={titleId} className="text-base font-semibold text-gray-900">
+      <h2 id={titleId} className="font-serif text-xl font-medium text-ink">
         {title}
       </h2>
-      <p className="mt-0.5 text-sm text-gray-500">
+      <p className="mt-1 text-sm text-ink-2">
         Choisissez un dossier existant dans les suggestions, ou tapez un nouveau nom pour en créer un.
       </p>
 
       <div className="mt-4 space-y-3">
         <div>
-          <label htmlFor={folderId} className="mb-1 block text-xs font-medium text-gray-600">
+          <label htmlFor={folderId} className="mb-1 block text-sm font-medium text-ink">
             Dossier
           </label>
           <Autocomplete
@@ -97,7 +98,7 @@ export function MoveToFolderDialog({ title, current, folders, loading = false, o
         </div>
 
         <div>
-          <label htmlFor={subfolderId} className="mb-1 block text-xs font-medium text-gray-600">
+          <label htmlFor={subfolderId} className="mb-1 block text-sm font-medium text-ink">
             Sous-dossier (optionnel)
           </label>
           <Autocomplete
