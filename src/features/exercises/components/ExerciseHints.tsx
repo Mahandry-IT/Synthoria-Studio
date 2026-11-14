@@ -14,25 +14,25 @@ export function ExerciseHints({ hints, revealed, onReveal }: ExerciseHintsProps)
   const shown = visibleHints(hints, revealed);
   return (
     <section aria-labelledby="exercise-hints-title" className="space-y-2">
-      <h4 id="exercise-hints-title" className="text-sm font-semibold text-gray-900">
+      <h4 id="exercise-hints-title" className="font-serif text-base font-medium text-ink">
         Indices
       </h4>
       {shown.length > 0 && (
         <ol className="space-y-2" aria-live="polite">
           {shown.map((hint, i) => (
-            <li key={i} className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
-              <span className="font-medium">Indice {i + 1} : </span>
+            <li key={i} className="rounded-card border-l-[3px] border-accent bg-primary-soft p-3 text-sm text-ink">
+              <span className="font-mono text-xs font-semibold text-primary">Indice {i + 1} : </span>
               <RichText text={hint} />
             </li>
           ))}
         </ol>
       )}
       {hasMoreHints(hints, revealed) ? (
-        <Button type="button" variant="secondary" size="sm" onClick={onReveal}>
+        <Button type="button" variant="secondary" onClick={onReveal}>
           Indice suivant ({revealed}/{hints.length})
         </Button>
       ) : (
-        <p className="text-xs text-gray-500">Tous les indices sont affichés.</p>
+        <p className="text-xs text-ink-3">Tous les indices sont affichés.</p>
       )}
     </section>
   );

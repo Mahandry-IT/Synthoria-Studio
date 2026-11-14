@@ -1,6 +1,8 @@
 "use client";
 
+import { Button } from "@/components/Button";
 import { ErrorState } from "@/components/ErrorState";
+import { ProgressBar } from "@/components/ProgressBar";
 import { Skeleton } from "@/components/Skeleton";
 import { LatexText } from "@/shared/utils/latex";
 import type { QuizQuestion, QuizUserAnswer } from "../course.types";
@@ -21,11 +23,6 @@ interface QuizResultsProps {
   onBack: () => void;
 }
 
-const SECONDARY_BUTTON =
-  "inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors";
-const PRIMARY_BUTTON =
-  "inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors";
-
 /**
  * Écran de résultats du quiz : note /20 (calculée par le serveur pour une tentative enregistrée)
  * et détail par question (bonne réponse, explication, points obtenus).
@@ -33,13 +30,13 @@ const PRIMARY_BUTTON =
 export function QuizResults({ grade, answers, grading, gradingError, onRetryGrading, onRestart, onBack }: QuizResultsProps) {
   return (
     <section className="space-y-6" aria-labelledby="quiz-results-heading" aria-busy={grading}>
-      <div className="rounded-lg border border-gray-200 p-6 text-center">
-        <h3 id="quiz-results-heading" className="text-lg font-semibold text-gray-900 mb-2">
+      <div className="rounded-card border border-line bg-surface p-6 text-center text-ink shadow-paper">
+        <h3 id="quiz-results-heading" className="mb-2 font-serif text-xl font-medium">
           Résultats du quiz
         </h3>
         {grading && (
           <>
-            <p className="text-sm text-gray-500" role="status">
+            <p className="text-sm text-ink-3" role="status">
               Correction en cours…
             </p>
             <Skeleton lines={2} />
@@ -47,10 +44,13 @@ export function QuizResults({ grade, answers, grading, gradingError, onRetryGrad
         )}
         {grade && (
           <>
-            <p className="text-3xl font-bold text-indigo-600" aria-live="polite">
+            <p className="font-serif text-4xl font-semibold text-primary" aria-live="polite">
               {formatScore(grade.score, grade.maxScore)}
             </p>
-            <p className="text-sm text-gray-500 mt-1">{scoreAppreciation(grade.score, grade.maxScore)}</p>
+            <p className="mt-1 text-sm text-ink-2">{scoreAppreciation(grade.score, grade.maxScore)}</p>
+            {grade.maxScore > 0 && (
+              <ProgressBar value={grade.score} max={grade.maxScore} label="Score du quiz" className="mx-auto mt-4 max-w-xs" />
+            )}
           </>
         )}
       </div>
@@ -72,12 +72,12 @@ export function QuizResults({ grade, answers, grading, gradingError, onRetryGrad
       )}
 
       <div className="flex flex-wrap justify-center gap-3">
-        <button type="button" onClick={onBack} className={SECONDARY_BUTTON}>
+        <Button type="button" variant="secondary" onClick={onBack}>
           Retour au cours
-        </button>
-        <button type="button" onClick={onRestart} className={PRIMARY_BUTTON} disabled={grading}>
+        </Button>
+        <Button type="button" onClick={onRestart} disabled={grading}>
           Recommencer
-        </button>
+        </Button>
       </div>
     </section>
   );
@@ -97,33 +97,38 @@ function QuestionResult({ question, index, item, answer }: QuestionResultProps) 
   const sectionRefs = formatSectionRefs(question.section_refs);
 
   return (
-    <div className={["rounded-lg border p-4", isCorrect ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"].join(" ")}>
-      <div className="flex items-start gap-3 mb-3">
-        <span className="text-lg" aria-hidden="true">
+    <div
+      className={[
+        "rounded-card border p-4 text-ink",
+        isCorrect ? "border-ok bg-ok-soft" : "border-err bg-err-soft",
+      ].join(" ")}
+    >
+      <div className="mb-3 flex items-start gap-3">
+        <span className={`text-lg font-semibold ${isCorrect ? "text-ok" : "text-err"}`} aria-hidden="true">
           {isCorrect ? "✓" : "✗"}
         </span>
-        <h4 className="text-sm font-semibold text-gray-900 flex-1">
-          <span className="text-indigo-600 mr-1">Q{index + 1}.</span>
+        <h4 className="flex-1 font-serif text-base font-medium leading-snug">
+          <span className="mr-1.5 font-mono text-sm text-primary">Q{index + 1}.</span>
           <span className="sr-only">{isCorrect ? "Réponse juste." : "Réponse fausse."}</span>
           <LatexText text={question.question} />
         </h4>
         {item && (
-          <span className="shrink-0 text-xs font-medium text-gray-600 tabular-nums">
+          <span className="shrink-0 font-mono text-xs font-medium tabular-nums text-ink-2">
             {pointsFormat.format(item.pointsEarned)} / {pointsFormat.format(question.points)} pt
           </span>
         )}
       </div>
 
-      <div className="space-y-2 ml-8">
+      <div className="ml-8 space-y-2">
         <QuestionCorrection question={question} answer={answer} />
 
         {question.explanation && (
-          <p className="text-sm text-gray-600 bg-white rounded-lg p-3 border border-gray-100">
+          <p className="rounded-ctrl border border-line bg-surface p-3 text-sm text-ink-2">
             💡 <LatexText text={question.explanation} />
           </p>
         )}
 
-        {sectionRefs && <p className="text-xs text-gray-500">{sectionRefs}</p>}
+        {sectionRefs && <p className="text-xs text-ink-2">{sectionRefs}</p>}
       </div>
     </div>
   );
@@ -142,13 +147,13 @@ function QuestionCorrection({ question, answer }: { question: QuizQuestion; answ
 
   if (kind === "numeric") {
     return (
-      <dl className="space-y-1 text-sm text-gray-700">
+      <dl className="space-y-1 text-sm text-ink">
         <div className="flex gap-2">
           <dt className="font-medium">Ta réponse :</dt>
           <dd>{answer?.numericValue != null ? formatValue(answer.numericValue, question.unit) : "Aucune réponse"}</dd>
         </div>
         <div className="flex gap-2">
-          <dt className="font-medium text-green-700">Bonne valeur :</dt>
+          <dt className="font-medium text-ok">✓ Bonne valeur :</dt>
           <dd>{formatValue(question.expected_value, question.unit)}</dd>
         </div>
       </dl>
@@ -163,15 +168,15 @@ function QuestionCorrection({ question, answer }: { question: QuizQuestion; answ
           const given = answer?.matches?.[i] ?? null;
           const ok = given != null && given === expected[i];
           return (
-            <li key={i} className="rounded-lg border p-3 text-sm bg-white">
-              <p className="text-gray-700">
+            <li key={i} className="rounded-ctrl border border-line bg-surface p-3 text-sm">
+              <p className="text-ink">
                 <LatexText text={subject} autoMath />
               </p>
-              <p className="text-green-700">
-                <span className="font-medium">Attendu :</span> {question.options[expected[i]] ?? "—"}
+              <p className="text-ok">
+                <span className="font-medium">✓ Attendu :</span> {question.options[expected[i]] ?? "—"}
               </p>
-              <p className={ok ? "text-green-700" : "text-red-700"}>
-                <span className="font-medium">Ta réponse :</span> {given != null ? (question.options[given] ?? "—") : "Aucune réponse"}
+              <p className={ok ? "text-ok" : "text-err"}>
+                <span className="font-medium">{ok ? "✓" : "✗"} Ta réponse :</span> {given != null ? (question.options[given] ?? "—") : "Aucune réponse"}
               </p>
             </li>
           );
@@ -184,25 +189,25 @@ function QuestionCorrection({ question, answer }: { question: QuizQuestion; answ
   const correctIndices = question.correct_option_indices ?? [];
   return (
     <div className="space-y-2">
-  {question.options.map((option, optIdx) => {
-            const isUserChoice = selected.includes(optIdx);
-            const isCorrectOption = correctIndices.includes(optIdx);
-            const ringClass = isCorrectOption
-              ? "ring-2 ring-green-500 bg-green-50"
-              : isUserChoice
-                ? "ring-2 ring-red-500 bg-red-50"
-                : "";
+      {question.options.map((option, optIdx) => {
+        const isUserChoice = selected.includes(optIdx);
+        const isCorrectOption = correctIndices.includes(optIdx);
+        const toneClass = isCorrectOption
+          ? "border-ok bg-ok-soft"
+          : isUserChoice
+            ? "border-err bg-err-soft"
+            : "border-line bg-surface";
 
-            return (
-              <div key={optIdx} className={["flex items-center gap-3 rounded-lg border p-3 text-sm", ringClass].join(" ")}>
-                <span className="flex-1 text-gray-700">
-                  <LatexText text={option} autoMath />
-                </span>
-                {isCorrectOption && <span className="text-green-600 font-medium text-xs">✓ Correct</span>}
-                {isUserChoice && !isCorrectOption && <span className="text-red-600 font-medium text-xs">✗ Ta réponse</span>}
-              </div>
-            );
-          })}
+        return (
+          <div key={optIdx} className={["flex items-center gap-3 rounded-ctrl border p-3 text-sm", toneClass].join(" ")}>
+            <span className="flex-1 text-ink">
+              <LatexText text={option} autoMath />
+            </span>
+            {isCorrectOption && <span className="text-xs font-medium text-ok">✓ Correct</span>}
+            {isUserChoice && !isCorrectOption && <span className="text-xs font-medium text-err">✗ Ta réponse</span>}
+          </div>
+        );
+      })}
     </div>
   );
 }

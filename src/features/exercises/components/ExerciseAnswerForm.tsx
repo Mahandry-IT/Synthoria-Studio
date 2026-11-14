@@ -25,7 +25,7 @@ export function ExerciseAnswerForm({ value, onChange, onSubmit, pending, error }
         if (canSubmit) onSubmit();
       }}
     >
-      <h4 id="exercise-answer-title" className="text-sm font-semibold text-gray-900">
+      <h4 id="exercise-answer-title" className="font-serif text-base font-medium text-ink">
         Votre réponse
       </h4>
       <RichTextEditor
@@ -36,7 +36,7 @@ export function ExerciseAnswerForm({ value, onChange, onSubmit, pending, error }
         invalid={tooLong}
       />
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className={`text-xs ${tooLong ? "font-medium text-red-600" : "text-gray-500"}`}>
+        <span className={`text-xs ${tooLong ? "font-medium text-err" : "text-ink-3"}`}>
           {value.length}/{EXERCISE_ANSWER_MAX_LENGTH}
           {tooLong && " : réponse trop longue, raccourcissez-la"}
         </span>
@@ -45,7 +45,7 @@ export function ExerciseAnswerForm({ value, onChange, onSubmit, pending, error }
         </Button>
       </div>
       {error && (
-        <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        <p role="alert" className="rounded-card border border-err bg-err-soft p-3 text-sm text-ink">
           {error}
         </p>
       )}

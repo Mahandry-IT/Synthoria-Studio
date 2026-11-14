@@ -26,10 +26,10 @@ export function GenerateExercisesDialog({ loading = false, onAccept, onDecline }
 
   return (
     <Modal onClose={onDecline} labelledBy="generate-exercises-title" size="md">
-      <h2 id="generate-exercises-title" className="text-base font-semibold text-gray-900">
+      <h2 id="generate-exercises-title" className="font-serif text-xl font-medium text-ink">
         Générer les exercices ?
       </h2>
-      <p className="mt-1 text-sm text-gray-600">
+      <p className="mt-2 text-sm text-ink-2">
         Des exercices corrigés, liés aux sections du cours, peuvent être préparés. La génération prend un moment et
         se fait en arrière-plan.
       </p>

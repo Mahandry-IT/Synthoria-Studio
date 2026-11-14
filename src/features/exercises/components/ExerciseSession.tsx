@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { useAnswerExercise } from "../hooks/useAnswerExercise";
 import { useExerciseDetail } from "../hooks/useExerciseDetail";
@@ -54,11 +55,11 @@ export function ExerciseSession({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+        <Button type="button" variant="ghost" onClick={onClose}>
           ← Retour à la liste
         </Button>
         {onBackToSection && (
-          <Button type="button" variant="ghost" size="sm" onClick={onBackToSection}>
+          <Button type="button" variant="ghost" onClick={onBackToSection}>
             Retour à la section
           </Button>
         )}
@@ -102,7 +103,7 @@ function ExerciseRun({ sessionId, exercise, sectionTitle, onNotFound, onRedo }: 
   }
   if (failure && failure.kind === "retryable") {
     return (
-      <div role="alert" className="space-y-3 rounded-lg border border-red-200 bg-red-50 p-5 text-sm text-red-800">
+      <div role="alert" className="space-y-3 rounded-card border border-err bg-err-soft p-5 text-sm text-ink">
         <p>{failure.message}</p>
         <Button type="button" variant="secondary" onClick={() => void query.refetch()}>
           Réessayer
@@ -111,7 +112,7 @@ function ExerciseRun({ sessionId, exercise, sectionTitle, onNotFound, onRedo }: 
     );
   }
   return (
-    <p role="status" className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-600">
+    <p role="status" className="rounded-card border border-dashed border-line-strong bg-surface p-6 text-center text-sm text-ink-2">
       Chargement de l&apos;exercice…
     </p>
   );
@@ -159,12 +160,15 @@ function ExerciseWorkspace({ sessionId, detail, sectionTitle, onRedo }: Exercise
   }
 
   return (
-    <article aria-labelledby={EXERCISE_TITLE_ID} className="space-y-5 rounded-xl border border-gray-200 bg-white p-5">
-      <header className="space-y-1">
-        <h3 id={EXERCISE_TITLE_ID} tabIndex={-1} className="text-base focus:outline-none font-semibold text-gray-900">
-          {detail.title}
-        </h3>
-        {sectionTitle && <p className="text-xs text-indigo-700">Section : {sectionTitle}</p>}
+    <article aria-labelledby={EXERCISE_TITLE_ID} className="space-y-5 rounded-card border border-line bg-surface p-5 text-ink shadow-paper">
+      <header className="space-y-1.5">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <h3 id={EXERCISE_TITLE_ID} tabIndex={-1} className="font-serif text-xl font-medium focus:outline-none">
+            {detail.title}
+          </h3>
+          <Badge variant={feedback ? "ok" : "info"}>{feedback ? "Terminé" : "En cours"}</Badge>
+        </div>
+        {sectionTitle && <p className="text-xs font-medium text-primary">Section : {sectionTitle}</p>}
       </header>
       <ExerciseTimer startedAt={startedAt} durationMinutes={detail.duration_minutes} stopped={Boolean(feedback)} />
       <ExerciseStatement blocks={detail.statement} />

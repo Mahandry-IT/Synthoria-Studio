@@ -87,9 +87,9 @@ export function QuizPanel({ questions, flow }: QuizPanelProps) {
 
   if (fullscreenPhase) {
     return (
-      <div className="fixed inset-0 z-60 overflow-y-auto bg-white">
+      <div className="fixed inset-0 z-60 overflow-y-auto bg-bg text-ink">
         <div className="mx-auto max-w-3xl p-6">
-          <h2 id="quiz-heading" className="text-lg font-semibold text-gray-900 mb-4">
+          <h2 id="quiz-heading" className="mb-4 font-serif text-2xl font-medium text-ink">
             Quiz
           </h2>
           {content}
@@ -100,7 +100,7 @@ export function QuizPanel({ questions, flow }: QuizPanelProps) {
 
   return (
     <section aria-labelledby="quiz-heading">
-      <h2 id="quiz-heading" className="text-lg font-semibold text-gray-900 mb-4">
+      <h2 id="quiz-heading" className="mb-4 font-serif text-2xl font-medium text-ink">
         Quiz
       </h2>
       {content}

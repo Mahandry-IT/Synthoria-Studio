@@ -12,15 +12,15 @@ interface ExerciseStatementProps {
 export function ExerciseStatement({ blocks }: ExerciseStatementProps) {
   return (
     <section aria-labelledby="exercise-statement-title" className="space-y-3">
-      <h4 id="exercise-statement-title" className="text-sm font-semibold text-gray-900">
+      <h4 id="exercise-statement-title" className="font-serif text-base font-medium text-ink">
         Énoncé
       </h4>
       {blocks.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-600">
+        <p className="rounded-card border border-dashed border-line-strong p-4 text-sm text-ink-2">
           L&apos;énoncé de cet exercice est indisponible. Revenez à la liste et choisissez un autre exercice.
         </p>
       ) : (
-        <div className="min-w-0 max-w-3xl space-y-3 overflow-x-auto text-sm text-gray-800">
+        <div className="min-w-0 max-w-3xl space-y-3 overflow-x-auto font-serif text-base leading-relaxed text-ink">
           <BlockRenderer blocks={blocks} />
         </div>
       )}
