@@ -130,8 +130,9 @@ Direction « carnet éditorial » : tokens en variables CSS dans `src/app/global
 - **Utilitaires** : `kicker`, `mark`, `rule-2`, `num`, anneau de focus `:focus-visible` terre cuite 2 px par défaut.
 - **Règle** : une page n'utilise jamais plus de trois tailles de texte.
 - **Thème** : un script inline (`THEME_INIT_SCRIPT`, `src/shared/utils/theme.ts`) pose `data-theme` sur `<html>` avant le rendu (choix `localStorage` clé `synthoria-theme`, sinon `prefers-color-scheme`). `useTheme()` (`src/shared/hooks`) expose `theme`, `setTheme`, `toggleTheme`.
-- **`DARK_THEME_ENABLED`** (`src/shared/utils/constants.ts`) : `false` tant que les écrans ne sont pas migrés ; force le clair (script et hook) et la bascule ne doit pas être affichée. À passer à `true` au lot 7 (le script lit la constante au build).
-- **Migration** : les classes `gray-*` / `indigo-*` existantes gardent leur rendu clair ; elles ne suivent pas le thème sombre. Mermaid, graphiques et widgets sont traités au lot 7.
+- **`DARK_THEME_ENABLED`** (`src/shared/utils/constants.ts`) : lu au build depuis `NEXT_PUBLIC_DARK_THEME` (seule la valeur `true` l'active ; faux par défaut). Faux : le clair est forcé (script et hook) et la bascule est masquée. Pour une build de revue du sombre : `NEXT_PUBLIC_DARK_THEME=true npm run build` (ou `npm run dev`). La valeur par défaut ne change qu'en fin de lot 7.
+- **Migration** : le détail du cours et les blocs de contenu (`blocks/*`, `RichText`) sont sur les tokens ; les autres écrans gardent leurs classes `gray-*` / `indigo-*` (rendu clair seulement) jusqu'à leur migration.
+- **Rendus à couleurs littérales** : Mermaid (`buildMermaidConfig(theme)`), graphiques SVG (`CHART_COLORS`) et document des widgets (`WIDGET_THEME_VARS`) ne peuvent pas lire les variables CSS. Ce sont des copies hex des tokens, verrouillées par `themePalettes.test.ts`. Le thème vient de `useDocumentTheme()` (attribut `data-theme` de `<html>`, suivi en direct) : le schéma est redessiné et l'iframe du widget rechargée au changement de thème (`sandbox="allow-scripts"` et CSP inchangés ; le thème n'entre que par le `srcdoc`).
 - **Icônes** : `@mui/icons-material` conservé.
 - **Contraste** : `designTokens.test.ts` vérifie les ratios WCAG des tokens dans les deux thèmes.
 

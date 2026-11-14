@@ -9,22 +9,27 @@ export const WIDGET_MESSAGE_SOURCE = "synthoria-widget";
 export const WIDGET_CSP =
   "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'";
 
-const THEME_VARS: Record<WidgetTheme, Record<string, string>> = {
+/**
+ * Variables `--w-*` lues par la boîte à outils `window.SW` et par les widgets. Le document sandboxé
+ * ne peut pas hériter des variables de la page : ce sont des copies, en hex, des tokens de
+ * `globals.css` (nom du token en commentaire), verrouillées par `widgetDocument.test.ts`.
+ */
+export const WIDGET_THEME_VARS: Record<WidgetTheme, Record<string, string>> = {
   light: {
-    "--w-bg": "#ffffff",
-    "--w-fg": "#111827",
-    "--w-muted": "#6b7280",
-    "--w-accent": "#4f46e5",
-    "--w-border": "#e5e7eb",
-    "--w-surface": "#f9fafb",
+    "--w-bg": "#fdfaf3", // surface
+    "--w-fg": "#1e2a28", // ink
+    "--w-muted": "#5c6863", // ink-3
+    "--w-accent": "#1f4e4a", // primary
+    "--w-border": "#ddd2be", // line
+    "--w-surface": "#efe7d8", // sunken
   },
   dark: {
-    "--w-bg": "#111827",
-    "--w-fg": "#f3f4f6",
-    "--w-muted": "#9ca3af",
-    "--w-accent": "#818cf8",
-    "--w-border": "#374151",
-    "--w-surface": "#1f2937",
+    "--w-bg": "#1b2220", // surface
+    "--w-fg": "#ede7d9", // ink
+    "--w-muted": "#98a09a", // ink-3
+    "--w-accent": "#86cabd", // primary
+    "--w-border": "#2b3532", // line
+    "--w-surface": "#101413", // sunken
   },
 };
 
@@ -48,21 +53,22 @@ measure();
 })();`;
 
 function themeCss(theme: WidgetTheme): string {
-  return Object.entries(THEME_VARS[theme])
+  return Object.entries(WIDGET_THEME_VARS[theme])
     .map(([k, v]) => `${k}:${v}`)
     .join(";");
 }
 
 /**
  * Construit le document `srcdoc` d'un widget. Fonction pure : seul `html` (fragment de body fourni par
- * le modèle) est inséré tel quel ; tout le reste est constant ou dérivé de `theme` (valeurs fixes).
+ * le modèle) est inséré tel quel ; tout le reste est constant ou dérivé de `theme` (valeurs fixes : variables `--w-*`, `color-scheme` et attribut `data-theme` de `<html>`,
+ * que le widget peut lire en CSS). Le thème ne passe que par ce document, jamais par `allow-same-origin`.
  * La CSP est la première balise du `<head>`, suivie du thème, de la boîte à outils `window.SW` (style puis
  * script, avant le script de mesure) ; le fragment du modèle ne l'atteint qu'après, dans le body.
  */
 export function buildWidgetDocument({ html, theme }: { html: string; theme: WidgetTheme }): string {
   const safeTheme: WidgetTheme = theme === "dark" ? "dark" : "light";
   return `<!doctype html>
-<html lang="fr">
+<html lang="fr" data-theme="${safeTheme}">
 <head>
 <meta http-equiv="Content-Security-Policy" content="${WIDGET_CSP}">
 <meta charset="utf-8">

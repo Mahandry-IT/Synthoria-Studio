@@ -148,12 +148,12 @@ function CourseContent({ data, sessionId: sessionIdProp, onCourseRegenerated }: 
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        {isMode3 && <Badge variant="indigo">🔍 Recherche web</Badge>}
-        {isMode2 && (
-          <Badge variant="indigo">📄 Basé sur vos documents</Badge>
-        )}
-      </div>
+      {(isMode3 || isMode2) && (
+        <div className="flex items-center gap-2">
+          {isMode3 && <Badge variant="info">🔍 Recherche web</Badge>}
+          {isMode2 && <Badge variant="ok">📄 Basé sur vos documents</Badge>}
+        </div>
+      )}
 
       <CourseMetaHeader meta={data.meta} />
 
@@ -171,7 +171,7 @@ function CourseContent({ data, sessionId: sessionIdProp, onCourseRegenerated }: 
             <div className="space-y-6">
               {data.introduction && (
                 <Card className="p-5">
-                  <div className="text-sm text-gray-700 leading-relaxed space-y-2">
+                  <div className="text-sm leading-relaxed text-ink-2 space-y-2">
                     {typeof data.introduction === "object" ? (
                       Object.entries(data.introduction).map(([key, value]) => (
                         <p key={key}>
@@ -189,9 +189,7 @@ function CourseContent({ data, sessionId: sessionIdProp, onCourseRegenerated }: 
 
               {data.answer && (
                 <Card className="p-5">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                    Réponse directe
-                  </h2>
+                  <h2 className="kicker mb-3">Réponse directe</h2>
                   <AnswerBlock answer={data.answer} />
                 </Card>
               )}
@@ -241,7 +239,7 @@ function CourseContent({ data, sessionId: sessionIdProp, onCourseRegenerated }: 
           quiz: hasQuiz ? (
             <QuizPanel questions={quiz} flow={quizFlow} />
           ) : (
-            <p className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">
+            <p className="rounded-card border border-dashed border-line-2 p-6 text-center text-sm text-ink-3">
               Ce cours n&apos;a pas de quiz.
             </p>
           ),

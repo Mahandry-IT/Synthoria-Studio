@@ -27,7 +27,7 @@ export function CourseTabs({ active, onChange, panels }: CourseTabsProps) {
 
   return (
     <div>
-      <div role="tablist" aria-label="Contenu du cours" className="flex flex-wrap gap-1 border-b border-gray-200">
+      <div role="tablist" aria-label="Contenu du cours" className="flex gap-1 overflow-x-auto border-b border-line">
         {COURSE_TABS.map(({ id, label }) => {
           const selected = id === active;
           return (
@@ -45,10 +45,9 @@ export function CourseTabs({ active, onChange, panels }: CourseTabsProps) {
               onClick={() => onChange(id)}
               onKeyDown={(e) => handleKeyDown(e, id)}
               className={[
-                "-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500",
-                selected
-                  ? "border-indigo-600 text-indigo-700"
-                  : "border-transparent text-gray-500 hover:text-gray-800",
+                // Anneau de focus à l'intérieur : le défilement horizontal rognerait un anneau extérieur.
+                "inline-flex min-h-11 shrink-0 items-center border-b-2 px-4 text-sm font-medium whitespace-nowrap transition-colors -outline-offset-2 motion-reduce:transition-none",
+                selected ? "border-accent text-ink" : "border-transparent text-ink-3 hover:text-ink",
               ].join(" ")}
             >
               {label}
@@ -65,7 +64,7 @@ export function CourseTabs({ active, onChange, panels }: CourseTabsProps) {
           aria-labelledby={tabId(id)}
           hidden={id !== active}
           tabIndex={0}
-          className="pt-6 focus:outline-none"
+          className="pt-6"
         >
           {id === active ? panels[id] : null}
         </div>

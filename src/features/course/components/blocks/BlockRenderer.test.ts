@@ -20,7 +20,7 @@ describe("BlockRenderer", () => {
     ]);
 
     // Le texte riche (LaTeX/markdown) est peuplé côté client : on vérifie la structure rendue.
-    expect(out).toContain("border-indigo-500"); // définition
+    expect(out).toContain("border-primary"); // définition
     expect(out).toContain("Attention"); // callout warning
     expect(out).toContain("list-decimal"); // liste ordonnée
     expect(out).toContain("<table");

@@ -23,13 +23,35 @@ describe("buildWidgetDocument", () => {
   });
 
   it("injecte les variables de thème clair et sombre", () => {
-    expect(doc).toContain("--w-bg:#ffffff");
+    expect(doc).toContain("--w-bg:#fdfaf3");
+    expect(doc).toContain("color-scheme:light");
+    expect(doc).toContain('<html lang="fr" data-theme="light">');
     const dark = buildWidgetDocument({ html: frag, theme: "dark" });
     for (const v of ["--w-bg", "--w-fg", "--w-muted", "--w-accent", "--w-border", "--w-surface"]) {
       expect(dark).toContain(v);
     }
-    expect(dark).toContain("--w-bg:#111827");
-    expect(dark).not.toContain("--w-bg:#ffffff");
+    expect(dark).toContain("--w-bg:#1b2220");
+    expect(dark).toContain("color-scheme:dark");
+    expect(dark).toContain('<html lang="fr" data-theme="dark">');
+    expect(dark).not.toContain("--w-bg:#fdfaf3");
+  });
+
+  it("le thème ne change ni la CSP, ni la boîte à outils, ni le script de mesure", () => {
+    const dark = buildWidgetDocument({ html: frag, theme: "dark" });
+    expect(dark).toContain(`content="${WIDGET_CSP}"`);
+    expect(dark).toContain(`<style>${TOOLKIT_CSS}</style>`);
+    expect(dark).toContain(`<script>${TOOLKIT_SCRIPT}</script>`);
+    expect(dark).not.toContain("allow-same-origin");
+    // Hors variables de thème, color-scheme et data-theme, les deux documents sont identiques.
+    const strip = (d: string) =>
+      d.replace(/:root\{[^}]*\}/, "").replace(/ data-theme="(light|dark)"/, "");
+    expect(strip(dark)).toBe(strip(doc));
+  });
+
+  it("une valeur de thème inattendue retombe sur le clair", () => {
+    const d = buildWidgetDocument({ html: frag, theme: "<script>" as never });
+    expect(d).toContain('data-theme="light"');
+    expect(d).not.toContain("data-theme=\"<script>\"");
   });
 
   it("encapsule le fragment tel quel dans le body et inclut le script de mesure", () => {
