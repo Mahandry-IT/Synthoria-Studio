@@ -67,6 +67,20 @@ describe("CycleReader — déroulé", () => {
     expect(out).not.toContain("Terminer la section");
   });
 
+  it("stepper à N segments réels : un seul temps courant, aucun titre à venir", () => {
+    const start = reader();
+    expect(start.match(/aria-current="step"/g)).toHaveLength(1);
+    expect(start.match(/Étape \d sur 5 :/g)).toHaveLength(5);
+    expect(start).toContain("Temps 1 sur 5 · Défi");
+
+    const short = reader(parse({ ...rawCycle, vocabulary: [], traps: undefined }), { unlocked: [], done: [], revealed: { s1: 2 } });
+    expect(short.match(/Étape \d sur 3 :/g)).toHaveLength(3);
+
+    const finished = reader(parse(rawCycle), { unlocked: ["s1"], done: ["s1"] });
+    expect(finished).not.toContain("aria-current");
+    expect(finished.match(/: terminée/g)).toHaveLength(5);
+  });
+
   it("défi : cases à cocher, nombre de bonnes réponses jamais annoncé", () => {
     const out = reader();
     expect(out.match(/type="checkbox"/g)).toHaveLength(4);

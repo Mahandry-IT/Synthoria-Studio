@@ -9,26 +9,26 @@ import { RichText } from "../RichText";
  */
 export function CycleVocabulary({ terms }: { terms: VocabTerm[] }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
+    <div className="overflow-x-auto rounded-card border border-line bg-surface">
       <table className="w-full border-collapse text-sm">
         <caption className="sr-only">Vocabulaire de la section</caption>
         <thead>
-          <tr className="bg-indigo-100">
-            <th scope="col" className="border border-indigo-200 px-3 py-2 text-left font-semibold text-indigo-800">
+          <tr className="bg-primary-soft">
+            <th scope="col" className="border-b border-line px-3.5 py-2.5 text-left font-semibold text-primary">
               Terme
             </th>
-            <th scope="col" className="border border-indigo-200 px-3 py-2 text-left font-semibold text-indigo-800">
+            <th scope="col" className="border-b border-line px-3.5 py-2.5 text-left font-semibold text-primary">
               En clair
             </th>
           </tr>
         </thead>
         <tbody>
           {terms.map((entry, i) => (
-            <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-              <th scope="row" className="border border-gray-200 px-3 py-2 text-left align-top font-medium text-gray-900">
+            <tr key={i} className="border-b border-line last:border-b-0">
+              <th scope="row" className="px-3.5 py-2.5 text-left align-top font-medium text-ink">
                 <LatexText text={entry.term} />
               </th>
-              <td className="border border-gray-200 px-3 py-2 align-top text-gray-700">
+              <td className="px-3.5 py-2.5 align-top text-ink-2">
                 <RichText text={entry.plain} />
                 {entry.formula_latex.trim() && (
                   <div className="mt-1 overflow-x-auto">

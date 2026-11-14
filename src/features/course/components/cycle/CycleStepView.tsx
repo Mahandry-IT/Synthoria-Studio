@@ -32,13 +32,13 @@ export function CycleStepView({ step, index, total, headingId, getAnswer, onAnsw
 
   return (
     <div className="space-y-3">
-      <h5 id={headingId} tabIndex={-1} className="text-xs font-semibold uppercase tracking-wide text-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+      <h5 id={headingId} tabIndex={-1} className="kicker focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
         Étape {index + 1} sur {total}
       </h5>
-      <RichText text={step.text} className="text-sm leading-relaxed text-gray-800" />
+      <RichText text={step.text} className="text-[15px] leading-relaxed text-ink" />
       {step.action && (
-        <p className="rounded-lg bg-indigo-50 px-3 py-2 text-sm text-indigo-900">
-          <span className="font-medium">À toi : </span>
+        <p className="rounded-ctrl border-l-[3px] border-accent bg-primary-soft px-3.5 py-2.5 text-sm text-ink">
+          <span className="font-semibold">À toi : </span>
           <RichText text={step.action} />
         </p>
       )}

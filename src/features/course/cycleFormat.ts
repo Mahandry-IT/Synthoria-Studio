@@ -31,3 +31,16 @@ export function cycleStages(section: { cycle?: SectionCycle }): CycleStageKey[] 
   if (cycle.trial) stages.push("trial");
   return stages;
 }
+
+/** Libellé annoncé du temps courant : « Temps n sur N · Titre » (n est borné à [1, N]). */
+export function stageProgressLabel(revealed: number, total: number, key: CycleStageKey): string {
+  const n = Math.min(Math.max(1, Math.round(revealed) || 1), Math.max(1, total));
+  return `Temps ${n} sur ${Math.max(1, total)} · ${CYCLE_STAGE_TITLES[key]}`;
+}
+
+/** Présentation d'un temps dévoilé : « courant » (dernier dévoilé, section en cours) ou « fait » (franchi, ou section terminée). */
+export type StageView = "done" | "current";
+
+export function stageView(position: number, revealed: number, sectionDone: boolean): StageView {
+  return !sectionDone && position === revealed - 1 ? "current" : "done";
+}

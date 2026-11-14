@@ -1,13 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
+import { Stepper } from "@/components/Stepper";
 import { sectionAnchorId } from "@/features/exercises/exerciseLinks";
 import { LatexText } from "@/shared/utils/latex";
 import type { CourseSection, CourseVideo, SectionCycle } from "../../course.types";
 import { cycleDurationLabel } from "../../cycleDuration";
-import { CYCLE_STAGE_TITLES, cycleStages, type CycleStageKey } from "../../cycleFormat";
+import { CYCLE_STAGE_TITLES, cycleStages, stageProgressLabel, stageView, type CycleStageKey } from "../../cycleFormat";
 import {
   getAnswer,
   recordAnswer,
@@ -27,7 +29,7 @@ import { CycleStepView } from "./CycleStepView";
 import { CycleTrial } from "./CycleTrial";
 import { CycleTraps } from "./CycleTraps";
 import { CycleVocabulary } from "./CycleVocabulary";
-import { StageHeading, TOUCH_TARGET } from "./cycleUi";
+import { StageHeading } from "./cycleUi";
 
 interface CycleReaderProps {
   /** Section portant un `cycle` (le parent choisit ce lecteur via `hasCycle`). */
@@ -81,11 +83,14 @@ export function CycleReader({
   const stepsFullyShown = done || revealed - 1 > stepsIndex;
   const stepCount = revealedMiniSteps(cycleProgress, id, cycle.steps.length, stepsFullyShown);
   const duration = cycleDurationLabel(section);
+  // Temps dévoilé par un clic sur « Continuer » : seul celui-là entre en fondu (jamais à la reprise).
+  const [entering, setEntering] = useState<CycleStageKey | null>(null);
 
   const answerOf = (answer: string) => getAnswer(cycleProgress, id, answer);
   const answer = (answerId: string, record: CycleAnswerRecord) => updateCycle((p) => recordAnswer(p, id, answerId, record));
 
   const goToNextStage = () => {
+    setEntering(stages[revealed]);
     update((p) => revealNextStep(p, id, total));
     focusAfterRender(`${stageDomId(stages[revealed])}-title`);
   };
@@ -133,14 +138,14 @@ export function CycleReader({
     const current = cycle.steps[stepCount - 1];
     if (key === "steps" && current?.prediction && !answerOf(answerKey.prediction(stepCount - 1))) return null;
     if (key === "steps" && stepCount < cycle.steps.length) {
-      return <Button type="button" className={TOUCH_TARGET} onClick={nextMiniStep}>Étape suivante</Button>;
+      return <Button type="button" className="w-full sm:w-auto" onClick={nextMiniStep}>Étape suivante</Button>;
     }
     return isLast ? (
-      <Button type="button" className={TOUCH_TARGET} onClick={() => update((p) => completeSection(p, id))}>
+      <Button type="button" variant="accent" className="w-full sm:w-auto" onClick={() => update((p) => completeSection(p, id))}>
         Terminer la section
       </Button>
     ) : (
-      <Button type="button" className={TOUCH_TARGET} onClick={goToNextStage}>
+      <Button type="button" className="w-full sm:w-auto" onClick={goToNextStage}>
         Continuer
         <span className="sr-only"> vers {CYCLE_STAGE_TITLES[stages[position + 1]]}</span>
       </Button>
@@ -148,14 +153,14 @@ export function CycleReader({
   };
 
   return (
-    <Card id={section.id ? sectionAnchorId(section.id) : undefined} className="p-5">
+    <Card id={section.id ? sectionAnchorId(section.id) : undefined} className="p-4 sm:p-6">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 id={headingId} tabIndex={-1} className="text-base font-semibold text-indigo-600 focus:outline-none">
-          <span className="mr-2">{index + 1}.</span>
+        <h3 id={headingId} tabIndex={-1} className="font-serif text-xl font-semibold leading-snug text-ink">
+          <span className="mr-2 text-primary">{index + 1}.</span>
           <LatexText text={section.title.replace(/^\d+\.\s*/, "")} />
         </h3>
         <div className="flex items-center gap-2">
-          {done && <Badge variant="green">Terminée</Badge>}
+          {done && <Badge variant="ok">Terminée</Badge>}
           {sessionId && section.id && (
             <SectionNoteButton
               sessionId={sessionId}
@@ -168,22 +173,37 @@ export function CycleReader({
         </div>
       </div>
       {cycle.thread && (
-        <p className="mb-2 text-sm italic text-gray-600">
+        <p className="mb-4 font-serif text-base italic leading-snug text-ink-2">
           <LatexText text={cycle.thread} />
         </p>
       )}
-      <p className="mb-3 text-xs text-gray-500" aria-live="polite">
-        Temps {revealed} sur {total}
+      <Stepper total={total} current={revealed} complete={done} label="Progression de la section" className="mb-3" />
+      <p className="kicker mb-4">
+        {stageProgressLabel(revealed, total, stages[revealed - 1])}
         {duration ? ` · ${duration}` : ""}
       </p>
-      <ol className="space-y-4">
-        {stages.slice(0, revealed).map((key, position) => (
-          <li key={key} id={stageDomId(key)} className="rounded-lg border border-gray-100 p-3">
-            <StageHeading id={`${stageDomId(key)}-title`}>{CYCLE_STAGE_TITLES[key]}</StageHeading>
-            {content(key)}
-            <div className="mt-3">{advance(key, position)}</div>
-          </li>
-        ))}
+      <ol className="space-y-5">
+        {stages.slice(0, revealed).map((key, position) => {
+          const current = stageView(position, revealed, done) === "current";
+          const next = advance(key, position);
+          return (
+            <li
+              key={key}
+              id={stageDomId(key)}
+              className={`${
+                current
+                  ? "rounded-card border border-line bg-surface p-3 shadow-paper sm:p-5"
+                  : "border-l-2 border-primary pl-3 sm:pl-4"
+              } ${entering === key ? "stage-in" : ""}`}
+            >
+              <StageHeading id={`${stageDomId(key)}-title`} done={!current}>
+                {CYCLE_STAGE_TITLES[key]}
+              </StageHeading>
+              {content(key)}
+              {next && <div className="mt-4 flex flex-col gap-2 border-t border-line pt-4 sm:flex-row sm:justify-end">{next}</div>}
+            </li>
+          );
+        })}
       </ol>
       {done && (
         <>
@@ -191,7 +211,7 @@ export function CycleReader({
           <SectionVideos videos={videos} sessionId={sessionId} onNoteSaved={onVideoNoteSaved} />
           {onDoExercise && (
             <div className="mt-4 flex justify-end">
-              <Button type="button" variant="outline" className={TOUCH_TARGET} onClick={onDoExercise}>
+              <Button type="button" variant="secondary" onClick={onDoExercise}>
                 Faire l&apos;exercice
               </Button>
             </div>

@@ -113,6 +113,12 @@ describe("Stepper", () => {
     expect(out).toContain("Étape 2 sur 3 : en cours");
     expect(out).toContain("Étape 3 sur 3 : à venir");
   });
+  it("`complete` : tous les segments terminés, aucune étape courante", () => {
+    const out = html(h(Stepper, { total: 3, current: 3, label: "Parcours", complete: true }));
+    expect(out).not.toContain("aria-current");
+    expect(out.match(/: terminée/g)).toHaveLength(3);
+    expect(out).not.toContain("en cours");
+  });
 });
 
 describe("Modal, ConfirmDialog, LoadingModal", () => {

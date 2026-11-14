@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/Button";
+import { Textarea } from "@/components/Input";
 import { ExerciseHints } from "@/features/exercises/components/ExerciseHints";
 import { LatexText } from "@/shared/utils/latex";
 import type { CycleTrial as CycleTrialData, ExerciseCard, QuizQuestion } from "../../course.types";
@@ -10,7 +11,7 @@ import { answerKey, type CycleAnswerRecord } from "../../cycleProgress";
 import { isAnswerCorrect, isNumericCorrect, optionFeedback, questionKind } from "../../quizGrading";
 import { QuizQuestionNumeric } from "../QuizQuestionNumeric";
 import { RichText } from "../RichText";
-import { ChoiceList, LiveNote, TOUCH_TARGET } from "./cycleUi";
+import { ChoiceList, LiveNote } from "./cycleUi";
 
 interface AnswerProps {
   getAnswer: (id: string) => CycleAnswerRecord | undefined;
@@ -48,11 +49,11 @@ function TrialQuestion({ question, index, answer, onAnswer }: {
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-3">
+    <div className="space-y-3 rounded-card border border-line bg-surface p-3.5 sm:p-4">
       {numeric ? (
         <>
-          <p className="text-sm font-medium text-gray-900">
-            <span className="mr-1 text-indigo-600">{index + 1}.</span>
+          <p className="font-serif text-lg font-medium leading-snug text-ink">
+            <span className="mr-1.5 font-mono text-base text-primary">{index + 1}.</span>
             <LatexText text={question.question} />
           </p>
           <QuizQuestionNumeric
@@ -67,8 +68,8 @@ function TrialQuestion({ question, index, answer, onAnswer }: {
         <ChoiceList
           legend={
             <>
-              <span className="mr-1 text-indigo-600">{index + 1}.</span>
-              <LatexText text={question.question} />
+              <span className="mr-1.5 font-mono text-base text-primary">{index + 1}.</span>
+              <span className="font-serif text-lg font-medium leading-snug"><LatexText text={question.question} /></span>
             </>
           }
           options={question.options}
@@ -80,14 +81,14 @@ function TrialQuestion({ question, index, answer, onAnswer }: {
         />
       )}
       {!validated && (
-        <Button type="button" className={TOUCH_TARGET} disabled={!canValidate} onClick={validate}>
+        <Button type="button" disabled={!canValidate} onClick={validate}>
           Valider
         </Button>
       )}
       <LiveNote tone={validated ? (correct ? "success" : "warn") : "info"}>
         {validated ? (
           <>
-            <span className="font-medium">{correct ? "Correct. " : "Pas tout à fait. "}</span>
+            <span className="font-semibold">{correct ? "Correct. " : "Pas tout à fait. "}</span>
             {numeric && !correct && question.expected_value != null && (
               <span>
                 Réponse attendue : {question.expected_value}
@@ -117,33 +118,32 @@ function TrialCard({ card, answer, onAnswer }: { card: ExerciseCard; answer?: Cy
   const [attempt, setAttempt] = useState("");
   const shown = Boolean(answer);
   return (
-    <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-3">
-      <RichText text={card.statement} className="text-sm leading-relaxed text-gray-900" />
+    <div className="space-y-3 rounded-card border border-line bg-surface p-3.5 sm:p-4">
+      <RichText text={card.statement} className="text-[15px] leading-relaxed text-ink" />
       <ExerciseHints hints={card.hint ? [card.hint] : []} revealed={hints} onReveal={() => setHints(1)} />
-      <div>
-        <label htmlFor="trial-attempt" className="mb-1 block text-sm font-medium text-gray-700">
-          Ta tentative <span className="font-normal text-gray-500">(brouillon, non envoyé)</span>
-        </label>
-        <textarea
-          id="trial-attempt"
-          rows={4}
-          value={attempt}
-          onChange={(e) => setAttempt(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-      </div>
+      <Textarea
+        id="trial-attempt"
+        rows={4}
+        label={
+          <>
+            Ta tentative <span className="font-normal text-ink-3">(brouillon, non envoyé)</span>
+          </>
+        }
+        value={attempt}
+        onChange={(e) => setAttempt(e.target.value)}
+      />
       {!shown && (
-        <Button type="button" className={TOUCH_TARGET} onClick={() => onAnswer({ picked: [] })}>
+        <Button type="button" onClick={() => onAnswer({ picked: [] })}>
           Voir la correction
         </Button>
       )}
       <div aria-live="polite">
         {shown && (
-          <section aria-labelledby="trial-correction" className="rounded-lg bg-green-50 p-3 text-sm text-green-950">
-            <h5 id="trial-correction" className="mb-2 font-semibold">
+          <section aria-labelledby="trial-correction" className="rounded-card border-l-[3px] border-accent bg-primary-soft p-4 text-sm text-ink">
+            <h5 id="trial-correction" className="kicker mb-2 text-primary">
               Correction pas à pas
             </h5>
-            <ol className="list-decimal space-y-1 pl-5">
+            <ol className="list-decimal space-y-1.5 pl-5 marker:text-ink-2">
               {card.steps.map((step, i) => (
                 <li key={i}>
                   <RichText text={step} />
@@ -151,7 +151,7 @@ function TrialCard({ card, answer, onAnswer }: { card: ExerciseCard; answer?: Cy
               ))}
             </ol>
             {card.result.trim() && (
-              <div className="mt-2 overflow-x-auto font-medium">
+              <div className="mt-3 overflow-x-auto font-serif text-lg">
                 <span>Résultat : </span>
                 <LatexText text={card.result} autoMath />
               </div>
