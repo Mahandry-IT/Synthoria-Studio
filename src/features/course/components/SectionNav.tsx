@@ -1,7 +1,21 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { Button } from "@/components/Button";
+import { cx } from "@/shared/utils/cx";
 import { LatexText } from "@/shared/utils/latex";
+import {
+  centerScrollTarget,
+  chapterNumber,
+  chapterView,
+  isChapterStarted,
+  scrollEdges,
+  scrollTargetFor,
+  type ChapterView,
+  type ScrollEdges,
+} from "../readerLayout";
 import type { SectionStatus } from "../sectionProgress";
 
 export interface SectionNavItem {
@@ -18,83 +32,164 @@ const STATUS_LABELS: Record<SectionStatus, string> = {
   todo: "à faire",
 };
 
-const STATUS_DOTS: Record<SectionStatus, string> = {
-  done: "bg-green-500 border-green-500",
-  in_progress: "bg-amber-400 border-amber-400",
-  todo: "bg-white border-gray-300",
+/** Filet supérieur et texte de chaque état ; le chapitre courant est déployé. */
+const VIEW_CLASSES: Record<ChapterView, string> = {
+  done: "border-t-primary text-ink-2 hover:text-ink",
+  current: "min-w-40 max-w-72 border-t-accent text-ink sm:min-w-[14.5rem]",
+  todo: "border-t-line-2 text-ink-3 hover:text-ink",
 };
 
 interface SectionNavProps {
   items: SectionNavItem[];
   currentKey: string | null;
   onSelect: (key: string) => void;
-  /** Résumé affiché sur le bouton de la barre repliable (mobile), ex. « 2/5 terminées ». */
-  summary?: string;
 }
 
+/** Fenêtre (ms) après le montage où le fil se place sans animation (la progression est restaurée juste après). */
+const INITIAL_PLACEMENT_MS = 600;
+
+/** Mouvement réduit : défilement immédiat plutôt que lissé. */
+const scrollBehavior = (): ScrollBehavior =>
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+
 /**
- * Liste des sections avec leur état (faite / en cours / à faire) et accès direct.
- * Sur mobile, la liste se replie derrière un bouton ; elle reste visible à partir de `lg`.
+ * Fil des chapitres : bandeau horizontal défilant, un bouton par section (fait / courant déployé / à faire),
+ * chevrons de défilement dès `sm` et chapitre courant ramené dans la vue à chaque changement.
+ * Sur mobile, seul le chapitre courant montre son titre (les autres le gardent pour les lecteurs d'écran).
  */
-export function SectionNav({ items, currentKey, onSelect, summary }: SectionNavProps) {
-  const [open, setOpen] = useState(false);
-  const listId = useId();
-  const currentIndex = items.findIndex((item) => item.key === currentKey);
+export function SectionNav({ items, currentKey, onSelect }: SectionNavProps) {
+  const listRef = useRef<HTMLOListElement>(null);
+  // Instant du montage : le placement initial et la restauration de la progression (juste après) sont immédiats.
+  const mountedAt = useRef(0);
+  const [edges, setEdges] = useState<ScrollEdges>({ canScrollBack: false, canScrollForward: false });
+
+  const measure = useCallback(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const next = scrollEdges(list.scrollLeft, list.scrollWidth, list.clientWidth);
+    setEdges((prev) =>
+      prev.canScrollBack === next.canScrollBack && prev.canScrollForward === next.canScrollForward ? prev : next,
+    );
+  }, []);
+
+  useEffect(() => {
+    mountedAt.current = Date.now();
+  }, []);
+
+  // Les bords sont aussi remesurés quand le contenu change (titres, sections ajoutées) sans changer la taille du fil.
+  useEffect(() => {
+    measure();
+  }, [measure, items]);
+
+  // Mesure initiale et à chaque redimensionnement (le premier rappel de l'observateur suit l'observation).
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(list);
+    return () => observer.disconnect();
+  }, [measure]);
+
+  // Ramène le chapitre courant au centre du fil ; sans animation au premier affichage.
+  useEffect(() => {
+    const list = listRef.current;
+    const current = list?.querySelector<HTMLElement>('[aria-current="step"]');
+    if (!list || !current) return;
+    list.scrollTo({
+      left: centerScrollTarget(current.offsetLeft, current.offsetWidth, list.scrollWidth, list.clientWidth),
+      behavior: Date.now() - mountedAt.current < INITIAL_PLACEMENT_MS ? "auto" : scrollBehavior(),
+    });
+  }, [currentKey]);
+
+  const scrollBy = (direction: -1 | 1) => {
+    const list = listRef.current;
+    if (!list) return;
+    list.scrollTo({
+      left: scrollTargetFor(direction, list.scrollLeft, list.scrollWidth, list.clientWidth),
+      behavior: scrollBehavior(),
+    });
+  };
 
   return (
-    <nav aria-label="Sections du cours">
-      <button
-        type="button"
-        className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 lg:hidden"
-        aria-expanded={open}
-        aria-controls={listId}
-        onClick={() => setOpen((v) => !v)}
-      >
-        <span>
-          Section {currentIndex + 1}/{items.length}
-          {summary ? <span className="ml-2 font-normal text-gray-500">· {summary}</span> : null}
-        </span>
-        <span aria-hidden="true">{open ? "▲" : "▼"}</span>
-      </button>
+    <nav aria-label="Sections du cours" className="flex items-center gap-2">
+      <div className="hidden sm:block">
+        <Button
+          type="button"
+          variant="secondary"
+          size="icon"
+          aria-label="Sections précédentes"
+          aria-disabled={!edges.canScrollBack}
+          className="aria-disabled:cursor-default aria-disabled:opacity-45 aria-disabled:hover:translate-y-0"
+          onClick={() => edges.canScrollBack && scrollBy(-1)}
+        >
+          <ChevronLeftIcon fontSize="small" aria-hidden="true" />
+        </Button>
+      </div>
       <ol
-        id={listId}
-        className={`${open ? "block" : "hidden"} mt-2 max-h-[70vh] lg:max-h-[calc(100dvh-6rem)] space-y-1 overflow-y-auto rounded-lg border border-gray-200 bg-white p-2 lg:mt-0 lg:block`}
+        ref={listRef}
+        data-fade-end={edges.canScrollForward}
+        onScroll={measure}
+        className="chaps relative flex min-w-0 flex-1 items-stretch overflow-x-auto p-1"
       >
         {items.map((item, i) => {
           const isCurrent = item.key === currentKey;
+          const view = chapterView(item.status, isCurrent);
           return (
-            <li key={item.key}>
+            <li key={item.key} className="flex-none">
               <button
                 type="button"
                 aria-current={isCurrent ? "step" : undefined}
-                onClick={() => {
-                  onSelect(item.key);
-                  setOpen(false);
-                }}
-                className={`flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
-                  isCurrent ? "bg-indigo-50 font-medium text-indigo-700" : "text-gray-700 hover:bg-gray-50"
-                }`}
+                onClick={() => onSelect(item.key)}
+                className={cx(
+                  "mr-4 flex h-full min-h-11 min-w-12 flex-col gap-1.5 rounded-none border-t-[3px] pb-3 pr-3 pt-2.5 text-left sm:min-w-16",
+                  VIEW_CLASSES[view],
+                )}
               >
-                <span
-                  aria-hidden="true"
-                  className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full border ${STATUS_DOTS[item.status]}`}
-                />
-                <span className="min-w-0 flex-1">
-                  <span className="mr-1 text-gray-400">{i + 1}.</span>
-                  <LatexText text={item.title} />
-                  {item.duration && (
-                    <span className="ml-2 whitespace-nowrap text-xs text-gray-500">
-                      <span aria-hidden="true">{item.duration}</span>
-                      <span className="sr-only"> (durée estimée {item.duration})</span>
-                    </span>
+                <span className="flex items-center gap-1.5 font-mono text-xs">
+                  {chapterNumber(i)}
+                  {item.status === "done" && <span aria-hidden="true">✓</span>}
+                  {isChapterStarted(item.status, isCurrent) && (
+                    <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full border border-primary" />
                   )}
-                  <span className="sr-only"> ({STATUS_LABELS[item.status]})</span>
                 </span>
+                <span
+                  className={
+                    isCurrent
+                      ? "font-serif text-[17px] font-semibold leading-snug"
+                      : "max-w-44 text-[13px] font-medium leading-snug sr-only sm:not-sr-only"
+                  }
+                >
+                  <LatexText text={item.title} />
+                </span>
+                {item.duration && (
+                  <>
+                    {isCurrent && (
+                      <span aria-hidden="true" className="font-mono text-xs text-ink-3">
+                        {item.duration}
+                      </span>
+                    )}
+                    <span className="sr-only"> (durée estimée {item.duration})</span>
+                  </>
+                )}
+                <span className="sr-only"> ({STATUS_LABELS[item.status]})</span>
               </button>
             </li>
           );
         })}
       </ol>
+      <div className="hidden sm:block">
+        <Button
+          type="button"
+          variant="secondary"
+          size="icon"
+          aria-label="Sections suivantes"
+          aria-disabled={!edges.canScrollForward}
+          className="aria-disabled:cursor-default aria-disabled:opacity-45 aria-disabled:hover:translate-y-0"
+          onClick={() => edges.canScrollForward && scrollBy(1)}
+        >
+          <ChevronRightIcon fontSize="small" aria-hidden="true" />
+        </Button>
+      </div>
     </nav>
   );
 }

@@ -339,7 +339,8 @@ describe("SectionsList — choix du lecteur et non-régression", () => {
     expect(out).toContain("Ancienne section");
     expect(out).toContain("Quoi legacy");
     expect(out).not.toContain("Temps 1 sur");
-    expect(out).not.toMatch(/\d+ min/);
+    // Texte rendu seulement (balises retirées) : les classes CSS ne comptent pas comme une durée.
+    expect(out.replace(/<[^>]*>/g, "")).not.toMatch(/\d+ min/);
   });
 
   it("section avec cycle : CycleReader et durée dans la navigation", () => {

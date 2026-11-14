@@ -10,6 +10,7 @@ import { Button } from "@/components/Button";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Skeleton } from "@/components/Skeleton";
 import { Card } from "@/components/Card";
+import { ErrorState } from "@/components/ErrorState";
 import { Badge } from "@/components/Badge";
 import { ScrollableQuestion } from "@/components/ScrollableQuestion";
 import { HttpError } from "@/shared/api/httpClient";
@@ -43,13 +44,15 @@ export default function HistoryDetailPage({
       error instanceof HttpError && (error as HttpError).status === 404;
 
     return (
-      <Card className="p-8 text-center">
-        <p className="text-sm text-red-600">
-          {is404
-            ? "Session introuvable. Ce cours a peut-être été supprimé."
-            : "Une erreur est survenue lors du chargement du cours."}
-        </p>
-      </Card>
+      <ErrorState
+        error={
+          new Error(
+            is404
+              ? "Session introuvable. Ce cours a peut-être été supprimé."
+              : "Une erreur est survenue lors du chargement du cours.",
+          )
+        }
+      />
     );
   }
 
@@ -69,10 +72,10 @@ export default function HistoryDetailPage({
       <Card className="p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
-            <Badge variant={data.mode === "file_question" ? "indigo" : "green"}>
+            <Badge variant={data.mode === "file_question" ? "info" : "ok"}>
               {data.mode === "file_question" ? "📄 Documents" : "🔍 Web"}
             </Badge>
-            <span className="text-sm text-gray-500">{date}</span>
+            <span className="font-mono text-xs text-ink-3">{date}</span>
           </div>
           <Button
             type="button"
@@ -87,9 +90,9 @@ export default function HistoryDetailPage({
         <ScrollableQuestion markdown={data.question} />
         {data.filenames.length > 0 && (
           <div className="mt-3 flex flex-wrap items-center gap-1.5" aria-label="Fichiers utilisés">
-            <span className="text-xs text-gray-500">Fichiers :</span>
+            <span className="text-xs text-ink-3">Fichiers :</span>
             {data.filenames.map((name) => (
-              <Badge key={name} variant="gray" className="max-w-full break-all" title={name}>
+              <Badge key={name} variant="neutral" className="max-w-full break-all" title={name}>
                 {name}
               </Badge>
             ))}

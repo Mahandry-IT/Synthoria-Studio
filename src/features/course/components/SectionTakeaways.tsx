@@ -33,11 +33,11 @@ export function SectionTakeaways({ section, idPrefix }: SectionTakeawaysProps) {
   return (
     <div className="mt-4 grid gap-3 md:grid-cols-2">
       {takeaways.length > 0 && (
-        <section aria-labelledby={retainId} className="rounded-lg border border-indigo-200 bg-indigo-50 p-4">
-          <h4 id={retainId} className="text-sm font-semibold text-indigo-900">
+        <section aria-labelledby={retainId} className="rounded-card border border-ok bg-ok-soft p-4">
+          <h4 id={retainId} className="text-sm font-semibold text-ok">
             Ce qu&apos;il faut retenir
           </h4>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-indigo-900">
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink">
             {takeaways.map((text, i) => (
               <li key={i}>
                 <LatexText text={text} />
@@ -47,11 +47,11 @@ export function SectionTakeaways({ section, idPrefix }: SectionTakeawaysProps) {
         </section>
       )}
       {pitfalls.length > 0 && (
-        <section aria-labelledby={avoidId} className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-          <h4 id={avoidId} className="text-sm font-semibold text-amber-900">
+        <section aria-labelledby={avoidId} className="rounded-card border border-warn bg-warn-soft p-4">
+          <h4 id={avoidId} className="text-sm font-semibold text-warn">
             Ce qu&apos;il faut éviter
           </h4>
-          <ul className="mt-2 space-y-3 text-sm text-amber-900">
+          <ul className="mt-2 space-y-3 text-sm text-ink">
             {pitfalls.map((pitfall, i) => (
               <li key={i}>
                 <p className="font-medium">
