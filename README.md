@@ -63,6 +63,25 @@ Replis : une section sans défi ni sous-sections (sessions historiques) s'affich
 
 À l'étape du plan, un **pré-test** facultatif marque les sections déjà maîtrisées (`mastery: "known"`) : le cours en génère une version condensée. La page **/review** et la carte « À réviser aujourd'hui » du dashboard proposent les flashcards issues des questions « Vérifie » (répétition espacée Leitner : J+1, J+3, J+7, J+21).
 
+### Widgets (boîte à outils `window.SW`)
+
+Un widget est un fragment HTML/JS du modèle, affiché dans une iframe `sandbox="allow-scripts"` (sans `allow-same-origin`) avec une CSP sans réseau (`widgetDocument.ts`). Le client y injecte, dans le `<head>` après la CSP et le thème et avant le script de mesure, une petite API `window.SW` (`widgetToolkit.ts`, gelée par `Object.freeze`) : le modèle l'appelle au lieu d'écrire le SVG à la main. Le contrat (signatures, exemples, widget d'exemple) est `src/features/course/components/blocks/widget-toolkit.json`, copié tel quel dans le dépôt backend (il alimente le prompt de génération).
+
+| Fonction | Rôle |
+| --- | --- |
+| `SW.svg(host, {width, height, label})` | SVG responsive avec texte alternatif |
+| `SW.axes(host, {xmin, xmax, ymin, ymax, xlabel, ylabel, label})` | repère gradué, renvoie `chart` |
+| `SW.line(chart, points \| fn, {i, label, dash})` | courbe ; `update(points \| fn)` |
+| `SW.scatter(chart, points, {i, label, r})` | nuage de points ; `update(points)` |
+| `SW.bars(host, {labels, values, ymin, ymax, ylabel, label, highlight})` | barres ; `update(values)` |
+| `SW.graph(host, {nodes, edges, directed, highlight, label, onSelect})` | graphe à mise en page automatique ; `highlight({nodes, path})` |
+| `SW.slider(host, {label, min, max, step, value, unit, onChange})` | curseur ; `get()`, `set(v)` |
+| `SW.stepper(host, {steps, start, onStep})` | pas-à-pas Précédent / Suivant ; `goto(i)`, `get()` |
+| `SW.table(host, {headers, rows, caption, highlight})` | tableau accessible ; `highlight(ligne)` |
+| `SW.color(i)` | couleur de la série `i`, dérivée des variables `--w-*` (`color-mix`) |
+
+Règles : couleurs uniquement par les variables `--w-*` ; textes rendus en `textContent`, jamais en HTML ; aucune fonction ne lève d'exception (donnée invalide : message `role="alert"` dans le widget), seules les erreurs du code du modèle (dans un `onChange`, `onStep`, fonction de courbe) remontent et déclenchent le repli sur la description. Le protocole vers le parent reste `height` et `error` seulement. **Compatibilité** : la boîte à outils est toujours injectée mais facultative, les widgets déjà stockés (sans `SW`) s'affichent à l'identique ; aucune fonction publiée n'est renommée ni retirée, et toute modification du contrat se fait en même temps dans les deux dépôts. Logique pure (échelles, graduations, mise en page des graphes) testée en node (`widgetToolkit.test.ts`).
+
 ### Chat du cours
 
 Chaque cours persisté (avec `session_id`) a un **tuteur** qui ne répond qu'aux questions sur sa leçon (`src/features/chat/`) :

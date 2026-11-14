@@ -1,3 +1,5 @@
+import { TOOLKIT_CSS, TOOLKIT_SCRIPT } from "./widgetToolkit";
+
 export type WidgetTheme = "light" | "dark";
 
 /** Identifiant des messages postés par le document du widget (contrôlé par le parent). */
@@ -54,7 +56,8 @@ function themeCss(theme: WidgetTheme): string {
 /**
  * Construit le document `srcdoc` d'un widget. Fonction pure : seul `html` (fragment de body fourni par
  * le modèle) est inséré tel quel ; tout le reste est constant ou dérivé de `theme` (valeurs fixes).
- * La CSP est la première balise du `<head>`.
+ * La CSP est la première balise du `<head>`, suivie du thème, de la boîte à outils `window.SW` (style puis
+ * script, avant le script de mesure) ; le fragment du modèle ne l'atteint qu'après, dans le body.
  */
 export function buildWidgetDocument({ html, theme }: { html: string; theme: WidgetTheme }): string {
   const safeTheme: WidgetTheme = theme === "dark" ? "dark" : "light";
@@ -71,6 +74,8 @@ html,body{margin:0;padding:0}
 body{padding:12px;background:var(--w-bg);color:var(--w-fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.5}
 button,input,select,textarea{font:inherit;color:inherit}
 </style>
+<style>${TOOLKIT_CSS}</style>
+<script>${TOOLKIT_SCRIPT}</script>
 <script>${MEASURE_SCRIPT}</script>
 </head>
 <body>
