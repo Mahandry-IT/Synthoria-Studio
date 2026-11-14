@@ -36,3 +36,12 @@ export const VIDEO_NOTE_MAX_LENGTH = 2000;
 
 /** Longueur maximale d'un message envoyé au chat d'un cours (alignée sur le backend). */
 export const CHAT_MESSAGE_MAX_LENGTH = 1000;
+
+/**
+ * Expose le thème sombre (bascule visible, `data-theme="dark"` honoré).
+ * Faux tant que les écrans ne sont pas tous migrés vers les tokens : le thème clair est alors forcé.
+ */
+export const DARK_THEME_ENABLED = false;
+
+/** Clé `localStorage` du thème choisi manuellement. */
+export const THEME_STORAGE_KEY = "synthoria-theme";

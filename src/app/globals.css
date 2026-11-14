@@ -1,8 +1,163 @@
 @import "tailwindcss";
 @import "react-toastify/dist/ReactToastify.css";
 
+/*
+ * Tokens « carnet éditorial » (valeurs du modèle de design). Thème clair par défaut ;
+ * le sombre s'active par data-theme="dark" sur <html> (voir README, « Thème et design »).
+ * Les anciennes classes gray-* / indigo-* restent valables tant que les écrans ne sont pas migrés.
+ */
 :root {
-  --font-sans: var(--font-geist), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+  --bg: #f7f1e6;
+  --surface: #fdfaf3;
+  --sunken: #efe7d8;
+  --line: #ddd2be;
+  --line-2: #bfb195;
+  /* Bordures de champs et de cases : 3:1 minimum (WCAG 1.4.11), que line-2 n'atteint pas. */
+  --line-strong: #8f8165;
+  --ink: #1e2a28;
+  --ink-2: #46534f;
+  --ink-3: #5c6863;
+  --primary: #1f4e4a;
+  --primary-ink: #f7f1e6;
+  --primary-soft: #d6e4df;
+  --accent: #b8481f;
+  --accent-ink: #fff8f0;
+  --accent-soft: #f3ddd0;
+  --mark: #f2d675;
+  --ok: #2f6b3f;
+  --ok-soft: #d9e8d8;
+  --warn: #7a4f00;
+  --warn-soft: #f4e3bf;
+  --err: #a3322b;
+  --err-soft: #f3d8d4;
+  --sh-1: 0 1px 0 rgba(30, 42, 40, 0.06), 0 1px 2px rgba(30, 42, 40, 0.08);
+  --sh-3: 0 2px 4px rgba(30, 42, 40, 0.08), 0 16px 40px rgba(30, 42, 40, 0.16);
+  --d-fast: 120ms;
+  --d-std: 220ms;
+  --d-slow: 400ms;
+  /* Nommé ainsi pour ne pas écraser --ease-out de Tailwind (classe ease-out). */
+  --ease-editorial: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --r-sm: 3px;
+  --r-md: 6px;
+  --r-lg: 8px;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #141918;
+  --surface: #1b2220;
+  --sunken: #101413;
+  --line: #2b3532;
+  --line-2: #415049;
+  --line-strong: #6b7c73;
+  --ink: #ede7d9;
+  --ink-2: #bdb8ab;
+  --ink-3: #98a09a;
+  --primary: #86cabd;
+  --primary-ink: #0e1e1b;
+  --primary-soft: #1f3532;
+  --accent: #ee8f66;
+  --accent-ink: #2a1208;
+  --accent-soft: #3a2418;
+  --mark: #5e4e14;
+  --ok: #86cc96;
+  --ok-soft: #1e3324;
+  --warn: #e3b95f;
+  --warn-soft: #3a2e12;
+  --err: #f09089;
+  --err-soft: #3c1e1b;
+  --sh-1: 0 0 0 1px rgba(0, 0, 0, 0.3);
+  --sh-3: 0 2px 4px rgba(0, 0, 0, 0.4), 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* Expose les tokens à Tailwind : bg-surface, text-ink, border-line, shadow-paper, rounded-ctrl… */
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: var(--font-fraunces), Georgia, serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-primary: var(--primary);
+  --color-primary-ink: var(--primary-ink);
+  --color-primary-soft: var(--primary-soft);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-mark: var(--mark);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-err: var(--err);
+  --color-err-soft: var(--err-soft);
+
+  --shadow-paper: var(--sh-1);
+  --shadow-lift: var(--sh-3);
+  --radius-tag: var(--r-sm);
+  --radius-ctrl: var(--r-md);
+  --radius-card: var(--r-lg);
+}
+
+/* Anneau de focus par défaut ; les classes focus-visible:outline-* existantes le surclassent. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+/* Utilitaires du modèle (couche components : les utilitaires Tailwind gardent la priorité). */
+@layer components {
+  .kicker {
+    font-family: var(--font-jetbrains), ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .mark {
+    background: linear-gradient(transparent 52%, var(--mark) 52% 92%, transparent 92%);
+    padding: 0 2px;
+    color: inherit;
+  }
+
+  .rule-2 {
+    border: 0;
+    border-top: 3px double var(--ink);
+    margin: 0;
+  }
+
+  .num {
+    font-family: var(--font-fraunces), Georgia, serif;
+    font-weight: 300;
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+  }
+}
+
+/* Notifications (react-toastify, thème « colored ») : couleurs issues des tokens. */
+:root {
+  --toastify-color-success: var(--ok);
+  --toastify-color-error: var(--err);
+  --toastify-color-warning: var(--warn);
+  --toastify-color-info: var(--primary);
+  --toastify-text-color-success: var(--bg);
+  --toastify-text-color-error: var(--bg);
+  --toastify-text-color-warning: var(--bg);
+  --toastify-text-color-info: var(--bg);
+  --toastify-color-light: var(--surface);
+  --toastify-text-color-light: var(--ink);
+  --toastify-font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -101,6 +256,7 @@
  * Le reset de Tailwind retire puces, numéros et marges : on les rétablit pour la saisie.
  */
 .rich-text {
+  color: inherit;
   line-height: 1.5rem;
   overflow-wrap: anywhere;
 }
@@ -177,7 +333,7 @@
 
 .rich-text code {
   border-radius: 0.25rem;
-  background-color: #f3f4f6;
+  background-color: var(--sunken);
   padding: 0.1rem 0.3rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.8125rem;
@@ -186,7 +342,7 @@
 .rich-text pre {
   overflow-x: auto;
   border-radius: 0.5rem;
-  background-color: #f3f4f6;
+  background-color: var(--sunken);
   padding: 0.5rem 0.75rem;
 }
 
@@ -200,7 +356,7 @@
   content: attr(data-placeholder);
   float: left;
   height: 0;
-  color: #9ca3af;
+  color: var(--ink-3);
   pointer-events: none;
 }
 
@@ -216,7 +372,81 @@
 
 .rich-text .inline-math-error,
 .rich-text .block-math-error {
-  color: #b91c1c;
+  color: var(--err);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.8125rem;
+}
+
+/*
+ * Thème sombre des boîtes de code : fond sur le token sunken, jetons recolorés (tous ≥ 4,5:1
+ * sur #101413, voir contrastes-lot-1.md). La palette claire ci-dessus reste inchangée.
+ */
+[data-theme="dark"] .code-highlight {
+  background-color: var(--sunken);
+  color: #ede7d9;
+}
+
+[data-theme="dark"] .code-highlight .hljs-comment,
+[data-theme="dark"] .code-highlight .hljs-quote {
+  color: #7fb08a;
+}
+
+[data-theme="dark"] .code-highlight .hljs-keyword,
+[data-theme="dark"] .code-highlight .hljs-type,
+[data-theme="dark"] .code-highlight .hljs-literal,
+[data-theme="dark"] .code-highlight .hljs-variable.language_ {
+  color: #7aa8f5;
+}
+
+[data-theme="dark"] .code-highlight .hljs-meta,
+[data-theme="dark"] .code-highlight .hljs-meta .hljs-keyword {
+  color: #d29bf0;
+}
+
+[data-theme="dark"] .code-highlight .hljs-string,
+[data-theme="dark"] .code-highlight .hljs-meta .hljs-string {
+  color: #e8a07e;
+}
+
+[data-theme="dark"] .code-highlight .hljs-regexp {
+  color: #e59ab5;
+}
+
+[data-theme="dark"] .code-highlight .hljs-number {
+  color: #8fd1a9;
+}
+
+[data-theme="dark"] .code-highlight .hljs-title {
+  color: #e3c98a;
+}
+
+[data-theme="dark"] .code-highlight .hljs-title.class_,
+[data-theme="dark"] .code-highlight .hljs-built_in {
+  color: #6fcfd8;
+}
+
+[data-theme="dark"] .code-highlight .hljs-variable,
+[data-theme="dark"] .code-highlight .hljs-property {
+  color: #9fc4f2;
+}
+
+[data-theme="dark"] .code-highlight .hljs-attr {
+  color: #8ec1f0;
+}
+
+[data-theme="dark"] .code-highlight .hljs-attribute {
+  color: #f08c86;
+}
+
+[data-theme="dark"] .code-highlight .hljs-tag,
+[data-theme="dark"] .code-highlight .hljs-name,
+[data-theme="dark"] .code-highlight .hljs-selector-tag,
+[data-theme="dark"] .code-highlight .hljs-selector-class,
+[data-theme="dark"] .code-highlight .hljs-selector-id,
+[data-theme="dark"] .code-highlight .hljs-selector-pseudo {
+  color: #e58a8a;
+}
+
+[data-theme="dark"] .code-highlight .hljs-subst {
+  color: #ede7d9;
 }
