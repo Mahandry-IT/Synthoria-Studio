@@ -1,3 +1,4 @@
+import { countLabel } from "@/shared/utils/plural";
 import { DEFAULT_FOLDER, DEFAULT_SUBFOLDER } from "@/components/folders/folders.constants";
 import type { FolderFilter, FolderPlacement, FolderSummary, FolderTarget } from "@/components/folders/folders.types";
 import type { FileInfo } from "./ingestion.types";
@@ -67,4 +68,9 @@ export function visibleFiles(files: readonly FileInfo[], filter: FolderFilter | 
 export function uploadTarget(filter: FolderFilter | null): FolderTarget | undefined {
   if (!filter) return undefined;
   return filter.subfolder ? { folder: filter.folder, subfolder: filter.subfolder } : { folder: filter.folder };
+}
+
+/** Kicker de /upload : « 24 documents · 6 dossiers ». */
+export function uploadKicker(documents: number, folders: number): string {
+  return `${countLabel(documents, "document")} · ${countLabel(folders, "dossier")}`;
 }

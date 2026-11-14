@@ -1,49 +1,47 @@
 "use client";
 
-import Link from "next/link";
 import StyleIcon from "@mui/icons-material/Style";
-import { Card } from "@/components/Card";
+import { ButtonLink } from "@/components/ButtonLink";
+import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
+import { SectionHeading } from "@/components/PageHeader";
 import { DashboardCardSkeleton } from "@/features/dashboard/components/DashboardCardSkeleton";
 import { useDueCards } from "../hooks/useReview";
 
-/** Carte « À réviser aujourd'hui » du dashboard : nombre de flashcards dues et accès à la session. */
+/** Section « À réviser aujourd'hui » du dashboard : nombre de flashcards dues et accès à la session. */
 export function DueReviewCard() {
   const { data, isLoading, error, refetch } = useDueCards(1);
 
   if (isLoading) return <DashboardCardSkeleton label="cartes à réviser" />;
   if (error) {
     return (
-      <Card className="p-5">
-        <h2 className="mb-3 text-base font-semibold text-gray-900">À réviser aujourd&apos;hui</h2>
-        <ErrorState error={error} onRetry={() => refetch()} />
-      </Card>
+      <section>
+        <SectionHeading title="À réviser aujourd'hui" />
+        <div className="mt-4">
+          <ErrorState error={error} onRetry={() => refetch()} />
+        </div>
+      </section>
     );
   }
 
   const due = data?.total_due ?? 0;
 
   return (
-    <Card className="p-5">
-      <div className="mb-3 flex items-center gap-2">
-        <StyleIcon fontSize="small" className="text-indigo-600" aria-hidden="true" />
-        <h2 className="text-base font-semibold text-gray-900">À réviser aujourd&apos;hui</h2>
-      </div>
+    <section>
+      <SectionHeading title="À réviser aujourd'hui" />
       {due === 0 ? (
-        <p className="text-sm text-gray-600">Aucune carte à réviser pour le moment. Bravo !</p>
+        <EmptyState className="mt-4" icon={<StyleIcon fontSize="small" />} title="Aucune carte à réviser pour le moment. Bravo !" />
       ) : (
-        <>
-          <p className="text-sm text-gray-600">
-            <span className="text-2xl font-bold text-gray-900">{due}</span> carte{due > 1 ? "s" : ""} à réviser.
+        <div className="pt-6">
+          <p className="flex flex-wrap items-baseline gap-x-5 gap-y-1 font-serif text-xl text-ink-2">
+            <span className="num text-[clamp(4.5rem,20vw,8.5rem)] text-primary">{due}</span>
+            <span>carte{due > 1 ? "s" : ""} à réviser.</span>
           </p>
-          <Link
-            href="/review"
-            className="mt-3 inline-block rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
-          >
+          <ButtonLink href="/review" className="mt-5 w-full sm:w-auto">
             Commencer la révision
-          </Link>
-        </>
+          </ButtonLink>
+        </div>
       )}
-    </Card>
+    </section>
   );
 }

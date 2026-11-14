@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import PodcastsIcon from "@mui/icons-material/Podcasts";
 import { Badge } from "@/components/Badge";
-import { Card } from "@/components/Card";
+import { Button } from "@/components/Button";
+import { ButtonLink } from "@/components/ButtonLink";
+import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
+import { SectionHeading } from "@/components/PageHeader";
 import { Skeleton } from "@/components/Skeleton";
 import { formatDuration, podcastStatusMeta } from "@/features/podcast/podcast.format";
 import { displayProgress, isTerminal } from "@/features/podcast/podcast.progress";
@@ -22,8 +25,8 @@ const PodcastPlayer = dynamic(
 );
 
 /**
- * Une seule carte pour les 3 derniers podcasts : titre, date relative, durée et statut
- * (icône + texte, jamais la couleur seule). Choisir un podcast prêt le lit dans la carte.
+ * Les 3 derniers podcasts : titre, date relative, durée et statut (icône + texte, jamais la
+ * couleur seule). Choisir un podcast prêt le lit dans la section.
  */
 export function RecentPodcastsCard() {
   const { data: podcasts, isLoading, error, refetch } = useRecentPodcasts();
@@ -33,10 +36,12 @@ export function RecentPodcastsCard() {
   if (isLoading) return <DashboardCardSkeleton label="derniers podcasts" />;
   if (error) {
     return (
-      <Card className="p-5">
-        <h2 className="mb-3 text-base font-semibold text-gray-900">Derniers podcasts</h2>
-        <ErrorState error={error} onRetry={() => refetch()} />
-      </Card>
+      <section>
+        <SectionHeading title="Derniers podcasts" />
+        <div className="mt-4">
+          <ErrorState error={error} onRetry={() => refetch()} />
+        </div>
+      </section>
     );
   }
 
@@ -44,63 +49,61 @@ export function RecentPodcastsCard() {
   const selected = items.find((podcast) => podcast.job_id === selectedId && podcast.status === "done") ?? null;
 
   return (
-    <Card className="p-5">
-      <div className="mb-3 flex items-center gap-2">
-        <PodcastsIcon fontSize="small" className="text-indigo-600" aria-hidden="true" />
-        <h2 className="text-base font-semibold text-gray-900">Derniers podcasts</h2>
-      </div>
+    <section>
+      <SectionHeading title="Derniers podcasts" />
 
       {items.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center">
-          <p className="text-sm text-gray-600">Aucun podcast pour le moment.</p>
-          <Link
-            href="/ask"
-            className="mt-3 inline-block rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
-          >
-            Générer un cours
-          </Link>
-        </div>
+        <EmptyState className="mt-4"
+          icon={<PodcastsIcon fontSize="small" />}
+          title="Aucun podcast pour le moment."
+          action={
+            <ButtonLink href="/ask" variant="accent">
+              Générer un cours
+            </ButtonLink>
+          }
+        />
       ) : (
         <>
-          <ul className="space-y-1">
+          <ul>
             {items.map((podcast) => {
               const meta = podcastStatusMeta(podcast.status);
               const playable = podcast.status === "done";
               const isSelected = playable && podcast.job_id === selectedId;
               const duration = formatDuration(podcast.duration_seconds);
+              const title = podcast.title || "Podcast sans titre";
 
               return (
-                <li key={podcast.job_id}>
-                  <button
+                <li key={podcast.job_id} className="flex items-center gap-4 border-b border-line py-4">
+                  <Button
                     type="button"
+                    size="icon"
+                    variant={isSelected ? "primary" : "secondary"}
                     disabled={!playable}
                     aria-pressed={playable ? isSelected : undefined}
+                    aria-label={`Écouter ${title}`}
                     onClick={() => setSelectedId(isSelected ? null : podcast.job_id)}
-                    className={`flex w-full items-start justify-between gap-3 rounded-lg px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${
-                      isSelected ? "bg-indigo-50" : playable ? "hover:bg-gray-50" : "cursor-default"
-                    }`}
+                    className="shrink-0 rounded-full"
                   >
-                    <span className="min-w-0">
-                      <span className="line-clamp-2 text-sm font-medium text-gray-900">
-                        {podcast.title || "Podcast sans titre"}
-                      </span>
-                      <span className="mt-0.5 block text-xs text-gray-500">
-                        {formatRelativeDate(podcast.created_at, now)}
-                        {duration && ` · ${duration}`}
-                      </span>
-                    </span>
-                    <Badge variant={meta.variant} className="shrink-0 gap-1">
+                    <PlayArrowIcon fontSize="small" />
+                  </Button>
+                  <div className="min-w-0 flex-1">
+                    <p className="line-clamp-2 font-serif text-[17px] leading-snug font-medium text-ink">{title}</p>
+                    <p className="mt-0.5 text-xs text-ink-2">{formatRelativeDate(podcast.created_at, now)}</p>
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-1.5">
+                    {duration && <span className="font-mono text-xs text-ink-2">{duration}</span>}
+                    <Badge variant={meta.variant} className="gap-1">
                       <span aria-hidden="true">{meta.icon}</span>
                       {isTerminal(podcast.status) ? meta.label : `${meta.label} ${displayProgress(podcast)} %`}
                     </Badge>
-                  </button>
+                  </div>
                 </li>
               );
             })}
           </ul>
 
           {selected ? (
-            <div className="mt-3 border-t border-gray-100 pt-3">
+            <div className="mt-4">
               <PodcastPlayer
                 key={selected.job_id}
                 jobId={selected.job_id}
@@ -110,11 +113,11 @@ export function RecentPodcastsCard() {
             </div>
           ) : (
             items.some((p) => p.status === "done") && (
-              <p className="mt-3 text-xs text-gray-500">Sélectionnez un podcast prêt pour l&apos;écouter ici.</p>
+              <p className="mt-3 text-xs text-ink-2">Sélectionnez un podcast prêt pour l&apos;écouter ici.</p>
             )
           )}
         </>
       )}
-    </Card>
+    </section>
   );
 }

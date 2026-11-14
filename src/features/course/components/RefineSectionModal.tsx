@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import { AutoResizeTextarea } from "@/components/AutoResizeTextarea";
 import { Button } from "@/components/Button";
+import { CONTROL_CLASSES } from "@/components/Input";
 import { PLAN_INSTRUCTIONS_MAX_LENGTH } from "@/shared/utils/constants";
 
 interface RefineSectionModalProps {
@@ -30,10 +31,7 @@ export function RefineSectionModal({ sectionTitle, onSubmit, onCancel }: RefineS
   }, [onCancel]);
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-4 backdrop-blur-sm"
-      onClick={onCancel}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-veil p-4" onClick={onCancel}>
       <form
         role="dialog"
         aria-modal="true"
@@ -43,24 +41,24 @@ export function RefineSectionModal({ sectionTitle, onSubmit, onCancel }: RefineS
           e.preventDefault();
           onSubmit(instructions.trim());
         }}
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+        className="w-full max-w-md rounded-card border border-line bg-surface p-6 text-ink shadow-lift"
       >
         <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
             <AutoAwesomeIcon fontSize="small" />
           </span>
           <div className="min-w-0">
-            <h2 id="refine-modal-title" className="text-base font-semibold text-gray-900">
+            <h2 id="refine-modal-title" className="font-serif text-xl font-medium text-ink">
               Compléter la section
             </h2>
-            <p className="mt-0.5 truncate text-sm text-gray-500" title={sectionTitle}>
+            <p className="mt-0.5 truncate text-sm text-ink-2" title={sectionTitle}>
               {sectionTitle || "Section sans titre"}
             </p>
           </div>
         </div>
 
-        <label htmlFor="refine-instructions" className="mt-4 block text-xs font-medium text-gray-600">
-          Que faut-il ajouter ? <span className="font-normal text-gray-400">(facultatif)</span>
+        <label htmlFor="refine-instructions" className="mt-4 block text-sm font-medium text-ink">
+          Que faut-il ajouter ? <span className="font-normal text-ink-3">(facultatif)</span>
         </label>
         <AutoResizeTextarea
           id="refine-instructions"
@@ -70,9 +68,9 @@ export function RefineSectionModal({ sectionTitle, onSubmit, onCancel }: RefineS
           value={instructions}
           onChange={(e) => setInstructions(e.target.value)}
           placeholder="Ex. : ajouter le cas du régime transitoire, avec un exemple chiffré"
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className={`${CONTROL_CLASSES} mt-1.5 block w-full py-2.5`}
         />
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-1.5 text-xs text-ink-2">
           Laissez vide : l&apos;IA repère et ajoute d&apos;elle-même les informations manquantes.
         </p>
 

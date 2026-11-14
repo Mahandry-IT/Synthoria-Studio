@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_FOLDER, DEFAULT_SUBFOLDER } from "@/components/folders/folders.constants";
-import { buildFolderTree, filterFilesByFolder, sortFilesByName, uploadTarget, visibleFiles } from "./fileFolders";
+import { buildFolderTree, filterFilesByFolder, sortFilesByName, uploadKicker, uploadTarget, visibleFiles } from "./fileFolders";
 import type { FileInfo } from "./ingestion.types";
 
 let nextId = 1;
@@ -82,5 +82,12 @@ describe("uploadTarget", () => {
   it("targets the selected folder or subfolder", () => {
     expect(uploadTarget({ folder: "Maths" })).toEqual({ folder: "Maths" });
     expect(uploadTarget({ folder: "Maths", subfolder: "Algèbre" })).toEqual({ folder: "Maths", subfolder: "Algèbre" });
+  });
+});
+
+describe("uploadKicker", () => {
+  it("compte documents et dossiers avec accord", () => {
+    expect(uploadKicker(24, 6)).toBe("24 documents · 6 dossiers");
+    expect(uploadKicker(1, 1)).toBe("1 document · 1 dossier");
   });
 });

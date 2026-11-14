@@ -8,6 +8,7 @@ interface UseCourseHistoryReturn {
   data: Awaited<ReturnType<typeof getCourseHistory>> | null;
   isLoading: boolean;
   error: Error | null;
+  refetch: () => void;
 }
 
 /**
@@ -28,5 +29,6 @@ export function useCourseHistory(
     data: query.data ?? null,
     isLoading: query.isLoading,
     error: query.error ?? null,
+    refetch: () => void query.refetch(),
   };
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
+import { Option } from "@/components/Check";
 import { LatexText } from "@/shared/utils/latex";
 import type { PretestItem } from "../course.types";
 import { masteredTitles, type PretestAnswers } from "../pretest";
@@ -45,11 +46,11 @@ export function PretestPanel({ pretest, onApply, disabled }: PretestPanelProps) 
   if (!open) {
     return (
       <Card className="flex flex-wrap items-center justify-between gap-3 p-4">
-        <p className="text-sm text-gray-600">
-          Vous connaissez déjà une partie du sujet ? Le <strong>pré-test</strong> (facultatif) permet de
-          condenser les sections que vous maîtrisez.
+        <p className="min-w-0 flex-1 basis-64 text-sm text-ink-2">
+          Vous connaissez déjà une partie du sujet ? Le <strong className="font-semibold text-ink">pré-test</strong>{" "}
+          (facultatif) permet de condenser les sections que vous maîtrisez.
         </p>
-        <Button type="button" variant="outline" disabled={disabled} onClick={() => setOpen(true)}>
+        <Button type="button" variant="secondary" disabled={disabled} onClick={() => setOpen(true)}>
           Faire le pré-test ({pretest.length} question{pretest.length > 1 ? "s" : ""})
         </Button>
       </Card>
@@ -57,28 +58,26 @@ export function PretestPanel({ pretest, onApply, disabled }: PretestPanelProps) 
   }
 
   return (
-    <Card className="space-y-4 p-5">
-      <h3 className="text-base font-semibold text-gray-900">Pré-test</h3>
+    <Card className="space-y-5 p-5">
+      <h3 className="font-serif text-xl font-medium text-ink">Pré-test</h3>
       {pretest.map((item) => {
         const multiple = item.question.correct_option_indices.length > 1;
         return (
           <fieldset key={item.section_title} className="space-y-2" disabled={disabled}>
-            <legend className="text-sm font-medium text-gray-900">
-              <span className="mr-2 text-xs font-normal text-indigo-600">{item.section_title}</span>
+            <legend className="mb-1 text-sm font-medium text-ink">
+              <span className="mr-2 font-mono text-xs font-normal text-primary">{item.section_title}</span>
               <LatexText text={item.question.question} />
             </legend>
-            {multiple && <p className="text-xs text-gray-500">Plusieurs réponses possibles.</p>}
+            {multiple && <p className="text-xs text-ink-2">Plusieurs réponses possibles.</p>}
             {item.question.options.map((option, i) => (
-              <label key={i} className="flex cursor-pointer items-start gap-2 text-sm text-gray-700">
-                <input
-                  type={multiple ? "checkbox" : "radio"}
-                  name={`pretest-${item.section_title}`}
-                  checked={(answers[item.section_title] ?? []).includes(i)}
-                  onChange={() => toggle(item.section_title, i, multiple)}
-                  className="mt-1"
-                />
-                <LatexText text={option} autoMath />
-              </label>
+              <Option
+                key={i}
+                type={multiple ? "checkbox" : "radio"}
+                name={`pretest-${item.section_title}`}
+                checked={(answers[item.section_title] ?? []).includes(i)}
+                onChange={() => toggle(item.section_title, i, multiple)}
+                label={<LatexText text={option} autoMath />}
+              />
             ))}
           </fieldset>
         );
@@ -88,7 +87,7 @@ export function PretestPanel({ pretest, onApply, disabled }: PretestPanelProps) 
           Valider le pré-test
         </Button>
         {result !== null && (
-          <p role="status" className="text-sm text-green-700">
+          <p role="status" className="text-sm text-ok">
             {result} section{result > 1 ? "s" : ""} marquée{result > 1 ? "s" : ""} « déjà maîtrisée
             {result > 1 ? "s" : ""} ». Elle{result > 1 ? "s seront condensées" : " sera condensée"} dans le cours.
           </p>

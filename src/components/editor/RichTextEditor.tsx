@@ -60,10 +60,10 @@ export function RichTextEditor({
   return (
     <div
       className={[
-        "overflow-hidden rounded-lg border bg-white",
-        "focus-within:ring-2",
-        invalid ? "border-red-300 focus-within:ring-red-500" : "border-gray-300 focus-within:border-indigo-500 focus-within:ring-indigo-500",
-        disabled ? "opacity-50" : "",
+        "overflow-hidden rounded-ctrl border bg-surface text-ink",
+        "focus-within:outline-2 focus-within:outline-offset-1 focus-within:outline-accent",
+        invalid ? "border-err" : "border-line-strong",
+        disabled ? "opacity-45" : "",
       ].join(" ")}
     >
       {editor && <RichTextToolbar editor={editor} tools={tools} disabled={disabled} />}

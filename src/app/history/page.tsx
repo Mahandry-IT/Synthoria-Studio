@@ -14,7 +14,13 @@ import { MoveToFolderDialog } from "@/components/folders/MoveToFolderDialog";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Pagination } from "@/components/Pagination";
 import { Skeleton } from "@/components/Skeleton";
-import { Card } from "@/components/Card";
+import { ButtonLink } from "@/components/ButtonLink";
+import { CollapsibleFolderPanel } from "@/components/folders/CollapsibleFolderPanel";
+import { filterLabel } from "@/components/folders/folders.utils";
+import { EmptyState } from "@/components/EmptyState";
+import { ErrorState } from "@/components/ErrorState";
+import { PageHeader } from "@/components/PageHeader";
+import { countLabel } from "@/shared/utils/plural";
 import type { DragData, DropTarget } from "@/components/folders/folders.dnd";
 import { innermostPointerWithin, resolveDropMove } from "@/components/folders/folders.dnd";
 import { useFolderDndSensors } from "@/components/folders/useFolderDndSensors";
@@ -36,7 +42,7 @@ export default function HistoryPage() {
   const [deletingSubfolder, setDeletingSubfolder] = useState<{ folder: string; subfolder: string } | null>(null);
   const [draggedItem, setDraggedItem] = useState<CourseHistoryItem | null>(null);
 
-  const { data, isLoading } = useCourseHistory(page, pageSize, filter ?? undefined);
+  const { data, isLoading, error, refetch } = useCourseHistory(page, pageSize, filter ?? undefined);
   const { data: folders, isLoading: foldersLoading } = useCourseFolders();
   const deleteCourse = useDeleteCourse();
   const moveCourse = useMoveCourseToFolder();
@@ -67,15 +73,12 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">
-          Historique des cours
-        </h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Retrouvez tous les cours que vous avez générés.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <PageHeader
+        kicker={data ? countLabel(data.meta.total, "cours", "cours") : undefined}
+        title="Historique des cours"
+        description="Retrouvez tous les cours que vous avez générés."
+      />
 
       <DndContext
         sensors={sensors}
@@ -83,36 +86,48 @@ export default function HistoryPage() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]">
-          <Card className="h-fit p-3">
-            <FolderNav
-              folders={folders}
-              isLoading={foldersLoading}
-              allLabel="Tous les cours"
-              ariaLabel="Dossiers de cours"
-              collapsedStorageKey="history-collapsed-folders"
-              filter={filter}
-              onSelect={handleSelect}
-              onDeleteFolder={setDeletingFolder}
-              onDeleteSubfolder={(folder, subfolder) => setDeletingSubfolder({ folder, subfolder })}
-            />
-          </Card>
+        <div className="grid grid-cols-1 gap-x-10 gap-y-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+          <div className="h-fit">
+            <p className="kicker mb-2 hidden lg:block">Dossiers</p>
+            <CollapsibleFolderPanel currentLabel={filterLabel(filter, "Tous les cours")}>
+              <FolderNav
+                folders={folders}
+                isLoading={foldersLoading}
+                allLabel="Tous les cours"
+                ariaLabel="Dossiers de cours"
+                collapsedStorageKey="history-collapsed-folders"
+                filter={filter}
+                onSelect={handleSelect}
+                onDeleteFolder={setDeletingFolder}
+                onDeleteSubfolder={(folder, subfolder) => setDeletingSubfolder({ folder, subfolder })}
+              />
+            </CollapsibleFolderPanel>
+          </div>
 
           <div className="min-w-0 space-y-6">
             {isLoading && (
-              <div className="space-y-4">
-                <Skeleton lines={2} />
-                <Skeleton lines={4} />
-                <Skeleton lines={3} />
+              <div aria-busy="true" role="status" aria-label="Chargement de l'historique">
+                {[0, 1, 2, 3].map((row) => (
+                  <div key={row} className="border-b border-line px-2 py-4">
+                    <Skeleton lines={2} aria-hidden="true" />
+                  </div>
+                ))}
               </div>
             )}
 
-            {!isLoading && data && data.data.length === 0 && (
-              <Card className="p-8 text-center">
-                <p className="text-sm text-gray-500">
-                  {filter ? "Aucun cours dans ce dossier." : "Aucun cours généré pour le moment."}
-                </p>
-              </Card>
+            {!isLoading && error && <ErrorState error={error} onRetry={refetch} />}
+
+            {!isLoading && !error && data && data.data.length === 0 && (
+              <EmptyState
+                title={filter ? "Aucun cours dans ce dossier." : "Aucun cours généré pour le moment."}
+                action={
+                  filter ? undefined : (
+                    <ButtonLink href="/ask" variant="accent">
+                      Poser une question
+                    </ButtonLink>
+                  )
+                }
+              />
             )}
 
             {!isLoading && data && data.data.length > 0 && (
@@ -140,7 +155,7 @@ export default function HistoryPage() {
 
         <DragOverlay>
           {draggedItem && (
-            <div className="max-w-xs truncate rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-lg">
+            <div className="max-w-xs truncate rounded-card border border-line-strong bg-surface px-3 py-2 text-sm text-ink shadow-lift">
               {markdownToPlain(draggedItem.question)}
             </div>
           )}

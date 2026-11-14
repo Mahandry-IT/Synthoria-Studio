@@ -99,26 +99,24 @@ export function PlanReview({ plan, onValidate, onRegenerate, isGenerating }: Pla
     <div className="space-y-4">
       <Card className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Plan du cours</h2>
-            <p className="mt-1 text-sm text-gray-600">
+          <div className="min-w-0 flex-1 basis-64">
+            <p className="kicker">Plan à valider</p>
+            <h2 className="mt-2 font-serif text-[clamp(1.5rem,4.5vw,2rem)] leading-tight font-medium text-ink">
               {plan.meta.title}
-              {plan.meta.subject ? ` — ${plan.meta.subject}` : ""}
-            </p>
+            </h2>
+            {plan.meta.subject && <p className="mt-1 text-sm text-ink-2">{plan.meta.subject}</p>}
           </div>
-          <Badge variant="indigo">
+          <Badge variant="info">
             {sections.length} section{sections.length > 1 ? "s" : ""}
           </Badge>
         </div>
-        <p className="mt-3 text-sm text-gray-500">
+        <p className="mt-4 text-sm text-ink-2">
           Relisez le plan, modifiez-le si besoin (titres, objectifs, ordre, sections), puis validez pour
           générer le cours complet. Le cours suivra exactement ce plan. Une section vous semble incomplète ?
           Le bouton <AutoAwesomeIcon sx={{ fontSize: 14 }} aria-hidden="true" /> la fait compléter par l&apos;IA.
         </p>
         {plan.coverage_notes && (
-          <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-            {plan.coverage_notes}
-          </p>
+          <p className="mt-3 rounded-ctrl bg-warn-soft px-3 py-2 text-sm text-warn">{plan.coverage_notes}</p>
         )}
       </Card>
 
@@ -147,7 +145,7 @@ export function PlanReview({ plan, onValidate, onRegenerate, isGenerating }: Pla
       </div>
 
       {errors.length > 0 && (
-        <ul role="alert" className="list-disc space-y-1 pl-5 text-sm text-red-600">
+        <ul role="alert" className="list-disc space-y-1 pl-5 text-sm text-err">
           {errors.map((error) => (
             <li key={error}>{error}</li>
           ))}
@@ -155,23 +153,28 @@ export function PlanReview({ plan, onValidate, onRegenerate, isGenerating }: Pla
       )}
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button
-          type="button"
-          loading={isGenerating}
-          disabled={errors.length > 0 || isAssisting}
-          onClick={() => onValidate(toPlannedSections(sections))}
-        >
-          Valider et générer le cours complet
-        </Button>
-        <Button type="button" variant="outline" disabled={isLocked || !canAdd} onClick={addMoreSections}>
+        <Button type="button" variant="secondary" disabled={isLocked || !canAdd} onClick={addMoreSections}>
           <AutoAwesomeIcon sx={{ fontSize: 16 }} />
           Ajouter plus de sections
         </Button>
         <Button type="button" variant="secondary" disabled={isLocked || !canAdd} onClick={() => addSection()}>
           Ajouter une section
         </Button>
-        <Button type="button" variant="outline" disabled={isLocked} onClick={onRegenerate}>
+        <Button type="button" variant="secondary" disabled={isLocked} onClick={onRegenerate}>
           Régénérer le plan
+        </Button>
+      </div>
+
+      <div>
+        <Button
+          type="button"
+          variant="accent"
+          loading={isGenerating}
+          disabled={errors.length > 0 || isAssisting}
+          onClick={() => onValidate(toPlannedSections(sections))}
+          className="w-full sm:w-auto"
+        >
+          Valider et générer le cours complet
         </Button>
       </div>
 

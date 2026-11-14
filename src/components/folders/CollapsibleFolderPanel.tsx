@@ -27,12 +27,12 @@ export function CollapsibleFolderPanel({ currentLabel, className = "", children 
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-controls={contentId}
-        className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 lg:hidden"
+        className="flex min-h-11 w-full items-center gap-2 rounded-ctrl border border-line-strong bg-surface px-3 text-left text-sm font-medium text-ink hover:bg-sunken lg:hidden"
       >
-        <FolderOutlinedIcon fontSize="small" className="text-gray-400" />
+        <FolderOutlinedIcon fontSize="small" className="text-ink-3" />
         <span className="min-w-0 flex-1 truncate">{currentLabel}</span>
         <svg
-          className={`h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200 motion-reduce:transition-none ${open ? "rotate-180" : ""}`}
+          className={`h-4 w-4 shrink-0 text-ink-3 transition-transform duration-200 motion-reduce:transition-none ${open ? "rotate-180" : ""}`}
           viewBox="0 0 20 20"
           fill="currentColor"
           aria-hidden="true"

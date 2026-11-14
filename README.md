@@ -135,6 +135,17 @@ Direction « carnet éditorial » : tokens en variables CSS dans `src/app/global
 - **Icônes** : `@mui/icons-material` conservé.
 - **Contraste** : `designTokens.test.ts` vérifie les ratios WCAG des tokens dans les deux thèmes.
 
+## Évolutions API
+
+Les maquettes montrent des données que l'API n'expose pas encore. Les écrans ne les inventent pas : elles sont masquées tant que le backend ne les fournit pas.
+
+| Écran | Donnée attendue |
+| --- | --- |
+| Accueil | cours d'origine des cartes à réviser, heure de la prochaine série, fichier source et mode d'un plan en attente, progression d'écoute d'un podcast |
+| Historique | numéro de cours, avancement de lecture, profondeur (express / standard / approfondi), podcast associé, recherche texte (paramètre `q`) |
+| Fichiers | nombre de pages d'un PDF, état d'indexation par fichier (seul le dernier import affiche « Indexé » / « Échec ») |
+| Nouveau cours | progression de génération (« section 8 sur 12 ») |
+
 ## Docker
 
 ### Quick Start

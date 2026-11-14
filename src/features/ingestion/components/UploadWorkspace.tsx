@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { DndContext, DragOverlay, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core";
-import { Card } from "@/components/Card";
 import { CollapsibleFolderPanel } from "@/components/folders/CollapsibleFolderPanel";
 import { FolderNav } from "@/components/folders/FolderNav";
 import { DEFAULT_FOLDER } from "@/components/folders/folders.constants";
@@ -61,8 +60,9 @@ export function UploadWorkspace() {
         onDragEnd={handleDragEnd}
         onDragCancel={() => setDraggedFile(null)}
       >
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]">
-          <Card className="h-fit p-3">
+        <div className="grid grid-cols-1 gap-x-10 gap-y-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+          <div className="h-fit">
+            <p className="kicker mb-2 hidden lg:block">Dossiers</p>
             <CollapsibleFolderPanel currentLabel={currentLabel}>
               <FolderNav
                 folders={folders}
@@ -76,9 +76,9 @@ export function UploadWorkspace() {
                 onDeleteSubfolder={(folder, subfolder) => setPendingDeletion({ folder, subfolder })}
               />
             </CollapsibleFolderPanel>
-          </Card>
+          </div>
 
-          <div className="min-w-0 space-y-6">
+          <div className="min-w-0 space-y-8">
             <div id="import" className="scroll-mt-6">
               <FileUploadPanel target={target} targetLabel={filter ? currentLabel : `${DEFAULT_FOLDER} (par défaut)`} />
             </div>
@@ -88,7 +88,7 @@ export function UploadWorkspace() {
 
         <DragOverlay>
           {draggedFile && (
-            <div className="max-w-xs truncate rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-lg">
+            <div className="max-w-xs truncate rounded-card border border-line-strong bg-surface px-3 py-2 text-sm text-ink shadow-lift">
               {draggedFile.filename}
             </div>
           )}

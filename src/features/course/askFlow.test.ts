@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveAskPhase, toPendingPlan, type PendingPlan } from "./askFlow";
+import { askStep, resolveAskPhase, toPendingPlan, type PendingPlan } from "./askFlow";
 
 const pendingPlan = { request: { question: "Q" }, plan: { plan_id: "p" } } as PendingPlan;
 const lastCourseId = "c-1";
@@ -57,5 +57,21 @@ describe("toPendingPlan", () => {
   it("un seul fichier → chaîne, plusieurs → tableau", () => {
     expect(toPendingPlan({ ...detail, filenames: ["a.pdf"] }).request.filename).toBe("a.pdf");
     expect(toPendingPlan({ ...detail, filenames: ["a.pdf", "b.pdf"] }).request.filename).toEqual(["a.pdf", "b.pdf"]);
+  });
+});
+
+describe("askStep", () => {
+  it("étape 1 sur le formulaire", () => {
+    expect(askStep("question", false)).toBe(1);
+  });
+
+  it("étape 2 pour un plan à valider ou en chargement", () => {
+    expect(askStep("plan_review", false)).toBe(2);
+    expect(askStep("question", false, true)).toBe(2);
+  });
+
+  it("étape 3 pendant la génération du cours, quelle que soit la phase", () => {
+    expect(askStep("plan_review", true)).toBe(3);
+    expect(askStep("question", true)).toBe(3);
   });
 });

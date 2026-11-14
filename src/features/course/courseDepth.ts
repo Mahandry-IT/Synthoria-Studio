@@ -26,3 +26,9 @@ export const COURSE_DEPTH_OPTIONS: readonly CourseDepthOption[] = [
 export function isCourseDepth(value: unknown): value is CourseDepth {
   return typeof value === "string" && (COURSE_DEPTHS as readonly string[]).includes(value);
 }
+
+/** Version courte de l'aide d'un niveau (sa première phrase), pour les cartes de choix. */
+export function shortDepthHelp(help: string): string {
+  const end = help.indexOf(". ");
+  return end === -1 ? help : help.slice(0, end + 1);
+}

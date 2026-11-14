@@ -9,10 +9,13 @@ import type { DropTarget } from "./folders.dnd";
 import type { FolderFilter, FolderSummary, SubfolderSummary } from "./folders.types";
 
 /** Highlight sobre (même famille que l'état « dossier actif ») pendant le survol d'un glisser. */
-const DROP_ACTIVE_CLASS = "bg-indigo-50 ring-1 ring-indigo-400";
+const DROP_ACTIVE_CLASS = "bg-primary-soft ring-1 ring-primary";
 
+/** Visible au survol de la ligne, au focus clavier et en permanence sur écran tactile (pas de survol). */
 const DELETE_BUTTON_CLASS =
-  "flex h-6 w-6 shrink-0 items-center justify-center rounded text-gray-300 opacity-0 hover:bg-red-50 hover:text-red-600 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500";
+  "flex h-11 w-11 shrink-0 items-center justify-center rounded-ctrl text-ink-3 opacity-0 hover:bg-err-soft hover:text-err focus-visible:opacity-100 pointer-coarse:opacity-100";
+
+const COUNT_CLASS = "ml-auto shrink-0 font-mono text-xs font-normal text-ink-3";
 
 interface FolderNavProps {
   folders: FolderSummary[];
@@ -58,19 +61,20 @@ function SubfolderRow({
   return (
     <div
       ref={setNodeRef}
-      className={`group/sub flex items-center justify-between rounded-lg px-1 py-0.5 transition-colors ${
-        isOver ? DROP_ACTIVE_CLASS : ""
-      }`}
+      className={`group/sub flex items-center justify-between rounded-ctrl transition-colors ${
+        isActive ? "bg-sunken" : "hover:bg-sunken"
+      } ${isOver ? DROP_ACTIVE_CLASS : ""}`}
     >
       <button
         type="button"
         onClick={onSelect}
-        className={`flex min-w-0 flex-1 items-center gap-2 truncate rounded-lg px-2 py-1.5 text-left text-sm transition-colors ${
-          isActive ? "font-medium text-indigo-700" : "text-gray-500 hover:text-gray-900"
+        aria-current={isActive ? "true" : undefined}
+        className={`flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-ctrl px-2 text-left text-sm ${
+          isActive ? "font-semibold text-ink" : "text-ink-2"
         }`}
       >
         <span className="truncate">{subfolder.name}</span>
-        <span className="text-xs text-gray-400">{subfolder.count}</span>
+        <span className={COUNT_CLASS}>{subfolder.count}</span>
       </button>
       {onDeleteSubfolder && subfolder.name !== DEFAULT_SUBFOLDER && (
         <button
@@ -80,7 +84,7 @@ function SubfolderRow({
           onClick={onDeleteSubfolder}
           className={`${DELETE_BUTTON_CLASS} group-hover/sub:opacity-100`}
         >
-          <DeleteOutlineIcon sx={{ fontSize: 14 }} />
+          <DeleteOutlineIcon sx={{ fontSize: 16 }} />
         </button>
       )}
     </div>
@@ -94,7 +98,7 @@ function ChevronButton({ name, isExpanded, onToggle }: { name: string; isExpande
       onClick={onToggle}
       aria-expanded={isExpanded}
       aria-label={isExpanded ? `Réduire le dossier ${name}` : `Déplier le dossier ${name}`}
-      className="flex h-6 w-6 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+      className="flex h-11 w-11 items-center justify-center rounded-ctrl text-ink-3 hover:text-ink"
     >
       <svg
         className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
@@ -141,23 +145,24 @@ function FolderRow({
     <div className="group">
       <div
         ref={setNodeRef}
-        className={`flex items-center justify-between rounded-lg px-1 py-0.5 transition-colors ${
-          isOver ? DROP_ACTIVE_CLASS : ""
-        }`}
+        className={`flex items-center justify-between rounded-ctrl transition-colors ${
+          isActive ? "bg-sunken" : "hover:bg-sunken"
+        } ${isOver ? DROP_ACTIVE_CLASS : ""}`}
       >
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center">
           {hasSubfolders && <ChevronButton name={folder.name} isExpanded={isExpanded} onToggle={onToggle} />}
         </span>
         <button
           type="button"
           onClick={() => onSelect({ folder: folder.name })}
-          className={`flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm font-medium transition-colors ${
-            isActive ? "text-indigo-700" : "text-gray-700 hover:text-gray-900"
+          aria-current={isActive ? "true" : undefined}
+          className={`flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-ctrl px-2 text-left text-sm ${
+            isActive ? "font-semibold text-ink" : "font-medium text-ink"
           }`}
         >
-          <FolderOutlinedIcon fontSize="small" className={isActive ? "text-indigo-600" : "text-gray-400"} />
+          <FolderOutlinedIcon fontSize="small" className={isActive ? "text-primary" : "text-ink-3"} />
           <span className="truncate">{folder.name}</span>
-          <span className="text-xs font-normal text-gray-400">{folder.count}</span>
+          <span className={COUNT_CLASS}>{folder.count}</span>
         </button>
         {onDeleteFolder && folder.name !== DEFAULT_FOLDER && (
           <button
@@ -167,13 +172,13 @@ function FolderRow({
             onClick={() => onDeleteFolder(folder.name)}
             className={`${DELETE_BUTTON_CLASS} group-hover:opacity-100`}
           >
-            <DeleteOutlineIcon sx={{ fontSize: 14 }} />
+            <DeleteOutlineIcon sx={{ fontSize: 16 }} />
           </button>
         )}
       </div>
 
       {hasSubfolders && isExpanded && (
-        <div className="ml-5 space-y-0.5 border-l border-gray-100 pl-2">
+        <div className="ml-4 border-l border-line pl-2">
           {folder.subfolders.map((s) => (
             <SubfolderRow
               key={s.name}
@@ -240,14 +245,15 @@ export function FolderNav({
       <button
         type="button"
         onClick={() => onSelect(null)}
-        className={`flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
-          filter === null ? "bg-indigo-50 text-indigo-700" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+        aria-current={filter === null ? "true" : undefined}
+        className={`flex min-h-11 w-full items-center rounded-ctrl px-3 text-left text-sm ${
+          filter === null ? "bg-sunken font-semibold text-ink" : "font-medium text-ink-2 hover:bg-sunken"
         }`}
       >
         {allLabel}
       </button>
 
-      {isLoading && <p className="px-3 py-2 text-xs text-gray-400">Chargement…</p>}
+      {isLoading && <p className="px-3 py-2 text-xs text-ink-3">Chargement…</p>}
 
       {folders.map((f) => (
         <FolderRow
