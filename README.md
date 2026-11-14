@@ -108,6 +108,20 @@ Un échec du podcast n'invalide jamais le cours affiché. L'audio est lu via `/a
 Endpoints backend utilisés par le dashboard : `GET /podcasts?limit=3`, `GET /courses/plans` et
 `GET /courses/plans/{plan_id}`.
 
+## Thème et design
+
+Direction « carnet éditorial » : tokens en variables CSS dans `src/app/globals.css`, exposés à Tailwind par `@theme inline`.
+
+- **Tokens** : `bg`, `surface`, `sunken`, `line`, `line-2`, `line-strong` (bordures de champs, 3:1), `ink`/`ink-2`/`ink-3`, `primary`(-ink/-soft), `accent`(-ink/-soft), `mark`, `ok`/`warn`/`err`(-soft). Clair sur `:root`, sombre sur `[data-theme="dark"]`. Écrire `bg-surface`, `text-ink`, `border-line`, `shadow-paper`/`shadow-lift`, `rounded-tag|ctrl|card`, jamais de couleur en dur ; durées `--d-fast|std|slow`, easing `--ease-editorial` (nom différent de `--ease-out` pour ne pas écraser celui de Tailwind).
+- **Polices** (`next/font`, auto-hébergées) : Fraunces (`font-serif`, titres), Inter (`font-sans`), JetBrains Mono (`font-mono`).
+- **Utilitaires** : `kicker`, `mark`, `rule-2`, `num`, anneau de focus `:focus-visible` terre cuite 2 px par défaut.
+- **Règle** : une page n'utilise jamais plus de trois tailles de texte.
+- **Thème** : un script inline (`THEME_INIT_SCRIPT`, `src/shared/utils/theme.ts`) pose `data-theme` sur `<html>` avant le rendu (choix `localStorage` clé `synthoria-theme`, sinon `prefers-color-scheme`). `useTheme()` (`src/shared/hooks`) expose `theme`, `setTheme`, `toggleTheme`.
+- **`DARK_THEME_ENABLED`** (`src/shared/utils/constants.ts`) : `false` tant que les écrans ne sont pas migrés ; force le clair (script et hook) et la bascule ne doit pas être affichée. À passer à `true` au lot 7 (le script lit la constante au build).
+- **Migration** : les classes `gray-*` / `indigo-*` existantes gardent leur rendu clair ; elles ne suivent pas le thème sombre. Mermaid, graphiques et widgets sont traités au lot 7.
+- **Icônes** : `@mui/icons-material` conservé.
+- **Contraste** : `designTokens.test.ts` vérifie les ratios WCAG des tokens dans les deux thèmes.
+
 ## Docker
 
 ### Quick Start
