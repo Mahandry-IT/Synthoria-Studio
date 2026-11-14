@@ -39,3 +39,24 @@ describe.each(Object.entries(themes))("contrastes des composants, thème %s", (_
     expect(contrastRatio(t.err, t.surface)).toBeGreaterThanOrEqual(4.5);
   });
 });
+
+/** Paires utilisées par les écrans Révisions et Tuteur (options corrigées, bulles, correction, encart de quota). */
+const screenPairs: [string, string][] = [
+  ["ok", "ok-soft"],
+  ["err", "err-soft"],
+  ["warn", "warn-soft"],
+  ["ink", "ok-soft"],
+  ["ink", "err-soft"],
+  ["ink", "warn-soft"],
+  ["ink", "primary-soft"],
+  ["ink-2", "primary-soft"],
+  ["primary-ink", "primary"],
+  ["ink-2", "sunken"],
+  ["ink-3", "surface"],
+];
+
+describe.each(Object.entries(themes))("contrastes des écrans Révisions et Tuteur, thème %s", (_n, t) => {
+  it.each(screenPairs)("%s sur %s ≥ 4,5:1", (fg, bg) => {
+    expect(contrastRatio(t[fg], t[bg]), `${fg} sur ${bg}`).toBeGreaterThanOrEqual(4.5);
+  });
+});

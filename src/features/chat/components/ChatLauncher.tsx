@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
+import { Button } from "@/components/Button";
 import { ChatDrawer } from "./ChatDrawer";
 
 /**
@@ -14,18 +15,19 @@ export function ChatLauncher({ sessionId, sectionId }: { sessionId: string; sect
 
   return (
     <>
-      <button
+      <Button
         type="button"
+        size="icon"
         onClick={() => setOpen(true)}
         aria-label="Ouvrir le chat du cours"
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? "course-chat-drawer" : undefined}
         title="Chat du cours"
-        className="fixed bottom-20 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg transition-colors duration-200 hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+        className="fixed bottom-20 right-6 z-40 shadow-lift"
       >
         <ChatBubbleOutlineIcon fontSize="small" />
-      </button>
+      </Button>
       {open && <ChatDrawer sessionId={sessionId} sectionId={sectionId} onClose={close} />}
     </>
   );

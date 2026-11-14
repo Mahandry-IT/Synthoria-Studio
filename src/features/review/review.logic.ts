@@ -62,3 +62,28 @@ export function cardCorrection(card: Pick<DueCard, "back" | "explanation">): { a
   const { answer, explanation } = splitBack(card.back);
   return { answer, explanation: card.explanation.trim() || explanation };
 }
+
+/** Délais de révision des quatre boîtes de Leitner (boîte 0 → J+1 … boîte 3 → J+21). */
+export const BOX_DELAYS = ["J+1", "J+3", "J+7", "J+21"] as const;
+
+/** Délai d'une boîte (« J+1 » … « J+21 ») ; valeur bornée aux quatre boîtes. */
+export function boxToDelay(box: number): (typeof BOX_DELAYS)[number] {
+  const index = Number.isFinite(box) ? Math.min(Math.max(Math.trunc(box), 0), BOX_DELAYS.length - 1) : 0;
+  return BOX_DELAYS[index];
+}
+
+/** Effectifs par boîte des cartes de la série en cours (quatre cases, boîtes ≥ 3 regroupées). */
+export function countByBox(cards: Pick<DueCard, "box">[]): number[] {
+  const counts = BOX_DELAYS.map(() => 0);
+  for (const card of cards) {
+    const index = Number.isFinite(card.box) ? Math.min(Math.max(Math.trunc(card.box), 0), counts.length - 1) : 0;
+    counts[index] += 1;
+  }
+  return counts;
+}
+
+/** « Carte 3 sur 20 » à partir de l'index (0 = première carte) et du total de la série. */
+export function cardPositionLabel(index: number, total: number): string {
+  const position = Math.min(Math.max(index + 1, 1), Math.max(total, 1));
+  return `Carte ${position} sur ${Math.max(total, 1)}`;
+}

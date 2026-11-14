@@ -5,6 +5,8 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import ReplayIcon from "@mui/icons-material/Replay";
 import { Badge } from "@/components/Badge";
 import { RichTextView } from "@/components/editor/RichTextView";
@@ -42,35 +44,43 @@ function formatTime(iso: string): string {
     : date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 }
 
+const SOURCE_CARD = "flex items-center gap-2 rounded-ctrl border border-line bg-bg px-3 py-2";
+
+/** Carte de source : icône livre, libellé, lien externe seulement pour une URL http(s) sûre. */
 function SourceItem({ source }: { source: ChatSource }) {
   const href = toSafeHttpUrl(source.reference);
   const label = source.label || source.reference;
   return (
-    <li className="truncate">
+    <li>
       {href ? (
         <a
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-indigo-700 underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-indigo-600"
+          className={`${SOURCE_CARD} text-primary underline-offset-2 hover:underline`}
         >
-          {label}
+          <MenuBookOutlinedIcon fontSize="inherit" className="shrink-0 text-base" aria-hidden="true" />
+          <span className="min-w-0 flex-1 truncate">{label}</span>
+          <OpenInNewIcon fontSize="inherit" className="shrink-0 text-sm" aria-hidden="true" />
         </a>
       ) : (
-        <span>{label === source.reference ? label : `${label} — ${source.reference}`}</span>
+        <div className={`${SOURCE_CARD} text-ink-2`}>
+          <MenuBookOutlinedIcon fontSize="inherit" className="shrink-0 text-base" aria-hidden="true" />
+          <span className="min-w-0 flex-1 break-words">{label === source.reference ? label : `${label} — ${source.reference}`}</span>
+        </div>
       )}
     </li>
   );
 }
 
 const BUBBLE_STYLES = {
-  user: "bg-indigo-600 text-white",
-  answered: "mr-auto border border-gray-200 bg-white text-gray-900",
-  off_topic: "mr-auto border border-amber-200 bg-amber-50 text-amber-900",
+  user: "on-primary rounded-[8px_8px_2px_8px] bg-primary text-primary-ink",
+  answered: "mr-auto rounded-[8px_8px_8px_2px] border border-line bg-surface text-ink",
+  off_topic: "mr-auto rounded-[8px_8px_8px_2px] border border-warn bg-warn-soft text-ink",
 } as const;
 
 const ICON_BUTTON =
-  "flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 focus-visible:outline-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent";
+  "flex h-9 w-9 items-center justify-center rounded-ctrl text-ink-2 transition-colors hover:bg-sunken hover:text-ink pointer-coarse:h-11 pointer-coarse:w-11 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-transparent motion-reduce:transition-none";
 
 /** Barre sous une question : navigation `< i/X >` entre versions (si X > 1), Copier, Modifier, Supprimer. */
 function UserMessageToolbar({ entry, actions }: { entry: ChatThreadEntry; actions: ChatMessageActions }) {
@@ -78,7 +88,7 @@ function UserMessageToolbar({ entry, actions }: { entry: ChatThreadEntry; action
   const { busy } = actions;
 
   return (
-    <div className="flex items-center gap-0.5 text-xs text-gray-500">
+    <div className="flex items-center gap-0.5 text-xs text-ink-2">
       <CopyMessageButton markdown={entry.message.content} className={ICON_BUTTON} />
       {versions && versions.count > 1 && (
         <div className="flex items-center" role="group" aria-label="Versions de la question">
@@ -91,7 +101,7 @@ function UserMessageToolbar({ entry, actions }: { entry: ChatThreadEntry; action
           >
             <ChevronLeftIcon fontSize="small" />
           </button>
-          <span className="min-w-8 text-center tabular-nums" aria-hidden="true">
+          <span className="min-w-8 text-center font-mono tabular-nums" aria-hidden="true">
             {versions.index}/{versions.count}
           </span>
           <span className="sr-only">
@@ -136,7 +146,7 @@ function UserMessageToolbar({ entry, actions }: { entry: ChatThreadEntry; action
 /** Barre sous une réponse du tuteur : Copier, et Réessayer (même question, nouvelle version). */
 function AssistantMessageToolbar({ entry, actions }: { entry: ChatThreadEntry; actions?: ChatMessageActions }) {
   return (
-    <div className="flex items-center gap-0.5 text-xs text-gray-500">
+    <div className="flex items-center gap-0.5 text-xs text-ink-2">
       <CopyMessageButton markdown={entry.message.content} className={ICON_BUTTON} />
       {actions && (
         <button
@@ -156,7 +166,7 @@ function AssistantMessageToolbar({ entry, actions }: { entry: ChatThreadEntry; a
 
 /**
  * Un message du chat : question de l'apprenant (aligné à droite, avec ses actions et ses versions)
- * ou réponse du tuteur (sources, badge « Hors sujet » si la question sortait du thème du cours).
+ * ou réponse du tuteur (cartes de sources, badge « Hors sujet » si la question sortait du thème du cours).
  * Les deux sont rendus en Markdown avec formules LaTeX (`$...$`, `$$...$$`).
  */
 function ChatMessageBubbleView({ entry, actions, editText = null }: ChatMessageBubbleProps) {
@@ -191,18 +201,18 @@ function ChatMessageBubbleView({ entry, actions, editText = null }: ChatMessageB
   }
 
   const bubble = (
-    <div className={`rounded-2xl px-3.5 py-2.5 text-sm ${style} ${isUser ? "" : "max-w-[85%]"}`}>
+    <div className={`px-3.5 py-2.5 text-sm ${style} ${isUser ? "" : "max-w-[85%]"}`}>
       <p className="sr-only">{isUser ? "Vous" : "Tuteur"}</p>
       {!isUser && message.status === "off_topic" && (
-        <Badge variant="amber" className="mb-1.5">
+        <Badge variant="warn" className="mb-1.5">
           Hors sujet
         </Badge>
       )}
       <RichTextView markdown={message.content} className="break-words" />
       {!isUser && message.sources.length > 0 && (
-        <div className="mt-2 border-t border-gray-100 pt-2 text-xs text-gray-600">
-          <p className="font-medium">Sources</p>
-          <ul className="mt-0.5 space-y-0.5">
+        <div className="mt-3 border-t border-line pt-2.5 text-xs">
+          <p className="kicker">Sources</p>
+          <ul className="mt-1.5 space-y-1.5">
             {message.sources.map((source, i) => (
               <SourceItem key={`${source.reference}-${i}`} source={source} />
             ))}
@@ -210,7 +220,7 @@ function ChatMessageBubbleView({ entry, actions, editText = null }: ChatMessageB
         </div>
       )}
       {time && (
-        <p className={`mt-1 text-right text-[11px] ${isUser ? "text-indigo-100" : "text-gray-400"}`}>
+        <p className={`mt-1 text-right font-mono text-[11px] ${isUser ? "text-primary-ink" : "text-ink-3"}`}>
           <time dateTime={message.created_at}>{time}</time>
         </p>
       )}

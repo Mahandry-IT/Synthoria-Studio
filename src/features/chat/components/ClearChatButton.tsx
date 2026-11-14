@@ -32,7 +32,7 @@ export function ClearChatButton({ sessionId, showLabel = false }: ClearChatButto
         disabled={busy || isEmpty}
         aria-label={showLabel ? undefined : "Supprimer toute la conversation"}
         title="Supprimer toute la conversation"
-        className={`flex h-11 items-center justify-center gap-1.5 rounded-lg text-gray-500 transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-gray-500 ${showLabel ? "px-2.5 text-xs font-medium" : "w-11"}`}
+        className={`flex h-11 items-center justify-center gap-1.5 rounded-ctrl text-ink-2 transition-colors hover:bg-err-soft hover:text-err motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-transparent disabled:hover:text-ink-2 ${showLabel ? "px-2.5 text-xs font-medium" : "w-11"}`}
       >
         <DeleteSweepOutlinedIcon fontSize="small" aria-hidden="true" />
         {showLabel && <span>Supprimer la conversation</span>}

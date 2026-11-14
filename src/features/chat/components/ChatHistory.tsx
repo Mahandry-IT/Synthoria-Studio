@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
+import { EmptyState } from "@/components/EmptyState";
 import { Skeleton } from "@/components/Skeleton";
 import { dayLabel, groupMessagesByDay, localDayKey, type ChatThreadEntry } from "../chat.logic";
 import { ChatMessageBubble, type ChatMessageActions } from "./ChatMessageBubble";
@@ -21,10 +23,10 @@ interface ChatHistoryProps {
 function PendingExchange({ text }: { text: string }) {
   return (
     <>
-      <li className="ml-auto max-w-[85%] rounded-2xl bg-indigo-600/80 px-3.5 py-2.5 text-sm text-white">
+      <li className="ml-auto max-w-[85%] rounded-[8px_8px_2px_8px] bg-primary px-3.5 py-2.5 text-sm text-primary-ink opacity-80">
         <p className="whitespace-pre-wrap break-words">{text}</p>
       </li>
-      <li className="mr-auto w-3/4 rounded-2xl border border-gray-200 bg-white px-3.5 py-3" aria-hidden="true">
+      <li className="mr-auto w-3/4 rounded-[8px_8px_8px_2px] border border-line bg-surface px-3.5 py-3" aria-hidden="true">
         <Skeleton lines={3} />
       </li>
     </>
@@ -54,20 +56,22 @@ export function ChatHistory({ thread, messageCount, pendingMessage, actions, edi
 
   if (groups.length === 0) {
     return (
-      <p className="px-2 py-8 text-center text-sm text-gray-500">
-        Posez une question sur ce cours : le tuteur répond à partir de la leçon.
-      </p>
+      <EmptyState
+        className="border-0 bg-transparent"
+        icon={<ForumOutlinedIcon fontSize="small" />}
+        title="Posez une question sur ce cours : le tuteur répond à partir de la leçon."
+      />
     );
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {groups.map((group, index) => (
-        <details key={group.key} open={index === 0} className="group rounded-lg border border-gray-200 bg-gray-50/60">
-          <summary className="flex cursor-pointer list-none items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold text-gray-600 select-none transition-colors hover:bg-gray-100">
-            <span className="first-letter:uppercase">{dayLabel(group.key)}</span>
+        <details key={group.key} open={index === 0} className="group">
+          <summary className="flex cursor-pointer list-none items-center justify-between border-t border-ink py-2 font-mono text-xs uppercase tracking-wider text-ink-2 select-none transition-colors hover:text-ink motion-reduce:transition-none">
+            <span>{dayLabel(group.key)}</span>
             <svg
-              className="h-4 w-4 text-gray-400 transition-transform duration-200 group-open:rotate-90 motion-reduce:transition-none"
+              className="h-4 w-4 text-ink-3 transition-transform duration-200 group-open:rotate-90 motion-reduce:transition-none"
               viewBox="0 0 20 20"
               fill="currentColor"
               aria-hidden="true"
@@ -75,7 +79,7 @@ export function ChatHistory({ thread, messageCount, pendingMessage, actions, edi
               <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
             </svg>
           </summary>
-          <ul className="flex flex-col gap-2 border-t border-gray-100 px-3 pb-3 pt-2">
+          <ul className="flex flex-col gap-3 pb-2 pt-2">
             {group.messages.map((message) => {
               const entry = entries.get(message.id);
               if (!entry) return null;

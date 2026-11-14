@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boxLabel, cardCorrection, isChoiceCorrect, resolveCardMode, splitBack, summarizeReview } from "./review.logic";
+import { boxLabel, boxToDelay, cardCorrection, cardPositionLabel, countByBox, isChoiceCorrect, resolveCardMode, splitBack, summarizeReview } from "./review.logic";
 import { dueCardListSchema, dueCardSchema, reviewResponseSchema } from "./review.schema";
 
 describe("review.logic", () => {
@@ -96,5 +96,23 @@ describe("review — cartes mixtes", () => {
     });
     expect(parsed).toMatchObject({ variant_no: 0, choices: [], correct_indices: [], explanation: "" });
     expect(parsed.mode).toBeUndefined();
+  });
+
+  it("boxToDelay donne J+1, J+3, J+7, J+21 et borne les valeurs", () => {
+    expect([0, 1, 2, 3].map(boxToDelay)).toEqual(["J+1", "J+3", "J+7", "J+21"]);
+    expect(boxToDelay(-2)).toBe("J+1");
+    expect(boxToDelay(9)).toBe("J+21");
+    expect(boxToDelay(Number.NaN)).toBe("J+1");
+  });
+
+  it("countByBox compte les quatre boîtes et regroupe les boîtes ≥ 3", () => {
+    expect(countByBox([{ box: 0 }, { box: 0 }, { box: 2 }, { box: 3 }, { box: 5 }])).toEqual([2, 0, 1, 2]);
+    expect(countByBox([])).toEqual([0, 0, 0, 0]);
+  });
+
+  it("cardPositionLabel formule la position dans la série", () => {
+    expect(cardPositionLabel(0, 20)).toBe("Carte 1 sur 20");
+    expect(cardPositionLabel(19, 20)).toBe("Carte 20 sur 20");
+    expect(cardPositionLabel(0, 0)).toBe("Carte 1 sur 1");
   });
 });

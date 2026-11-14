@@ -1,8 +1,10 @@
 "use client";
 
 import { useId, type FormEvent, type KeyboardEvent } from "react";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import SendIcon from "@mui/icons-material/Send";
 import { AutoResizeTextarea } from "@/components/AutoResizeTextarea";
+import { Button } from "@/components/Button";
 import { CHAT_MESSAGE_MAX_LENGTH } from "@/shared/utils/constants";
 import { isQuotaExhausted, remainingLabel } from "../chat.logic";
 import type { ChatQuota } from "../chat.types";
@@ -24,7 +26,8 @@ function formatResetTime(iso: string): string {
 
 /**
  * Champ de question du chat : grandit avec le texte, Entrée envoie (Maj+Entrée = retour à la ligne),
- * compteur de caractères et quota du jour ; désactivé si le message est vide/trop long ou le quota épuisé.
+ * compteur de caractères et quota du jour ; désactivé si le message est vide/trop long ou le quota épuisé
+ * (un encart d'avertissement explique alors la limite et l'heure de remise à zéro).
  */
 export function ChatComposer({ value, onChange, onSubmit, quota, pending }: ChatComposerProps) {
   const inputId = useId();
@@ -46,7 +49,15 @@ export function ChatComposer({ value, onChange, onSubmit, quota, pending }: Chat
   const resetTime = quota ? formatResetTime(quota.resets_at) : "";
 
   return (
-    <form onSubmit={submit} className="border-t border-gray-200 bg-white p-3">
+    <form onSubmit={submit} className="border-t border-line bg-surface p-3">
+      {exhausted && (
+        <div id={helpId} role="status" className="mb-2 flex items-start gap-2 rounded-ctrl bg-warn-soft px-3 py-2 text-xs font-medium text-warn">
+          <HourglassEmptyIcon fontSize="inherit" className="mt-px shrink-0 text-sm" aria-hidden="true" />
+          <span>
+            {`Limite de ${quota?.limit ?? ""} messages atteinte pour aujourd'hui${resetTime ? ` (nouveau quota à ${resetTime})` : ""}.`}
+          </span>
+        </div>
+      )}
       <label htmlFor={inputId} className="sr-only">
         Votre question sur le cours
       </label>
@@ -62,26 +73,21 @@ export function ChatComposer({ value, onChange, onSubmit, quota, pending }: Chat
           disabled={exhausted}
           placeholder={exhausted ? "Limite du jour atteinte" : "Posez une question sur le cours…"}
           aria-describedby={helpId}
-          className="max-h-40 min-h-11 flex-1 overflow-y-auto rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:bg-gray-100 read-only:bg-gray-50"
+          className="max-h-40 min-h-11 flex-1 overflow-y-auto rounded-ctrl border border-line-strong bg-surface px-3 py-2.5 text-sm text-ink placeholder:text-ink-3 disabled:cursor-not-allowed disabled:bg-sunken read-only:bg-sunken"
         />
-        <button
-          type="submit"
-          disabled={!canSend}
-          aria-label="Envoyer la question"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white transition-colors hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-40"
-        >
+        <Button type="submit" variant="accent" size="icon" disabled={!canSend} aria-label="Envoyer la question">
           <SendIcon fontSize="small" />
-        </button>
+        </Button>
       </div>
-      <p id={helpId} className="mt-1.5 flex flex-wrap justify-between gap-2 text-xs text-gray-500">
-        <span className={exhausted ? "font-medium text-amber-700" : ""}>
+      <p id={exhausted ? undefined : helpId} className="mt-1.5 flex flex-wrap justify-between gap-2 text-xs text-ink-2">
+        <span>
           {exhausted
-            ? `Limite de ${quota?.limit ?? ""} messages atteinte pour aujourd'hui${resetTime ? ` (nouveau quota à ${resetTime})` : ""}.`
+            ? ""
             : quota
               ? remainingLabel(quota.remaining)
               : "Entrée pour envoyer, Maj+Entrée pour un retour à la ligne."}
         </span>
-        <span className={isOverLimit ? "font-medium text-red-600" : ""}>
+        <span className={`font-mono ${isOverLimit ? "font-medium text-err" : ""}`}>
           {value.length} / {CHAT_MESSAGE_MAX_LENGTH}
         </span>
       </p>
