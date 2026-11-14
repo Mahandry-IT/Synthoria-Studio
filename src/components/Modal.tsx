@@ -33,7 +33,7 @@ export function Modal({ onClose, labelledBy, size = "md", children }: ModalProps
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-veil p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
@@ -41,7 +41,7 @@ export function Modal({ onClose, labelledBy, size = "md", children }: ModalProps
         aria-modal="true"
         aria-labelledby={labelledBy}
         onClick={(e) => e.stopPropagation()}
-        className={`w-full rounded-2xl bg-white shadow-xl ${SIZE_CLASSES[size]}`}
+        className={`w-full rounded-card bg-surface text-ink shadow-lift ${SIZE_CLASSES[size]}`}
       >
         {children}
       </div>

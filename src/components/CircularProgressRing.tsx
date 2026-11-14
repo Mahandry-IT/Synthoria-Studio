@@ -6,9 +6,9 @@ interface CircularProgressRingProps {
   /** Diamètre en px. */
   size?: number;
   strokeWidth?: number;
-  /** Couleur de l'arc (couleur CSS). */
+  /** Couleur de l'arc (couleur CSS, `var(--token)` accepté). Défaut : token `primary`. */
   color?: string;
-  /** Couleur du cercle de fond. */
+  /** Couleur du cercle de fond. Défaut : token `line`. */
   trackColor?: string;
   /**
    * `progressbar` (défaut) expose les valeurs ARIA (0-100) ;
@@ -33,8 +33,8 @@ export function CircularProgressRing({
   value,
   size = 44,
   strokeWidth = 3,
-  color = "#6366f1", // indigo-500
-  trackColor = "#e5e7eb", // gray-200
+  color = "var(--primary)",
+  trackColor = "var(--line)",
   role = "progressbar",
   label,
   children,
@@ -62,7 +62,7 @@ export function CircularProgressRing({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke={trackColor}
+          style={{ stroke: trackColor }}
           strokeWidth={strokeWidth}
         />
         <circle
@@ -70,7 +70,7 @@ export function CircularProgressRing({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke={color}
+          style={{ stroke: color }}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}

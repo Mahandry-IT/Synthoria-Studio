@@ -6,20 +6,15 @@ interface SkeletonProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * Placeholder de chargement animé.
+ * Placeholder de chargement : dégradé `sunken` / `line` (classe `.skel`, animation coupée
+ * sous `prefers-reduced-motion`, voir globals.css).
  */
 const Skeleton = forwardRef<HTMLDivElement, SkeletonProps>(
   ({ lines = 1, className = "", ...props }, ref) => {
     return (
       <div ref={ref} className={className} {...props}>
         {Array.from({ length: lines }).map((_, i) => (
-          <div
-            key={i}
-            className={[
-              "mb-2 h-4 rounded bg-gray-200 animate-pulse",
-              i === lines - 1 ? "w-3/4" : "w-full",
-            ].join(" ")}
-          />
+          <div key={i} className={`skel mb-2 h-4 ${i === lines - 1 ? "w-3/4" : "w-full"}`} />
         ))}
       </div>
     );

@@ -30,14 +30,14 @@ export function ConfirmDialog({
   return (
     <Modal onClose={onClose} labelledBy="confirm-dialog-title" size="md">
       <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-err-soft text-err">
           <WarningAmberIcon fontSize="small" />
         </span>
         <div className="min-w-0">
-          <h2 id="confirm-dialog-title" className="text-base font-semibold text-gray-900">
+          <h2 id="confirm-dialog-title" className="text-base font-semibold text-ink">
             {title}
           </h2>
-          <p className="mt-0.5 text-sm text-gray-500">{description}</p>
+          <p className="mt-0.5 text-sm text-ink-2">{description}</p>
         </div>
       </div>
 

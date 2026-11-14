@@ -3,6 +3,7 @@
 import { useState } from "react";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { Input, Select } from "@/components/Input";
 
 export const DEFAULT_PAGE_SIZE_OPTIONS = [5, 10, 20, 50] as const;
 
@@ -30,11 +31,12 @@ function visiblePages(page: number, totalPages: number): (number | "ellipsis-sta
 }
 
 const navButton =
-  "flex h-8 w-8 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent focus-visible:outline-2 focus-visible:outline-indigo-500";
+  "flex h-11 w-11 items-center justify-center rounded-ctrl text-ink transition-colors hover:bg-sunken " +
+  "disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-transparent motion-reduce:transition-none";
 
 /**
  * Pagination commune : précédent / numéros / suivant, sélecteur de taille de page (optionnel)
- * et saisie directe d'une page (« Aller à »).
+ * et saisie directe d'une page (« Aller à »). Cibles de 44 px, page courante en `primary`.
  */
 export function Pagination({
   page,
@@ -60,7 +62,7 @@ export function Pagination({
 
   return (
     <nav aria-label="Pagination" className="flex justify-center pt-4">
-      <div className="flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-3xl bg-white px-4 py-2 text-sm shadow-md ring-1 ring-gray-100">
+      <div className="flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-card border border-line bg-surface px-3 py-1.5 text-sm text-ink shadow-paper">
         <div className="flex items-center gap-1">
           <button
             type="button"
@@ -80,16 +82,14 @@ export function Pagination({
                 onClick={() => onPageChange(item)}
                 aria-label={`Page ${item}`}
                 aria-current={item === page ? "page" : undefined}
-                className={`flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-indigo-500 ${
-                  item === page
-                    ? "bg-indigo-100 font-medium text-indigo-700 ring-1 ring-indigo-300"
-                    : "text-gray-700 hover:bg-indigo-50"
+                className={`flex h-11 min-w-11 items-center justify-center rounded-ctrl px-2 text-sm transition-colors motion-reduce:transition-none ${
+                  item === page ? "bg-primary font-semibold text-primary-ink" : "text-ink hover:bg-sunken"
                 }`}
               >
                 {item}
               </button>
             ) : (
-              <span key={item} aria-hidden="true" className="px-1 text-gray-400">
+              <span key={item} aria-hidden="true" className="px-1 text-ink-3">
                 …
               </span>
             ),
@@ -107,23 +107,23 @@ export function Pagination({
         </div>
 
         {canChangeSize && (
-          <select
+          <Select
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
             aria-label="Éléments par page"
-            className="rounded-full border border-indigo-300 bg-white py-1 pl-3 pr-2 text-sm text-gray-700 focus-visible:outline-2 focus-visible:outline-indigo-500"
+            fullWidth={false}
           >
             {sizes.map((size) => (
               <option key={size} value={size}>
                 {size} / page
               </option>
             ))}
-          </select>
+          </Select>
         )}
 
-        <label className="flex items-center gap-2 text-gray-600">
+        <label className="flex items-center gap-2 text-ink-2">
           Aller à
-          <input
+          <Input
             type="number"
             min={1}
             max={totalPages}
@@ -135,7 +135,8 @@ export function Pagination({
             }}
             onBlur={submitGoTo}
             aria-label={`Aller à la page (1 à ${totalPages})`}
-            className="h-8 w-16 rounded-full border border-indigo-300 bg-white px-2 text-center text-gray-800 focus-visible:outline-2 focus-visible:outline-indigo-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            fullWidth={false}
+            className="w-20 px-2 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
           Page
         </label>
