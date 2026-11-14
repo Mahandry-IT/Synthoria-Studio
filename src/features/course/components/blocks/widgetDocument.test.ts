@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { TOOLKIT_CSS, TOOLKIT_SCRIPT } from "./widgetToolkit";
 import {
   WIDGET_CSP,
   buildWidgetDocument,
@@ -39,6 +40,30 @@ describe("buildWidgetDocument", () => {
 
   it("n'autorise jamais allow-same-origin", () => {
     expect(doc).not.toContain("allow-same-origin");
+  });
+
+  it("injecte la boîte à outils SW (style puis script) avant le script de mesure et le body", () => {
+    const style = doc.indexOf(`<style>${TOOLKIT_CSS}</style>`);
+    const script = doc.indexOf(`<script>${TOOLKIT_SCRIPT}</script>`);
+    const measure = doc.indexOf("ResizeObserver");
+    expect(style).toBeGreaterThan(doc.indexOf("--w-bg"));
+    expect(script).toBeGreaterThan(style);
+    expect(script).toBeLessThan(measure);
+    expect(script).toBeLessThan(doc.indexOf("<body>"));
+    expect(doc.indexOf("Content-Security-Policy")).toBeLessThan(style);
+    expect(doc.match(/<\/script>/g)).toHaveLength(3);
+    expect(TOOLKIT_SCRIPT).toContain("Object.freeze");
+  });
+
+  it("n'élargit pas le protocole vers le parent : un seul postMessage, dans le script de mesure", () => {
+    expect(doc.match(/postMessage/g)).toHaveLength(1);
+    expect(TOOLKIT_SCRIPT).not.toContain("postMessage");
+  });
+
+  it("un ancien widget sans SW reste inchangé dans le body", () => {
+    const old = "<canvas id=c></canvas><script>document.getElementById('c');</script>";
+    const d = buildWidgetDocument({ html: old, theme: "dark" });
+    expect(d.endsWith(`<body>\n${old}\n</body>\n</html>`)).toBe(true);
   });
 });
 
