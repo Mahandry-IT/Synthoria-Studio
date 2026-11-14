@@ -35,7 +35,7 @@ export function PendingPlansList() {
   if (isLoading) return <DashboardCardSkeleton label="plans en cours" />;
   if (error) {
     return (
-      <Card className="p-5">
+      <Card id="plans" className="scroll-mt-6 p-5">
         <h2 className="mb-3 text-base font-semibold text-gray-900">Plans en cours</h2>
         <ErrorState error={error} onRetry={() => refetch()} />
       </Card>
@@ -46,7 +46,7 @@ export function PendingPlansList() {
   const plans = activePlans(data?.data ?? [], now);
 
   return (
-    <Card className="p-5">
+    <Card id="plans" className="scroll-mt-6 p-5">
       <div className="mb-3 flex items-center gap-2">
         <ChecklistIcon fontSize="small" className="text-indigo-600" aria-hidden="true" />
         <h2 className="text-base font-semibold text-gray-900">Plans en cours</h2>

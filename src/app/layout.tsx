@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
-import { Sidebar } from "@/components/Sidebar";
+import { AppNav } from "@/components/nav/AppNav";
 import { ScrollableMain } from "@/components/ScrollableMain";
 import { THEME_INIT_SCRIPT } from "@/shared/utils/theme";
 
@@ -54,8 +54,14 @@ export default function RootLayout({
         className="min-h-screen bg-bg font-sans antialiased text-ink"
       >
         <Providers>
-          <div className="flex h-screen overflow-hidden">
-            <Sidebar />
+          <a
+            href="#contenu"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-60 focus:rounded-ctrl focus:bg-primary focus:px-4 focus:py-3 focus:text-sm focus:font-semibold focus:text-primary-ink focus:shadow-lift"
+          >
+            Aller au contenu
+          </a>
+          <div className="flex h-dvh flex-col overflow-hidden lg:flex-row">
+            <AppNav />
             <ScrollableMain>{children}</ScrollableMain>
           </div>
         </Providers>

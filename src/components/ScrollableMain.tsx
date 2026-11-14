@@ -31,7 +31,12 @@ export function ScrollableMain({ children }: { children: React.ReactNode }) {
     <>
       {/* `relative` : les éléments en position absolue (`sr-only`) restent contenus dans la zone
           défilante. Sans cela ils agrandissent le document, que `scrollIntoView` fait alors défiler. */}
-      <main ref={mainRef} className="relative flex-1 overflow-y-auto px-4 pb-8 pt-20 sm:px-6 md:pt-8">
+      <main
+        ref={mainRef}
+        id="contenu"
+        tabIndex={-1}
+        className="relative min-h-0 flex-1 overflow-y-auto px-4 pb-8 pt-6 focus:outline-none sm:px-6 sm:pt-8"
+      >
         <div className="mx-auto max-w-4xl">{children}</div>
       </main>
 

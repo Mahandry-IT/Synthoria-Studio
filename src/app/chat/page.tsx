@@ -63,7 +63,7 @@ function ChatPageContent() {
     <div className="space-y-4">
       <SelectedCourseHeader sessionId={sessionId} onChange={clearCourse} />
       <Card className="overflow-hidden">
-        <ChatConversation key={sessionId} sessionId={sessionId} className="h-[calc(100dvh-16rem)] min-h-[24rem]" />
+        <ChatConversation key={sessionId} sessionId={sessionId} className="h-[calc(100dvh-19rem)] min-h-[24rem] lg:h-[calc(100dvh-16rem)]" />
       </Card>
     </div>
   );
