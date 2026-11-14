@@ -1,4 +1,6 @@
 import { Button } from "@/components/Button";
+import { EmptyState } from "@/components/EmptyState";
+import { ProgressBar } from "@/components/ProgressBar";
 import type { ExerciseList } from "../exercise.types";
 
 interface ExercisesPanelViewProps {
@@ -17,7 +19,7 @@ interface ExercisesPanelViewProps {
   notice?: string | null;
 }
 
-const BOX = "rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-600";
+const BOX = "rounded-card border border-dashed border-line-strong bg-surface p-6 text-center text-sm text-ink-2";
 
 /**
  * Contenu de l'onglet « Exercices corrigés » (présentation pure, texte seulement).
@@ -55,28 +57,29 @@ export function ExercisesPanelView({
   switch (data.status) {
     case "absent":
       return (
-        <div className={BOX}>
-          <p>Aucun exercice n&apos;a encore été généré pour ce cours.</p>
-          <div className="mt-3 flex justify-center">
+        <EmptyState
+          title="Aucun exercice n'a encore été généré pour ce cours."
+          action={
             <Button type="button" loading={launching} onClick={onGenerate}>
               Générer les exercices
             </Button>
-          </div>
-        </div>
+          }
+        />
       );
     case "pending":
     case "generating":
       return (
         <div role="status" aria-live="polite" className={BOX}>
-          <p className="font-medium text-gray-800">
+          <p className="font-medium text-ink">
             {data.status === "pending" ? "Génération en attente…" : "Génération des exercices en cours…"}
           </p>
           <p className="mt-1">Cette page se met à jour toute seule.</p>
+          <ProgressBar label="Génération des exercices en cours" className="mx-auto mt-3 max-w-xs" />
         </div>
       );
     case "failed":
       return (
-        <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-6 text-center text-sm text-red-800">
+        <div role="alert" className="rounded-card border border-err bg-err-soft p-6 text-center text-sm text-ink">
           <p>{data.error_message ?? "La génération des exercices a échoué."}</p>
           <div className="mt-3 flex justify-center">
             <Button type="button" variant="secondary" loading={launching} onClick={onGenerate}>
@@ -87,12 +90,12 @@ export function ExercisesPanelView({
       );
     case "done":
       if (data.exercises.length === 0) {
-        return <p className={BOX}>Ce cours ne demande aucun exercice supplémentaire.</p>;
+        return <EmptyState title="Ce cours ne demande aucun exercice supplémentaire." />;
       }
       return (
         <div className="space-y-3">
           {notice && (
-            <p role="alert" className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+            <p role="alert" className="rounded-card border border-warn bg-warn-soft p-3 text-sm text-ink">
               {notice}
             </p>
           )}
@@ -103,11 +106,11 @@ export function ExercisesPanelView({
                 const section = exercise.section_id ? sectionTitles[exercise.section_id] : undefined;
                 const content = (
                   <>
-                    <span className="block text-sm font-semibold text-gray-900">{exercise.title}</span>
-                    {section && <span className="mt-0.5 block text-xs text-indigo-700">Section : {section}</span>}
-                    {exercise.covers && <span className="mt-1 block text-sm text-gray-600">{exercise.covers}</span>}
+                    <span className="block font-serif text-base font-medium text-ink">{exercise.title}</span>
+                    {section && <span className="mt-0.5 block text-xs font-medium text-primary">Section : {section}</span>}
+                    {exercise.covers && <span className="mt-1 block text-sm text-ink-2">{exercise.covers}</span>}
                     {exercise.duration_minutes !== null && (
-                      <span className="mt-1 block text-xs text-gray-500">Durée prévue : {exercise.duration_minutes} min</span>
+                      <span className="mt-1 block font-mono text-xs text-ink-3">Durée prévue : {exercise.duration_minutes} min</span>
                     )}
                   </>
                 );
@@ -117,12 +120,12 @@ export function ExercisesPanelView({
                       <button
                         type="button"
                         onClick={() => onOpen(exercise.id)}
-                        className="block min-h-11 w-full rounded-lg border border-gray-200 bg-white p-4 text-left transition-colors hover:border-indigo-300 hover:bg-indigo-50/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                        className="block min-h-11 w-full rounded-card border border-line bg-surface p-4 text-left shadow-paper transition-shadow duration-(--d-fast) hover:border-primary hover:shadow-lift motion-reduce:transition-none"
                       >
                         {content}
                       </button>
                     ) : (
-                      <div className="rounded-lg border border-gray-200 bg-white p-4">{content}</div>
+                      <div className="rounded-card border border-line bg-surface p-4 shadow-paper">{content}</div>
                     )}
                   </li>
                 );

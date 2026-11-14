@@ -35,12 +35,13 @@ export function ExerciseTimer({ startedAt, durationMinutes, stopped = false }: E
         role="timer"
         aria-live="off"
         aria-label="Temps restant"
-        className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 font-mono text-lg tabular-nums text-gray-900"
+        className="rounded-ctrl border border-line bg-sunken px-3 py-1.5 font-mono text-lg tabular-nums text-ink"
       >
         {formatMmSs(remaining)}
       </div>
       {finished && !stopped && (
-        <p role="status" className="rounded-lg bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-900">
+        <p role="status" className="rounded-ctrl bg-warn-soft px-3 py-1.5 text-sm font-medium text-warn">
+          <span aria-hidden="true">⚠ </span>
           Temps écoulé : vous pouvez continuer et envoyer votre réponse.
         </p>
       )}

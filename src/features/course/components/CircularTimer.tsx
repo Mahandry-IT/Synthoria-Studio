@@ -10,7 +10,7 @@ interface CircularTimerProps {
 /**
  * Cercle progressif affichant le temps restant.
  * - Se vide proportionnellement au temps écoulé.
- * - Passe rouge quand timeLeft < 10s.
+ * - Passe en ton `err` (token) quand timeLeft < 10s ; le texte masqué du `role="timer"` porte le sens.
  * - Affiche le temps au centre (mm:ss ou ss).
  */
 export function CircularTimer({ timeLeft, totalTime }: CircularTimerProps) {
@@ -27,10 +27,10 @@ export function CircularTimer({ timeLeft, totalTime }: CircularTimerProps) {
       value={progress}
       role="timer"
       label={`${timeLeft} secondes restantes`}
-      color={isUrgent ? "#ef4444" : "#6366f1"} // red-500 : indigo-500
+      color={isUrgent ? "var(--err)" : "var(--accent)"}
     >
       <span
-        className={`font-mono text-[11px] font-semibold ${isUrgent ? "text-red-500" : "text-gray-700"}`}
+        className={`font-mono text-[11px] font-semibold ${isUrgent ? "text-err" : "text-ink-2"}`}
       >
         {display}
       </span>

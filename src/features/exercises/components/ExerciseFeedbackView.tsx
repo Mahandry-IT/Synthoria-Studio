@@ -7,11 +7,14 @@ interface ExerciseFeedbackViewProps {
   onRedo: () => void;
 }
 
-function PointList({ title, points, tone }: { title: string; points: string[]; tone: string }) {
+function PointList({ title, mark, points, tone }: { title: string; mark: string; points: string[]; tone: string }) {
   if (points.length === 0) return null;
   return (
-    <div className={`rounded-lg p-3 ${tone}`}>
-      <p className="font-semibold">{title}</p>
+    <div className={`rounded-card border-l-[3px] p-3 text-ink ${tone}`}>
+      <p className="font-semibold">
+        <span aria-hidden="true">{mark} </span>
+        {title}
+      </p>
       <ul className="mt-1 list-disc space-y-1 pl-5">
         {points.map((point, i) => (
           <li key={i}>
@@ -27,18 +30,18 @@ function PointList({ title, points, tone }: { title: string; points: string[]; t
 export function ExerciseFeedbackView({ feedback, onRedo }: ExerciseFeedbackViewProps) {
   return (
     <section aria-labelledby="exercise-feedback-title" className="space-y-3 text-sm">
-      <h4 id="exercise-feedback-title" tabIndex={-1} className="text-sm font-semibold text-gray-900">
+      <h4 id="exercise-feedback-title" tabIndex={-1} className="font-serif text-base font-medium text-ink">
         Correction
       </h4>
       {feedback.feedback && (
-        <div className="rounded-lg bg-gray-50 p-3 text-gray-800">
+        <div className="rounded-card bg-sunken p-3 text-ink">
           <RichText text={feedback.feedback} />
         </div>
       )}
-      <PointList title="Ce qui est juste" points={feedback.correct_points} tone="bg-green-50 text-green-900" />
-      <PointList title="Ce qui manque" points={feedback.missing_points} tone="bg-amber-50 text-amber-900" />
+      <PointList title="Ce qui est juste" mark="✓" points={feedback.correct_points} tone="border-ok bg-ok-soft" />
+      <PointList title="Ce qui manque" mark="⚠" points={feedback.missing_points} tone="border-warn bg-warn-soft" />
       {feedback.expected_approach && (
-        <div className="rounded-lg bg-indigo-50 p-3 text-indigo-900">
+        <div className="rounded-card border-l-[3px] border-accent bg-primary-soft p-3 text-ink">
           <p className="font-semibold">Démarche attendue</p>
           <div className="mt-1">
             <RichText text={feedback.expected_approach} />

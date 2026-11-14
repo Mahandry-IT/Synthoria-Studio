@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { EmptyState } from "@/components/EmptyState";
 import { useExercises } from "../hooks/useExercises";
 import { useGenerateExercises } from "../hooks/useGenerateExercises";
 import { ExercisesPanelView } from "./ExercisesPanelView";
@@ -44,9 +45,7 @@ export function ExercisesPanel({
 
   if (!sessionId) {
     return (
-      <p className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-600">
-        Les exercices ne sont pas disponibles pour ce cours.
-      </p>
+      <EmptyState title="Les exercices ne sont pas disponibles pour ce cours." />
     );
   }
 

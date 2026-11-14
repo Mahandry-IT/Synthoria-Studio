@@ -77,6 +77,28 @@ const blockPairs: [string, string][] = [
   ["ink", "err-soft"],
 ];
 
+/** Quiz et exercices : retours corrigés (texte secondaire, numéros de question, indices) sur les fonds `*-soft`. */
+const quizExercisePairs: [string, string][] = [
+  ["ink-2", "ok-soft"],
+  ["ink-2", "err-soft"],
+  ["ink-2", "warn-soft"],
+  ["primary", "ok-soft"],
+  ["primary", "err-soft"],
+  ["err", "surface"],
+  ["ok", "surface"],
+  ["ink-2", "surface"],
+  ["ink-3", "surface"],
+  ["ok", "ok-soft"],
+  ["err", "err-soft"],
+  ["warn", "warn-soft"],
+];
+
+describe.each(Object.entries(themes))("contrastes du quiz et des exercices, thème %s", (_n, t) => {
+  it.each(quizExercisePairs)("%s sur %s ≥ 4,5:1", (fg, bg) => {
+    expect(contrastRatio(t[fg], t[bg]), `${fg} sur ${bg}`).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
 describe.each(Object.entries(themes))("contrastes du détail du cours et des blocs, thème %s", (_n, t) => {
   it.each(blockPairs)("%s sur %s ≥ 4,5:1", (fg, bg) => {
     expect(contrastRatio(t[fg], t[bg]), `${fg} sur ${bg}`).toBeGreaterThanOrEqual(4.5);
@@ -92,6 +114,10 @@ const nonTextPairs: [string, string][] = [
   ["ok", "ok-soft"],
   ["err", "err-soft"],
   ["line-strong", "surface"],
+  // Filet des indices et de la démarche attendue (exercices), anneau du minuteur (quiz).
+  ["accent", "primary-soft"],
+  ["err", "surface"],
+  ["ok", "surface"],
 ];
 
 describe.each(Object.entries(themes))("contrastes non textuels du détail du cours, thème %s", (_n, t) => {

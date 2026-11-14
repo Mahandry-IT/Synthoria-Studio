@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
+import { Button } from "@/components/Button";
 import type { QuizQuestion } from "../course.types";
 
 interface QuizIntroProps {
@@ -25,33 +26,26 @@ export function QuizIntro({ questions, onStart, starting = false }: QuizIntroPro
 
   return (
     <section
-      className="rounded-lg border border-gray-200 p-6 text-center"
+      className="rounded-card border border-line bg-surface p-6 text-center text-ink shadow-paper"
       aria-labelledby="quiz-intro-heading"
     >
-      <h3 id="quiz-intro-heading" className="text-lg font-semibold text-gray-900 mb-2">
+      <h3 id="quiz-intro-heading" className="mb-2 font-serif text-xl font-medium">
         Quiz
       </h3>
-      <p className="text-sm text-gray-600 mb-1" aria-live="polite">
+      <p className="mb-1 text-sm text-ink-2" aria-live="polite">
         {questionCount} question{questionCount > 1 ? "s" : ""}
         {totalPoints > 0 && (
-          <span className="ml-2 text-indigo-600 font-medium">
+          <span className="ml-2 font-medium text-primary">
             • {totalPoints} point{totalPoints > 1 ? "s" : ""}
           </span>
         )}
       </p>
-      <p className="text-sm text-gray-500 mb-4">
+      <p className="mb-4 text-sm text-ink-3">
         Une question à la fois — le feedback apparaîtra à la fin.
       </p>
-      <button
-        ref={buttonRef}
-        type="button"
-        onClick={onStart}
-        disabled={starting}
-        aria-busy={starting}
-        className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors disabled:cursor-wait disabled:opacity-60"
-      >
+      <Button ref={buttonRef} type="button" onClick={onStart} disabled={starting} aria-busy={starting}>
         {starting ? "Préparation du quiz…" : "Commencer"}
-      </button>
+      </Button>
     </section>
   );
 }

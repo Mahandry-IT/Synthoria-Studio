@@ -1,6 +1,7 @@
 "use client";
 
 import { useId } from "react";
+import { Select } from "@/components/Input";
 import { LatexText } from "@/shared/utils/latex";
 import type { QuizQuestion } from "../course.types";
 import { availableOptions } from "../quizGrading";
@@ -27,16 +28,17 @@ export function QuizQuestionMatching({ question, selections, onChange, disabled 
         const selectId = `${id}-${i}`;
         const choices = availableOptions(question.options, selections, i);
         return (
-          <li key={i} className="flex flex-col gap-2 rounded-lg border border-gray-200 p-3 sm:flex-row sm:items-center">
-            <label htmlFor={selectId} className="flex-1 text-sm text-gray-700">
+          <li key={i} className="flex flex-col gap-2 rounded-card border border-line bg-surface p-3 sm:flex-row sm:items-center">
+            <label htmlFor={selectId} className="flex-1 text-sm text-ink">
               <LatexText text={subject} autoMath />
             </label>
-            <select
+            <Select
               id={selectId}
               value={selections[i] ?? ""}
               disabled={disabled}
               onChange={(e) => onChange(i, e.target.value === "" ? null : Number(e.target.value))}
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:w-64"
+              fullWidth={false}
+              className="w-full sm:w-64"
             >
               <option value="">—</option>
               {choices.map(({ index, label }) => (
@@ -44,7 +46,7 @@ export function QuizQuestionMatching({ question, selections, onChange, disabled 
                   {label}
                 </option>
               ))}
-            </select>
+            </Select>
           </li>
         );
       })}
