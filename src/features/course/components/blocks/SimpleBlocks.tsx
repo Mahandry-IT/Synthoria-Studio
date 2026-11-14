@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card } from "@/components/Card";
+import { Button } from "@/components/Button";
 import { CodeBlock } from "@/components/code/CodeBlock";
 import { LatexText } from "@/shared/utils/latex";
 import { stripMathDelimiters } from "@/shared/utils/mathNotation";
@@ -9,7 +9,7 @@ import { RichTable, RichText } from "../RichText";
 import type { CourseContentBlock } from "../../course.types";
 
 export function TextBlock({ text }: { text: string }) {
-  return <RichText text={text} className="text-sm leading-relaxed text-gray-700" />;
+  return <RichText text={text} className="text-sm leading-relaxed text-ink" />;
 }
 
 /** Tableau pleine largeur, défilement horizontal interne sur mobile (assuré par `RichTable`). */
@@ -21,7 +21,7 @@ export function TableBlock({ table }: { table: NonNullable<CourseContentBlock["t
 export function ListBlock({ items, ordered }: { items: string[]; ordered?: boolean | null }) {
   const Tag = ordered ? "ol" : "ul";
   return (
-    <Tag className={`my-2 space-y-1 pl-5 text-sm text-gray-700 ${ordered ? "list-decimal" : "list-disc"}`}>
+    <Tag className={`my-2 space-y-1 pl-5 text-sm text-ink marker:text-ink-3 ${ordered ? "list-decimal" : "list-disc"}`}>
       {items.map((item, i) => (
         <li key={i}>
           <RichText text={item} />
@@ -33,9 +33,9 @@ export function ListBlock({ items, ordered }: { items: string[]; ordered?: boole
 
 export function FormulaBlock({ formula }: { formula: NonNullable<CourseContentBlock["formula"]> }) {
   return (
-    <div className="my-3 overflow-x-auto rounded-lg bg-gray-50 px-4 py-3 text-center">
+    <div className="my-3 overflow-x-auto rounded-card bg-sunken px-4 py-3 text-center">
       <LatexText text={`$$${stripMathDelimiters(formula.latex)}$$`} />
-      {formula.description && <p className="mt-1 text-xs text-gray-500">{formula.description}</p>}
+      {formula.description && <p className="mt-1 text-xs text-ink-3">{formula.description}</p>}
     </div>
   );
 }
@@ -46,23 +46,24 @@ export function CodeSnippetBlock({ code, language }: { code: string; language?: 
 
 export function DefinitionCard({ text }: { text: string }) {
   return (
-    <div className="my-2 rounded-lg border-l-4 border-indigo-500 bg-indigo-50 px-4 py-3 text-sm text-indigo-900">
+    <div className="my-2 rounded-card border-l-4 border-primary bg-primary-soft px-4 py-3 text-sm text-ink">
       <RichText text={text} />
     </div>
   );
 }
 
+/** Texte courant en `ink` sur le fond doux ; le sens passe par le libellé, la couleur le renforce. */
 const CALLOUT_STYLES = {
-  note: { box: "border-sky-300 bg-sky-50 text-sky-900", label: "Note" },
-  warning: { box: "border-amber-300 bg-amber-50 text-amber-900", label: "Attention" },
-  tip: { box: "border-emerald-300 bg-emerald-50 text-emerald-900", label: "Astuce" },
+  note: { box: "border-primary bg-primary-soft", title: "text-primary", label: "Note" },
+  warning: { box: "border-warn bg-warn-soft", title: "text-warn", label: "Attention" },
+  tip: { box: "border-ok bg-ok-soft", title: "text-ok", label: "Astuce" },
 } as const;
 
 export function Callout({ text, variant }: { text: string; variant?: CourseContentBlock["callout_variant"] }) {
   const style = CALLOUT_STYLES[variant ?? "note"];
   return (
-    <aside className={`my-2 rounded-lg border px-4 py-3 text-sm ${style.box}`}>
-      <p className="mb-1 font-semibold">{style.label}</p>
+    <aside className={`my-2 rounded-card border px-4 py-3 text-sm text-ink ${style.box}`}>
+      <p className={`mb-1 font-semibold ${style.title}`}>{style.label}</p>
       <RichText text={text} />
     </aside>
   );
@@ -70,8 +71,8 @@ export function Callout({ text, variant }: { text: string; variant?: CourseConte
 
 export function PitfallCard({ pitfall }: { pitfall: NonNullable<CourseContentBlock["pitfall"]> }) {
   return (
-    <Card className="my-2 border-red-200 bg-red-50 p-4 text-sm text-gray-800">
-      <p className="font-semibold text-red-800">
+    <div className="my-2 rounded-card border border-err bg-err-soft p-4 text-sm text-ink">
+      <p className="font-semibold text-err">
         <RichText text={pitfall.description} />
       </p>
       {pitfall.why_it_happens && (
@@ -86,7 +87,7 @@ export function PitfallCard({ pitfall }: { pitfall: NonNullable<CourseContentBlo
           <RichText text={pitfall.how_to_avoid} />
         </p>
       )}
-    </Card>
+    </div>
   );
 }
 
@@ -97,14 +98,14 @@ export function WorkedExampleStepper({ example }: { example: NonNullable<CourseC
   const done = shown >= steps.length;
 
   return (
-    <Card className="my-3 bg-gray-50 p-4 text-sm">
-      <h4 className="mb-2 font-medium text-gray-900">Exemple</h4>
+    <div className="my-3 rounded-card border border-line bg-sunken p-4 text-sm text-ink">
+      <h4 className="mb-2 font-serif text-base font-medium text-ink">Exemple</h4>
       {example.statement && (
-        <p className="mb-3 italic text-gray-600">
+        <p className="mb-3 italic text-ink-2">
           <RichText text={example.statement} />
         </p>
       )}
-      <ol className="list-decimal space-y-2 pl-5 text-gray-700">
+      <ol className="list-decimal space-y-2 pl-5 text-ink marker:text-ink-3">
         {steps.slice(0, shown).map((step, i) => (
           <li key={i}>
             <RichText text={step} />
@@ -112,20 +113,20 @@ export function WorkedExampleStepper({ example }: { example: NonNullable<CourseC
         ))}
       </ol>
       {!done && (
-        <div className="mt-3 flex gap-3">
-          <button type="button" onClick={() => setShown((n) => n + 1)} className="text-indigo-600 hover:underline">
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button type="button" variant="secondary" onClick={() => setShown((n) => n + 1)}>
             Étape suivante
-          </button>
-          <button type="button" onClick={() => setShown(steps.length)} className="text-gray-500 hover:underline">
+          </Button>
+          <Button type="button" variant="ghost" onClick={() => setShown(steps.length)}>
             Tout afficher
-          </button>
+          </Button>
         </div>
       )}
       {done && example.result && (
-        <p className="mt-3 font-medium text-green-700">
+        <p className="mt-3 font-medium text-ok">
           <RichText text={example.result} />
         </p>
       )}
-    </Card>
+    </div>
   );
 }

@@ -19,10 +19,10 @@ export function ImageBlock({
         width={image.width}
         height={image.height}
         loading="lazy"
-        className="mx-auto max-h-96 w-auto rounded-lg border border-gray-200 object-contain"
+        className="mx-auto max-h-96 w-auto rounded-card border border-line object-contain"
       />
       {(displayCaption || attribution?.author || attribution?.license) && (
-        <figcaption className="mt-1.5 text-center text-xs text-gray-500">
+        <figcaption className="mt-1.5 text-center text-xs text-ink-3">
           {displayCaption}
           {attribution?.author && (
             <span>
@@ -36,7 +36,7 @@ export function ImageBlock({
                       href={attribution.license_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="underline hover:text-gray-700"
+                      className="underline underline-offset-2 hover:text-ink"
                     >
                       {attribution.license}
                     </a>

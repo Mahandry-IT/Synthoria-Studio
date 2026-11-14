@@ -1,3 +1,5 @@
+import { parseDarkThemeFlag } from "./darkThemeFlag";
+
 /** Longueur max de la question (alignée sur COURSE_QUESTION_MAX_LENGTH du backend) */
 export const COURSE_QUESTION_MAX_LENGTH = 15000;
 
@@ -38,10 +40,12 @@ export const VIDEO_NOTE_MAX_LENGTH = 2000;
 export const CHAT_MESSAGE_MAX_LENGTH = 1000;
 
 /**
- * Expose le thème sombre (bascule visible, `data-theme="dark"` honoré).
- * Faux tant que les écrans ne sont pas tous migrés vers les tokens : le thème clair est alors forcé.
+ * Expose le thème sombre (bascule visible, `data-theme="dark"` honoré). Lu au build depuis
+ * `NEXT_PUBLIC_DARK_THEME` (faux par défaut : le thème clair est alors forcé) ; une build de revue
+ * l'active avec `NEXT_PUBLIC_DARK_THEME=true`. La référence littérale à `process.env` est nécessaire
+ * pour que Next.js l'inline dans le bundle client.
  */
-export const DARK_THEME_ENABLED = false;
+export const DARK_THEME_ENABLED = parseDarkThemeFlag(process.env.NEXT_PUBLIC_DARK_THEME);
 
 /** Clé `localStorage` du thème choisi manuellement. */
 export const THEME_STORAGE_KEY = "synthoria-theme";

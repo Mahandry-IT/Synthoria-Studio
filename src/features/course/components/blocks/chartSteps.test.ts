@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { courseSectionSchema } from "../../course.schema";
 import type { CourseChart, CourseChartStep } from "../../course.types";
 import { ChartBlock } from "./ChartBlock";
+import { CHART_COLORS } from "./chartColors";
 import { isHighlighted } from "./chartHighlight";
 
 const base: CourseChart = {
@@ -46,7 +47,7 @@ describe("ChartBlock", () => {
     expect(out).toContain("Légende 1");
     expect(out).toContain('aria-live="polite"');
     expect(out.match(/opacity="0\.25"/g)).toHaveLength(3); // 3 barres de s2
-    expect(out).toContain('stroke="#111827"');
+    expect(out).toContain(`stroke="${CHART_COLORS.light.outline}"`);
   });
   it("étape sans mise en avant : rien d'atténué", () => {
     expect(render({ ...base, steps: [step([], [])] })).not.toContain('opacity="0.25"');

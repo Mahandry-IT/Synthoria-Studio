@@ -5,15 +5,14 @@ import type { CourseChart } from "../../course.types";
 import { axisMax, pieSlices } from "./chartGeometry";
 import { DIMMED_OPACITY, hasHighlight, isHighlighted } from "./chartHighlight";
 import { ChartStepControls } from "./ChartStepControls";
+import { CHART_COLORS } from "./chartColors";
+import { useDocumentTheme } from "@/shared/hooks/useDocumentTheme";
 
-const PALETTE = ["#4f46e5", "#0891b2", "#d97706", "#db2777"];
 const W = 480;
 const H = 240;
 const PAD = { top: 12, right: 12, bottom: 44, left: 40 };
 const plotW = W - PAD.left - PAD.right;
 const plotH = H - PAD.top - PAD.bottom;
-
-const colorOf = (i: number) => PALETTE[i % PALETTE.length];
 
 function arcPath(cx: number, cy: number, r: number, start: number, end: number): string {
   const point = (a: number) => `${cx + r * Math.sin(a)} ${cy - r * Math.cos(a)}`;
@@ -21,8 +20,13 @@ function arcPath(cx: number, cy: number, r: number, start: number, end: number):
   return `M ${cx} ${cy} L ${point(start)} A ${r} ${r} 0 ${end - start > Math.PI ? 1 : 0} 1 ${point(end)} Z`;
 }
 
-/** Graphique en SVG pur (barres, courbes, secteurs) : aucune dépendance, aucune injection HTML. */
+/**
+ * Graphique en SVG pur (barres, courbes, secteurs) : aucune dépendance, aucune injection HTML.
+ * Couleurs littérales du thème courant (`CHART_COLORS`), recalculées au changement de thème.
+ */
 export function ChartBlock({ chart }: { chart: CourseChart }) {
+  const colors = CHART_COLORS[useDocumentTheme()];
+  const colorOf = (i: number) => colors.series[i % colors.series.length];
   const steps = chart.steps ?? [];
   const [stepIndex, setStepIndex] = useState(0);
   const safeIndex = Math.min(stepIndex, Math.max(steps.length - 1, 0));
@@ -31,14 +35,14 @@ export function ChartBlock({ chart }: { chart: CourseChart }) {
   const opacityOf = (labelIndex: number, seriesIndex: number) =>
     isHighlighted(current, labelIndex, seriesIndex) ? undefined : DIMMED_OPACITY;
   const accent = (labelIndex: number, seriesIndex: number) =>
-    dimming && isHighlighted(current, labelIndex, seriesIndex) ? { stroke: "#111827", strokeWidth: 2 } : {};
+    dimming && isHighlighted(current, labelIndex, seriesIndex) ? { stroke: colors.outline, strokeWidth: 2 } : {};
   const max = axisMax(chart.series.map((s) => s.values));
   const step = plotW / Math.max(chart.labels.length, 1);
   const y = (v: number) => PAD.top + plotH - (Math.max(v, 0) / max) * plotH;
 
   return (
-    <figure className="my-3 w-full rounded-lg border border-gray-200 bg-white p-3">
-      {chart.caption && <figcaption className="mb-2 text-sm font-semibold text-gray-900">{chart.caption}</figcaption>}
+    <figure className="my-3 w-full rounded-card border border-line bg-surface p-3 text-ink">
+      {chart.caption && <figcaption className="mb-2 text-sm font-semibold text-ink">{chart.caption}</figcaption>}
       <div className="overflow-x-auto">
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -49,7 +53,7 @@ export function ChartBlock({ chart }: { chart: CourseChart }) {
           {chart.kind === "pie" ? (
             pieSlices(chart.series[0]?.values ?? []).map((slice, i) => (
               <path key={i} d={arcPath(W / 2, H / 2, H / 2 - 12, slice.start, slice.end)} fill={colorOf(i)}
-                stroke="#fff"
+                stroke={colors.sliceStroke}
                 opacity={opacityOf(i, -1)}
                 {...accent(i, -1)}
               >
@@ -58,12 +62,12 @@ export function ChartBlock({ chart }: { chart: CourseChart }) {
             ))
           ) : (
             <>
-              <line x1={PAD.left} y1={PAD.top + plotH} x2={W - PAD.right} y2={PAD.top + plotH} stroke="#9ca3af" />
-              <line x1={PAD.left} y1={PAD.top} x2={PAD.left} y2={PAD.top + plotH} stroke="#9ca3af" />
-              <text x={PAD.left - 6} y={PAD.top + 4} textAnchor="end" fontSize="10" fill="#6b7280">
+              <line x1={PAD.left} y1={PAD.top + plotH} x2={W - PAD.right} y2={PAD.top + plotH} stroke={colors.axis} />
+              <line x1={PAD.left} y1={PAD.top} x2={PAD.left} y2={PAD.top + plotH} stroke={colors.axis} />
+              <text x={PAD.left - 6} y={PAD.top + 4} textAnchor="end" fontSize="10" fill={colors.tick}>
                 {max}
               </text>
-              <text x={PAD.left - 6} y={PAD.top + plotH} textAnchor="end" fontSize="10" fill="#6b7280">
+              <text x={PAD.left - 6} y={PAD.top + plotH} textAnchor="end" fontSize="10" fill={colors.tick}>
                 0
               </text>
               {chart.labels.map((label, i) => (
@@ -73,7 +77,7 @@ export function ChartBlock({ chart }: { chart: CourseChart }) {
                   y={H - 22}
                   textAnchor="middle"
                   fontSize="10"
-                  fill="#374151"
+                  fill={colors.label}
                 >
                   {label.length > 12 ? `${label.slice(0, 11)}…` : label}
                 </text>
@@ -120,7 +124,7 @@ export function ChartBlock({ chart }: { chart: CourseChart }) {
           )}
         </svg>
       </div>
-      <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
+      <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-2">
         {(chart.kind === "pie" ? chart.labels : chart.series.map((s) => s.name)).map((name, i) => (
           <li key={i} className="flex items-center gap-1">
             <span aria-hidden className="inline-block size-2.5 rounded-sm" style={{ backgroundColor: colorOf(i) }} />

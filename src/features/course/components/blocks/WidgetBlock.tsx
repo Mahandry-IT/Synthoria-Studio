@@ -1,32 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Button } from "@/components/Button";
+import { useDocumentTheme } from "@/shared/hooks/useDocumentTheme";
 import type { CourseWidget } from "../../course.types";
 import {
   WIDGET_DEFAULT_HEIGHT,
   buildWidgetDocument,
   clampWidgetHeight,
   parseWidgetMessage,
-  type WidgetTheme,
 } from "./widgetDocument";
 
 /** Délai sans mesure de hauteur au-delà duquel on bascule sur la description. */
 const LOAD_TIMEOUT_MS = 3000;
-
-function subscribeTheme(onChange: () => void) {
-  const observer = new MutationObserver(onChange);
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-  return () => observer.disconnect();
-}
-
-/** Thème courant : classe `dark` sur <html> si présente, sinon clair (l'application n'a pas de mode sombre aujourd'hui). */
-function useWidgetTheme(): WidgetTheme {
-  return useSyncExternalStore(
-    subscribeTheme,
-    () => (document.documentElement.classList.contains("dark") ? "dark" : "light"),
-    () => "light",
-  );
-}
 
 /** Vrai dès que l'élément approche du viewport ; repli immédiat si IntersectionObserver est absent. */
 function useNearViewport(ref: React.RefObject<HTMLElement | null>): boolean {
@@ -55,8 +41,8 @@ function useNearViewport(ref: React.RefObject<HTMLElement | null>): boolean {
 
 function Fallback({ description }: { description: string }) {
   return (
-    <div role="note" className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
-      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-gray-500">Widget indisponible</p>
+    <div role="note" className="rounded-card border border-line bg-sunken px-4 py-3 text-sm text-ink-2">
+      <p className="kicker mb-1">Widget indisponible</p>
       <p>{description || "Ce widget interactif n'a pas pu être affiché."}</p>
     </div>
   );
@@ -67,10 +53,18 @@ export function WidgetBlock({ widget }: { widget: CourseWidget }) {
   const containerRef = useRef<HTMLElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const near = useNearViewport(containerRef);
-  const theme = useWidgetTheme();
+  // Le thème n'entre que dans le `srcDoc` : un changement le reconstruit et recharge l'iframe.
+  const theme = useDocumentTheme();
   const [reloadKey, setReloadKey] = useState(0);
   const [measured, setMeasured] = useState<number | null>(null);
   const [failed, setFailed] = useState(false);
+  // Au changement de thème l'iframe se recharge : mesure et échec précédents ne valent plus (comme « Recharger »).
+  const [loadedTheme, setLoadedTheme] = useState(theme);
+  if (loadedTheme !== theme) {
+    setLoadedTheme(theme);
+    setFailed(false);
+    setMeasured(null);
+  }
 
   const srcDoc = useMemo(() => buildWidgetDocument({ html: widget.html, theme }), [widget.html, theme]);
   const initialHeight = clampWidgetHeight(widget.height_hint ?? WIDGET_DEFAULT_HEIGHT);
@@ -104,7 +98,7 @@ export function WidgetBlock({ widget }: { widget: CourseWidget }) {
 
   return (
     <figure ref={containerRef} className="my-3" aria-label={widget.title || "Widget interactif"}>
-      {widget.title && <figcaption className="mb-1.5 text-sm font-medium text-gray-800">{widget.title}</figcaption>}
+      {widget.title && <figcaption className="mb-1.5 text-sm font-medium text-ink">{widget.title}</figcaption>}
       {failed ? (
         <Fallback description={widget.description} />
       ) : (
@@ -117,17 +111,13 @@ export function WidgetBlock({ widget }: { widget: CourseWidget }) {
           title={widget.title || "Widget interactif"}
           referrerPolicy="no-referrer"
           style={{ height }}
-          className="w-full rounded-lg border border-gray-200 bg-white"
+          className="w-full rounded-card border border-line bg-surface"
         />
       )}
       <div className="mt-1.5 flex justify-end">
-        <button
-          type="button"
-          onClick={reload}
-          className="rounded text-xs text-indigo-600 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-        >
+        <Button type="button" variant="ghost" size="sm" onClick={reload}>
           Recharger le widget
-        </button>
+        </Button>
       </div>
     </figure>
   );

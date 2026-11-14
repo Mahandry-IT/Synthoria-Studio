@@ -81,19 +81,19 @@ function parseFlattenedList(text: string): string[] | null {
 
 export function RichTable({ headers, rows, caption }: { headers: string[]; rows: string[][]; caption?: string }) {
   return (
-    <div className="overflow-x-auto my-3 rounded-lg border border-gray-200">
+    <div className="overflow-x-auto my-3 rounded-card border border-line">
       <table className="w-full text-sm border-collapse">
         {caption && (
-          <caption className="caption-top px-3 py-2 text-left text-sm font-semibold text-gray-900 bg-white">
+          <caption className="caption-top px-3 py-2 text-left text-sm font-semibold text-ink bg-surface">
             <RichText text={caption} />
           </caption>
         )}
         <thead>
-          <tr className="bg-indigo-100">
+          <tr className="bg-primary-soft">
             {headers.map((h, i) => (
               <th
                 key={i}
-                className="px-3 py-2 text-left font-semibold text-indigo-800 border border-indigo-200"
+                className="px-3 py-2 text-left font-semibold text-primary border border-line"
               >
                 <RichText text={h} />
               </th>
@@ -102,11 +102,11 @@ export function RichTable({ headers, rows, caption }: { headers: string[]; rows:
         </thead>
         <tbody>
           {rows.map((row, rIdx) => (
-            <tr key={rIdx} className={rIdx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+            <tr key={rIdx} className={rIdx % 2 === 0 ? "bg-surface" : "bg-sunken"}>
               {headers.map((_, cIdx) => (
                 <td
                   key={cIdx}
-                  className="px-3 py-2 text-gray-700 border border-gray-200"
+                  className="px-3 py-2 text-ink border border-line"
                 >
                   <RichText text={row[cIdx] ?? ""} />
                 </td>
@@ -123,7 +123,7 @@ function RichList({ items }: { items: string[] }) {
   return (
     <ul className="list-disc list-inside space-y-1 my-2">
       {items.map((item, i) => (
-        <li key={i} className="text-sm text-gray-700">
+        <li key={i} className="text-sm text-ink">
           <RichText text={item} />
         </li>
       ))}

@@ -14,18 +14,18 @@ interface ChartStepControlsProps {
 export function ChartStepControls({ index, total, caption, onPrevious, onNext }: ChartStepControlsProps) {
   if (total <= 0) return null;
   return (
-    <div className="mt-3 border-t border-gray-100 pt-3">
-      <p className="text-xs font-semibold text-indigo-600">
+    <div className="mt-3 border-t border-line pt-3">
+      <p className="font-mono text-xs font-medium text-primary">
         Étape {index + 1}/{total}
       </p>
-      <p aria-live="polite" className="mt-1 min-h-10 text-sm text-gray-700">
+      <p aria-live="polite" className="mt-1 min-h-10 text-sm text-ink">
         {caption}
       </p>
       <div className="mt-2 flex flex-wrap gap-2">
-        <Button type="button" variant="secondary" size="sm" disabled={index <= 0} onClick={onPrevious}>
+        <Button type="button" variant="secondary" disabled={index <= 0} onClick={onPrevious}>
           ← Précédent
         </Button>
-        <Button type="button" size="sm" disabled={index >= total - 1} onClick={onNext}>
+        <Button type="button" disabled={index >= total - 1} onClick={onNext}>
           Suivant →
         </Button>
       </div>
