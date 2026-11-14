@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/Button";
 import { HttpError } from "@/shared/api/httpClient";
 import { resolveErrorMessage } from "@/shared/api/errors";
 
@@ -18,10 +19,10 @@ export function ErrorState({ error, onRetry }: ErrorStateProps) {
   const status = error instanceof HttpError ? error.status : 0;
   const message = resolveErrorMessage(error);
 
-  const iconColor = status >= 500 ? "text-red-500" : "text-amber-500";
+  const iconColor = status >= 500 ? "text-err" : "text-warn";
 
   return (
-    <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+    <div className="rounded-card border border-err bg-err-soft p-6">
       <div className="flex items-start gap-3">
         <svg
           className={`mt-0.5 h-5 w-5 flex-shrink-0 ${iconColor}`}
@@ -36,20 +37,15 @@ export function ErrorState({ error, onRetry }: ErrorStateProps) {
           />
         </svg>
         <div className="flex-1">
-          <h3 className="text-sm font-semibold text-red-900">
-            {status ? `Erreur ${status}` : "Erreur"}
-          </h3>
-          <p className="mt-1 text-sm text-red-700">{message}</p>
+          <h3 className="text-sm font-semibold text-err">{status ? `Erreur ${status}` : "Erreur"}</h3>
+          <p className="mt-1 text-sm text-ink">{message}</p>
         </div>
       </div>
       {onRetry && (
         <div className="mt-4">
-          <button
-            onClick={onRetry}
-            className="rounded-lg bg-red-100 px-3 py-1.5 text-sm font-medium text-red-800 transition-colors hover:bg-red-200"
-          >
+          <Button type="button" variant="secondary" onClick={onRetry}>
             Réessayer
-          </button>
+          </Button>
         </div>
       )}
     </div>

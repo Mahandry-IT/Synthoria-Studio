@@ -1,32 +1,49 @@
 import { type HTMLAttributes, forwardRef } from "react";
+import { cx } from "@/shared/utils/cx";
 
-type BadgeVariant = "indigo" | "green" | "amber" | "gray" | "red";
+/** Tons du carnet éditorial. */
+type BadgeTone = "ok" | "warn" | "err" | "neutral" | "info";
+/** Anciens noms, conservés comme alias : indigo → info, green → ok, amber → warn, gray → neutral, red → err. */
+type LegacyBadgeVariant = "indigo" | "green" | "amber" | "gray" | "red";
+type BadgeVariant = BadgeTone | LegacyBadgeVariant;
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: BadgeVariant;
 }
 
-const variantClasses: Record<BadgeVariant, string> = {
-  indigo: "bg-indigo-100 text-indigo-800",
-  green: "bg-green-100 text-green-800",
-  amber: "bg-amber-100 text-amber-800",
-  gray: "bg-gray-100 text-gray-700",
-  red: "bg-red-100 text-red-800",
+export const BADGE_TONE_CLASSES: Record<BadgeTone, string> = {
+  ok: "bg-ok-soft text-ok border-transparent",
+  warn: "bg-warn-soft text-warn border-transparent",
+  err: "bg-err-soft text-err border-transparent",
+  neutral: "bg-transparent text-ink-2 border-line-2",
+  info: "bg-primary-soft text-primary border-transparent",
 };
 
+export const BADGE_ALIASES: Record<LegacyBadgeVariant, BadgeTone> = {
+  indigo: "info",
+  green: "ok",
+  amber: "warn",
+  gray: "neutral",
+  red: "err",
+};
+
+function resolveTone(variant: BadgeVariant): BadgeTone {
+  return variant in BADGE_ALIASES ? BADGE_ALIASES[variant as LegacyBadgeVariant] : (variant as BadgeTone);
+}
+
 /**
- * Badge inline pour labels, statuts, modes.
+ * Étiquette inline pour libellés, statuts et modes. Le sens passe par le texte, pas seulement la couleur.
  */
 const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
-  ({ variant = "gray", className = "", children, ...props }, ref) => {
+  ({ variant = "neutral", className = "", children, ...props }, ref) => {
     return (
       <span
         ref={ref}
-        className={[
-          "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-          variantClasses[variant],
+        className={cx(
+          "inline-flex items-center gap-1.5 rounded-tag border px-2 py-[3px] text-xs font-medium",
+          BADGE_TONE_CLASSES[resolveTone(variant)],
           className,
-        ].join(" ")}
+        )}
         {...props}
       >
         {children}

@@ -31,6 +31,8 @@
   --warn-soft: #f4e3bf;
   --err: #a3322b;
   --err-soft: #f3d8d4;
+  /* Voile des modals (derrière le dialogue). */
+  --veil: rgba(20, 25, 24, 0.5);
   --sh-1: 0 1px 0 rgba(30, 42, 40, 0.06), 0 1px 2px rgba(30, 42, 40, 0.08);
   --sh-3: 0 2px 4px rgba(30, 42, 40, 0.08), 0 16px 40px rgba(30, 42, 40, 0.16);
   --d-fast: 120ms;
@@ -67,6 +69,7 @@
   --warn-soft: #3a2e12;
   --err: #f09089;
   --err-soft: #3c1e1b;
+  --veil: rgba(0, 0, 0, 0.6);
   --sh-1: 0 0 0 1px rgba(0, 0, 0, 0.3);
   --sh-3: 0 2px 4px rgba(0, 0, 0, 0.4), 0 16px 40px rgba(0, 0, 0, 0.5);
 }
@@ -99,6 +102,7 @@
   --color-warn-soft: var(--warn-soft);
   --color-err: var(--err);
   --color-err-soft: var(--err-soft);
+  --color-veil: var(--veil);
 
   --shadow-paper: var(--sh-1);
   --shadow-lift: var(--sh-3);
@@ -137,6 +141,19 @@
     margin: 0;
   }
 
+  /* Squelette de chargement : dégradé sunken / line animé (coupé sous prefers-reduced-motion). */
+  .skel {
+    background: linear-gradient(90deg, var(--sunken), var(--line), var(--sunken));
+    background-size: 200% 100%;
+    border-radius: 4px;
+    animation: skel-shimmer 1.4s ease-in-out infinite;
+  }
+
+  /* Barre de progression indéterminée. */
+  .bar-indeterminate {
+    animation: bar-slide 1.2s ease-in-out infinite;
+  }
+
   .num {
     font-family: var(--font-fraunces), Georgia, serif;
     font-weight: 300;
@@ -160,7 +177,22 @@
   --toastify-font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
+@keyframes skel-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@keyframes bar-slide {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(250%); }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .skel,
+  .bar-indeterminate {
+    animation: none;
+  }
+
   *,
   *::before,
   *::after {
