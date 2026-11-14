@@ -52,7 +52,7 @@ export function NavRail({
     <nav aria-label="Navigation principale" className="flex h-full shrink-0 max-lg:hidden">
       <div className="flex w-22 flex-col items-center gap-1.5 border-r border-line bg-surface py-4">
         <Image
-          src="/logo-mark.svg"
+          src="/logo-mark.png"
           alt="Synthoria"
           width={36}
           height={36}

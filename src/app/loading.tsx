@@ -6,9 +6,9 @@ import { Skeleton } from "@/components/Skeleton";
  */
 export default function Loading() {
   return (
-    <div className="space-y-6 animate-pulse">
-      <div className="h-8 w-48 rounded bg-gray-200" />
-      <div className="h-4 w-72 rounded bg-gray-200" />
+    <div className="space-y-6">
+      <div className="skel h-8 w-48" />
+      <div className="skel h-4 w-72" />
       <Skeleton lines={4} />
       <Skeleton lines={3} />
     </div>

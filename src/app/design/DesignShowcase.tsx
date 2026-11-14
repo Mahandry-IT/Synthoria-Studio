@@ -58,11 +58,6 @@ function Panel({ theme }: { theme: "light" | "dark" }) {
         <Badge variant="err">err</Badge>
         <Badge variant="neutral">neutral</Badge>
         <Badge variant="info">info</Badge>
-        <Badge variant="indigo">indigo</Badge>
-        <Badge variant="green">green</Badge>
-        <Badge variant="amber">amber</Badge>
-        <Badge variant="gray">gray</Badge>
-        <Badge variant="red">red</Badge>
       </Section>
 
       <Section title="Card">

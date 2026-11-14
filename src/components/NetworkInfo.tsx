@@ -46,19 +46,19 @@ export function NetworkInfo({
   className = "",
 }: NetworkInfoProps) {
   return (
-    <div className={`rounded-lg border border-gray-200 p-4 ${className}`}>
+    <div className={`rounded-card border border-line bg-surface p-4 ${className}`}>
       {title && (
-        <h4 className="text-sm font-semibold text-gray-900 mb-3">{title}</h4>
+        <h4 className="text-sm font-semibold text-ink mb-3">{title}</h4>
       )}
 
       <div className="space-y-3">
         {/* Plage d'adresses IP */}
         {ipRange && (
           <div className="flex items-start gap-2">
-            <span className="text-gray-500 text-sm">▶</span>
-            <div className="text-sm text-gray-700">
+            <span className="text-ink-3 text-sm">▶</span>
+            <div className="text-sm text-ink-2">
               <span className="font-medium">Adresses utilisables :</span>{" "}
-              <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono">
+              <code className="bg-sunken px-1.5 py-0.5 rounded text-xs font-mono text-ink">
                 {formatIPRange(ipRange.start, ipRange.end)}
               </code>
             </div>
@@ -68,14 +68,14 @@ export function NetworkInfo({
         {/* Adresses CIDR */}
         {cidrAddresses.length > 0 && (
           <div className="flex items-start gap-2">
-            <span className="text-gray-500 text-sm">▶</span>
-            <div className="text-sm text-gray-700">
+            <span className="text-ink-3 text-sm">▶</span>
+            <div className="text-sm text-ink-2">
               <span className="font-medium">Exemples d&apos;adresses IP :</span>{" "}
               <div className="mt-1 flex flex-wrap gap-2">
                 {cidrAddresses.map((cidr) => (
                   <code
                     key={cidr}
-                    className="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono"
+                    className="bg-sunken px-1.5 py-0.5 rounded text-xs font-mono text-ink"
                   >
                     {formatCIDR(cidr)}
                   </code>
@@ -87,7 +87,7 @@ export function NetworkInfo({
 
         {/* Description supplémentaire */}
         {description && (
-          <p className="text-sm text-gray-600 mt-2">{description}</p>
+          <p className="text-sm text-ink-2 mt-2">{description}</p>
         )}
       </div>
     </div>

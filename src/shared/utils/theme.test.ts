@@ -44,15 +44,21 @@ describe("THEME_INIT_SCRIPT", () => {
     return attrs["data-theme"];
   }
 
-  it("pose light tant que le sombre est désactivé", () => {
-    expect(run(THEME_INIT_SCRIPT, { stored: "dark", dark: true })).toBe("light");
+  it("applique la logique complète : le sombre est actif par défaut", () => {
+    expect(run(THEME_INIT_SCRIPT, { stored: "dark" })).toBe("dark");
+    expect(run(THEME_INIT_SCRIPT, { stored: "light", dark: true })).toBe("light");
+    expect(run(THEME_INIT_SCRIPT, { stored: "zzz", dark: true })).toBe("dark");
+    expect(run(THEME_INIT_SCRIPT, { stored: null, dark: true })).toBe("dark");
   });
 
-  it("applique la logique complète quand le sombre est activé", () => {
-    const enabled = THEME_INIT_SCRIPT.replace("if(false)", "if(true)");
-    expect(enabled).not.toBe(THEME_INIT_SCRIPT);
-    expect(run(enabled, { stored: "dark" })).toBe("dark");
-    expect(run(enabled, { stored: "zzz", dark: true })).toBe("dark");
-    expect(run(enabled, { throwing: true, dark: false })).toBe("light");
+  it("repli sans localStorage : thème système, sans lever d'erreur", () => {
+    expect(run(THEME_INIT_SCRIPT, { throwing: true, dark: true })).toBe("dark");
+    expect(run(THEME_INIT_SCRIPT, { throwing: true, dark: false })).toBe("light");
+  });
+
+  it("pose light quand le sombre est désactivé (NEXT_PUBLIC_DARK_THEME=false)", () => {
+    const disabled = THEME_INIT_SCRIPT.replace("if(true)", "if(false)");
+    expect(disabled).not.toBe(THEME_INIT_SCRIPT);
+    expect(run(disabled, { stored: "dark", dark: true })).toBe("light");
   });
 });

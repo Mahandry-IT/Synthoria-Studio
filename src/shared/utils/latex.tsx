@@ -151,16 +151,16 @@ function parseBoldMarkdown(
 function createTableElement(rows: string[][]): HTMLTableElement {
   const table = document.createElement("table");
   table.className =
-    "w-full text-sm border-collapse my-3 rounded-lg overflow-hidden";
+    "w-full text-sm border-collapse my-3 rounded-card overflow-hidden";
 
   const thead = document.createElement("thead");
   const headerRow = document.createElement("tr");
-  headerRow.className = "bg-indigo-100";
+  headerRow.className = "bg-primary-soft";
 
   for (const cell of rows[0]) {
     const th = document.createElement("th");
     th.className =
-      "px-3 py-2 text-left font-semibold text-indigo-800 border border-indigo-200";
+      "px-3 py-2 text-left font-semibold text-primary border border-line";
     th.textContent = cell;
     headerRow.appendChild(th);
   }
@@ -170,11 +170,11 @@ function createTableElement(rows: string[][]): HTMLTableElement {
   const tbody = document.createElement("tbody");
   for (let r = 1; r < rows.length; r++) {
     const tr = document.createElement("tr");
-    tr.className = r % 2 === 0 ? "bg-white" : "bg-gray-50";
+    tr.className = r % 2 === 0 ? "bg-surface" : "bg-sunken";
 
     for (const cell of rows[r]) {
       const td = document.createElement("td");
-      td.className = "px-3 py-2 text-gray-700 border border-gray-200";
+      td.className = "px-3 py-2 text-ink border border-line";
       td.textContent = cell;
       tr.appendChild(td);
     }
