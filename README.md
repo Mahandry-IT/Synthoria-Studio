@@ -32,6 +32,19 @@ npm start
 | `/history` | Historique des cours ; le détail propose le podcast du cours |
 | `/chat` | Chat avec le tuteur d'un cours : choix du cours (`?course=<id>`), puis conversation |
 
+## Navigation
+
+Configuration unique dans `src/components/nav/navConfig.ts` (groupes Accueil, Fichiers, Cours, Réviser et leurs sous-éléments) ; `AppNav` (monté dans `layout.tsx`) choisit par `useMediaQuery` entre `NavRail` (≥ 1024 px : rail de 88 px + tiroir de 232 px) et `NavBar` (en dessous : deux lignes défilantes), jamais les deux. Le rail n'est pas réductible.
+
+- **Lien actif** : fonction pure `findActiveNav` (`navActive.ts`), par préfixe de chemin (`/history/abc` active Historique) ; un sous-élément à ancre (`/#plans`, `/upload#import`) n'est actif que si le hash correspond. Le hash est relu après chaque clic (`useLocationHash`).
+- **Ancres** : `id="plans"` (carte des plans en cours, `/`) et `id="import"` (panneau d'import, `/upload`), avec `scroll-mt-6`.
+- **Compteurs** (`useNavCounts`) : fichiers, cours, révisions dues, plans actifs, via les hooks existants (clés de cache partagées avec le tableau de bord, pas de nouvel endpoint). Rien n'est affiché tant que la requête charge ou échoue (pas de faux zéro). Les plans comptés sont ceux de la première page (5), hors expirés.
+- **Absents volontairement** : « Podcasts » et « Dossiers » (aucune page) ; les podcasts restent sur le tableau de bord, les dossiers dans `/upload`.
+- **Thème** : le bouton (pied de rail, fin de la première ligne de la barre) n'apparaît que si `DARK_THEME_ENABLED`.
+- **Accessibilité** : lien d'évitement « Aller au contenu » vers `main#contenu`, `aria-current`, cibles de 44 px, flèches haut/bas, Début et Fin dans les groupes du rail (tabulation roulante), Tab dans le tiroir.
+- **Mouvement** : le tiroir glisse de 12 px à chaque changement de groupe, sous-éléments décalés de 40 ms (`.nav-drawer`, `.nav-item` dans `globals.css`), coupé sous `prefers-reduced-motion`.
+- **Coquille** : `h-dvh`, `z-30` pour la barre (sous les `z-50` des modales et du `ChatDrawer`) ; hauteur du chat réduite sous `lg` pour la barre.
+
 ## Dossiers
 
 Les cours de l'historique et les fichiers ingérés se rangent en **dossiers / sous-dossiers** (2 niveaux), avec les mêmes règles : dossier « Général » / sous-dossier « Non classé » par défaut (non supprimables), création implicite en tapant un nouveau nom lors d'un déplacement, réutilisation de la casse d'un dossier existant, et suppression d'un dossier qui reclasse son contenu au défaut sans rien supprimer.

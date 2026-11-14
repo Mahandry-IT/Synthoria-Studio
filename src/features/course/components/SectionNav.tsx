@@ -58,7 +58,7 @@ export function SectionNav({ items, currentKey, onSelect, summary }: SectionNavP
       </button>
       <ol
         id={listId}
-        className={`${open ? "block" : "hidden"} mt-2 max-h-[70vh] lg:max-h-[calc(100vh-6rem)] space-y-1 overflow-y-auto rounded-lg border border-gray-200 bg-white p-2 lg:mt-0 lg:block`}
+        className={`${open ? "block" : "hidden"} mt-2 max-h-[70vh] lg:max-h-[calc(100dvh-6rem)] space-y-1 overflow-y-auto rounded-lg border border-gray-200 bg-white p-2 lg:mt-0 lg:block`}
       >
         {items.map((item, i) => {
           const isCurrent = item.key === currentKey;

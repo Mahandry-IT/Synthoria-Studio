@@ -79,7 +79,9 @@ export function UploadWorkspace() {
           </Card>
 
           <div className="min-w-0 space-y-6">
-            <FileUploadPanel target={target} targetLabel={filter ? currentLabel : `${DEFAULT_FOLDER} (par défaut)`} />
+            <div id="import" className="scroll-mt-6">
+              <FileUploadPanel target={target} targetLabel={filter ? currentLabel : `${DEFAULT_FOLDER} (par défaut)`} />
+            </div>
             <IngestedFilesPanel folderFilter={filter} folderLabel={currentLabel} onMove={setMovingFile} />
           </div>
         </div>
