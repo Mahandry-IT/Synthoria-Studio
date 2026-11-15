@@ -71,7 +71,7 @@ describe("CycleReader — déroulé", () => {
     const start = reader();
     expect(start.match(/aria-current="step"/g)).toHaveLength(1);
     expect(start.match(/Étape \d sur 5 :/g)).toHaveLength(5);
-    expect(start).toContain("Temps 1 sur 5 · Défi");
+    expect(start).toContain("Temps 1 sur 5 : Défi");
 
     const short = reader(parse({ ...rawCycle, vocabulary: [], traps: undefined }), { unlocked: [], done: [], revealed: { s1: 2 } });
     expect(short.match(/Étape \d sur 3 :/g)).toHaveLength(3);
@@ -360,5 +360,27 @@ describe("SectionsList — choix du lecteur et non-régression", () => {
   it("section incomplète avec cycle : garde le lecteur historique (régénération possible)", () => {
     const incomplete = { ...parse(rawCycle), incomplete: true };
     expect(list([incomplete])).not.toContain("Temps 1 sur");
+  });
+});
+
+describe("CycleReader - temps à flèches", () => {
+  const hiddenStages = (out: string) => out.match(/<li id="section-0-cycle-[^"]*" hidden=""/g) ?? [];
+
+  it("début : un seul temps, flèches désactivées", () => {
+    const out = reader();
+    expect(hiddenStages(out)).toHaveLength(0);
+    expect(out).toContain('aria-label="Temps suivant"');
+    expect(out.match(/disabled=""[^>]*aria-label="Temps (précédent|suivant)"/g)).toHaveLength(2);
+  });
+
+  it("reprise au 3e temps : seul le dernier est affiché, les précédents restent montés", () => {
+    const out = reader(parse(rawCycle), { unlocked: [], done: [], revealed: { s1: 3 } });
+    expect(hiddenStages(out)).toHaveLength(2);
+    expect(out).toContain("Temps 3 sur 5 : Le mot juste");
+  });
+
+  it("section terminée : cinq temps montés, le dernier affiché", () => {
+    const out = reader(parse(rawCycle), { unlocked: ["s1"], done: ["s1"] });
+    expect(hiddenStages(out)).toHaveLength(4);
   });
 });

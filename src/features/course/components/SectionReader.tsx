@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
+import { SLIDE_CLASSES, StepPager, useStepPager } from "@/components/StepPager";
 import { LatexText } from "@/shared/utils/latex";
 import { AnswerBlock } from "./AnswerBlock";
 import { BlockRenderer } from "./blocks/BlockRenderer";
@@ -126,8 +126,9 @@ export function focusAfterRender(elementId: string) {
 
 /**
  * Une section du cours. Section avec défi et contenu par blocs : dévoilement progressif
- * (Défi → Pourquoi → Quoi → Comment → À toi → Vérifie → Explique), chaque étape se dépliant via
- * « Continuer » ; les étapes déjà vues restent repliables. Sections historiques : affichage complet.
+ * (Défi → Pourquoi → Quoi → Comment → À toi → Vérifie → Explique) : une seule étape est affichée,
+ * « Continuer » débloque la suivante et les flèches revoient les étapes déjà dévoilées.
+ * Sections historiques : affichage complet.
  */
 export function SectionReader({
   section,
@@ -143,8 +144,8 @@ export function SectionReader({
   regenerationLocked = false,
   onDoExercise,
 }: SectionReaderProps) {
-  // Étapes repliées par l'apprenant (état d'affichage local, non persisté)
-  const [collapsed, setCollapsed] = useState<string[]>([]);
+  // Étape affichée par les flèches (état d'affichage local, non persisté)
+  const pager = useStepPager();
   const canRecall = Boolean(sessionId && section.id && section.recall_prompt);
   const done = progress.done.includes(id);
   const domPrefix = `section-${index}`;
@@ -266,18 +267,18 @@ export function SectionReader({
   const lastSubsectionStep = [...steps].reverse().find((s) => s.subsectionIndex !== undefined);
   const stepDomId = (step: LearningStep) => `${domPrefix}-${step.key}`;
 
+  const shown = pager.shownFor(revealed);
+
   const continueTo = (nextIndex: number) => {
     update((p) => {
       const next = revealNextStep(p, id, total);
       // Sans « Vérifie », la section est terminée quand tout est dévoilé.
       return !hasCheck && nextIndex >= total - 1 ? completeSection(next, id) : next;
     });
+    pager.followLatest(shown);
     const nextStep = steps[nextIndex];
     if (nextStep) focusAfterRender(`${stepDomId(nextStep)}-title`);
   };
-
-  const toggle = (key: string) =>
-    setCollapsed((current) => (current.includes(key) ? current.filter((k) => k !== key) : [...current, key]));
 
   const renderStepContent = (step: LearningStep) => {
     switch (step.kind) {
@@ -314,58 +315,56 @@ export function SectionReader({
   return (
     <Card id={anchorId} className="p-4 sm:p-6">
       {header}
-      <p className="kicker mb-4" aria-live="polite">
-        Étape {revealed} sur {total}
-      </p>
-      <ol className="space-y-4">
+      <StepPager
+        current={shown}
+        revealed={revealed}
+        total={total}
+        title={stepTitle(steps[shown], section, shown)}
+        onChange={(i) => pager.goTo(i, shown)}
+        label={`Étapes de la section ${index + 1}`}
+      >
+      <ol>
         {steps.slice(0, revealed).map((step, i) => {
+          const visible = i === shown;
+          const slide = visible && pager.direction ? SLIDE_CLASSES[pager.direction] : "";
           const isLastRevealed = i === revealed - 1;
           const canContinue = isLastRevealed && revealed < total;
 
           if (step.kind === "challenge") {
             return (
-              <li key={step.key} id={stepDomId(step)}>
+              <li key={step.key} id={stepDomId(step)} hidden={!visible} className={slide}>
                 <h4 id={`${stepDomId(step)}-title`} tabIndex={-1} className="sr-only">
                   Défi
                 </h4>
-                <ChallengeCard
-                  challenge={section.challenge ?? ""}
-                  sessionId={sessionId}
-                  sectionId={section.id}
-                  answered={revealed > 1}
-                  onContinue={() => continueTo(1)}
-                />
+                {pager.isMounted(i, shown) && (
+                  <ChallengeCard
+                    challenge={section.challenge ?? ""}
+                    sessionId={sessionId}
+                    sectionId={section.id}
+                    answered={revealed > 1}
+                    onContinue={() => continueTo(1)}
+                  />
+                )}
               </li>
             );
           }
 
-          const isCollapsed = collapsed.includes(step.key);
-          const contentId = `${stepDomId(step)}-content`;
           return (
-            <li key={step.key} id={stepDomId(step)} className="rounded-card border border-line p-3 sm:p-4">
-              <div className="flex items-center justify-between gap-2">
-                <h4
-                  id={`${stepDomId(step)}-title`}
-                  tabIndex={-1}
-                  className="font-serif text-lg font-semibold leading-snug text-ink"
-                >
-                  {stepTitle(step, section, i)}
-                </h4>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  aria-expanded={!isCollapsed}
-                  aria-controls={contentId}
-                  onClick={() => toggle(step.key)}
-                >
-                  {isCollapsed ? "Déplier" : "Replier"}
-                  <span className="sr-only"> l&apos;étape {stepTitle(step, section, i)}</span>
-                </Button>
-              </div>
-              {/* `hidden` plutôt que démonter : les réponses en cours (Vérifie, Explique) sont conservées. */}
-              <div id={contentId} hidden={isCollapsed} className="mt-2">
-                {renderStepContent(step)}
-              </div>
+            <li
+              key={step.key}
+              id={stepDomId(step)}
+              hidden={!visible}
+              className={`rounded-card border border-line p-3 sm:p-4 ${slide}`}
+            >
+              {/* Monté à la première visite puis conservé (`hidden`) : les réponses en cours sont gardées, et rien n'est rendu dans un conteneur masqué dès le chargement. */}
+              <h4
+                id={`${stepDomId(step)}-title`}
+                tabIndex={-1}
+                className="font-serif text-lg font-semibold leading-snug text-ink"
+              >
+                {stepTitle(step, section, i)}
+              </h4>
+              <div className="mt-2">{pager.isMounted(i, shown) && renderStepContent(step)}</div>
               {canContinue && (
                 <div className="mt-4 flex flex-col gap-2 border-t border-line pt-4 sm:flex-row sm:justify-end">
                   <Button type="button" className="w-full sm:w-auto" onClick={() => continueTo(i + 1)}>
@@ -378,6 +377,7 @@ export function SectionReader({
           );
         })}
       </ol>
+      </StepPager>
       {/* Encadrés et vidéos : uniquement une fois la dernière étape terminée (pas de spoil du quiz). */}
       {atEnd && (
         <>

@@ -156,3 +156,29 @@ describe("SectionReader : bouton « Faire l'exercice »", () => {
     expect(render(progressive, done)).toContain('id="section-anchor-s2"');
   });
 });
+
+describe("SectionReader - étapes à flèches", () => {
+  const withCheck = {
+    ...progressive,
+    check_questions: [{ kind: "choice", question: "Q ?", options: ["a", "b"], correct_option_indices: [0], explanation: "E" }],
+  } as unknown as CourseSection;
+  const hiddenSteps = (out: string) => out.match(/<li id="section-0-[^"]*" hidden=""/g) ?? [];
+
+  it("reprise à 3 étapes : seule la dernière est affichée, les autres restent montées en hidden", () => {
+    const out = render(withCheck, { unlocked: ["s2"], done: [], revealed: { s2: 3 } });
+    expect(hiddenSteps(out)).toHaveLength(2);
+    expect(out).toContain("Étape 3 sur 3");
+    expect(out).toContain('aria-label="Étape précédente"');
+    expect(out).toMatch(/disabled=""[^>]*aria-label="Étape suivante"/);
+  });
+
+  it("début : une seule étape, aucun bouton Replier/Déplier", () => {
+    const out = render(withCheck);
+    expect(hiddenSteps(out)).toHaveLength(0);
+    expect(out).not.toMatch(/Replier|Déplier/);
+  });
+
+  it("titres h4 inchangés pour les ancres", () => {
+    expect(render(withCheck, { unlocked: ["s2"], done: [], revealed: { s2: 2 } })).toMatch(/<h4 id="section-0-[^"]+-title" tabindex="-1"/);
+  });
+});

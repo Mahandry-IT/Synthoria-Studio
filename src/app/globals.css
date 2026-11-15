@@ -296,23 +296,32 @@
 }
 
 /*
- * Temps du cycle nouvellement dévoilé (lecteur de cours) : fondu et glissement de 8 px en 220 ms.
- * Appliqué seulement après un clic sur « Continuer », jamais à la reprise d'une section.
+ * Étape affichée par les flèches du lecteur de cours : fondu et glissement latéral de 12 px en 220 ms,
+ * dans le sens du déplacement. Rejoué quand l'étape redevient visible (display: none -> block).
  */
-@keyframes stage-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes step-slide-next {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
-.stage-in {
-  animation: stage-in var(--d-std) var(--ease-editorial) backwards;
+@keyframes step-slide-prev {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
-/* Mouvement réduit : fondu seul de 120 ms, sans déplacement. */
+.step-slide-next {
+  animation: step-slide-next var(--d-std) var(--ease-editorial) backwards;
+}
+
+.step-slide-prev {
+  animation: step-slide-prev var(--d-std) var(--ease-editorial) backwards;
+}
+
+/* Mouvement réduit : aucune animation, changement d'étape instantané. */
 @media (prefers-reduced-motion: reduce) {
-  .stage-in.stage-in {
-    animation-name: veil-in;
-    animation-duration: var(--d-fast) !important;
+  .step-slide-next,
+  .step-slide-prev {
+    animation: none;
   }
 }
 
