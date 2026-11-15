@@ -1,4 +1,5 @@
 import { deleteJson, getJson, putJson } from "@/shared/api/httpClient";
+import { parseCourseResponse } from "@/features/course/course.api";
 import type { PaginatedResponse } from "@/shared/types/pagination";
 import type { CourseFolder, CourseFolderFilter, CourseHistoryItem, CourseHistoryDetail } from "./history.types";
 
@@ -19,8 +20,11 @@ export function getCourseHistory(
  * Récupère le détail d'un cours par son ID.
  * Laisse remonter HttpError (404 si introuvable).
  */
-export function getCourseHistoryById(id: string): Promise<CourseHistoryDetail> {
-  return getJson<CourseHistoryDetail>(`/courses/history/${id}`);
+export async function getCourseHistoryById(id: string): Promise<CourseHistoryDetail> {
+  const detail = await getJson<CourseHistoryDetail>(`/courses/history/${id}`);
+  // Même validation que la génération : normalise les champs nuls du backend (ex. `formula_latex: null`
+  // d'un terme de vocabulaire) que les composants du cycle supposent être des chaînes.
+  return { ...detail, gemini_response: parseCourseResponse(detail.gemini_response) };
 }
 
 /**

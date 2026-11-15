@@ -68,6 +68,23 @@ describe("coursePlanSchema", () => {
   });
 });
 
+describe("courseResponseSchema — réponse ciblée avec des champs nuls du backend", () => {
+  it("accepte une réponse dont quoi / pourquoi / comment / worked_example sont null (pas de repli sur les données brutes)", () => {
+    const result = courseResponseSchema.safeParse({
+      mode: "question_only",
+      format: "focused_answer",
+      meta: {},
+      sources: [],
+      answer: { summary: "Résumé", quoi: null, pourquoi: null, comment: null, worked_example: null, key_points: null, tables: null },
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.data?.answer?.quoi).toBe("");
+    expect(result.data?.answer?.worked_example).toBeUndefined();
+    expect(result.data?.answer?.key_points).toEqual([]);
+  });
+});
+
 describe("courseResponseSchema — session_id et podcast_job_id", () => {
   const base = { mode: "question_only", format: "focused_answer", meta: {}, sources: [] };
 
