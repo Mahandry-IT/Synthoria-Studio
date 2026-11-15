@@ -1,3 +1,5 @@
+import { createStoredValue } from "@/shared/utils/storedValue";
+
 export const COURSE_TABS = [
   { id: "lessons", label: "Leçons" },
   { id: "exercises", label: "Exercices corrigés" },
@@ -38,32 +40,13 @@ export function tabForKey(current: CourseTabId, key: string): CourseTabId | null
   }
 }
 
-// Magasin minimal pour useSyncExternalStore : l'onglet choisi vit en mémoire (repli si le stockage
-// est indisponible) et est recopié dans localStorage.
-let memoryTab: string | null = null;
-const listeners = new Set<() => void>();
+const tabStore = createStoredValue<string | null>(COURSE_TAB_STORAGE_KEY, (raw) => raw, (tab) => tab ?? "");
 
-export function subscribeTab(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+export const subscribeTab = tabStore.subscribe;
 
 /** Onglet mémorisé (mémoire, sinon localStorage) ; null si aucun. */
-export function readStoredTab(): string | null {
-  if (memoryTab) return memoryTab;
-  try {
-    return window.localStorage.getItem(COURSE_TAB_STORAGE_KEY);
-  } catch {
-    return null;
-  }
-}
+export const readStoredTab = tabStore.read;
 
 export function storeTab(tab: CourseTabId): void {
-  memoryTab = tab;
-  try {
-    window.localStorage.setItem(COURSE_TAB_STORAGE_KEY, tab);
-  } catch {
-    // Stockage indisponible (navigation privée, quota) : seule la mémoire de la page est conservée
-  }
-  listeners.forEach((listener) => listener());
+  tabStore.write(tab);
 }

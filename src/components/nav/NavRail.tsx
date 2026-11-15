@@ -4,7 +4,7 @@ import type { CSSProperties, KeyboardEvent } from "react";
 import { cx } from "@/shared/utils/cx";
 import { formatNavCount } from "./navCounts";
 import { navHref } from "./navConfig";
-import { NavIcon, ThemeIcon } from "./navIcons";
+import { DrawerToggleIcon, NavIcon, ThemeIcon } from "./navIcons";
 import type { NavViewProps } from "./nav.types";
 
 export const NAV_DRAWER_ID = "nav-drawer";
@@ -30,10 +30,42 @@ function onGroupKeyDown(
   buttons?.[next]?.focus();
 }
 
+/** Bouton chevron qui replie / déplie le tiroir (`aria-expanded`, `aria-controls` sur le tiroir). */
+function DrawerToggleButton({
+  collapsed,
+  onToggle,
+  className,
+}: {
+  collapsed: boolean;
+  onToggle: () => void;
+  className?: string;
+}) {
+  const label = collapsed ? "Afficher le menu" : "Masquer le menu";
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={!collapsed}
+      aria-controls={NAV_DRAWER_ID}
+      aria-label={label}
+      title={label}
+      className={cx(
+        "flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-2 hover:bg-sunken hover:text-ink",
+        "transition-colors duration-(--d-fast) motion-reduce:transition-none",
+        FOCUS,
+        className,
+      )}
+    >
+      <DrawerToggleIcon collapsed={collapsed} />
+    </button>
+  );
+}
+
 /**
  * Navigation verticale (≥ lg) : rail de 88 px (groupes) et tiroir de 232 px (sous-éléments du
  * groupe affiché, compteurs à droite). Un seul `nav` ; le tiroir glisse de 12 px à chaque changement
- * de groupe (animation coupée sous `prefers-reduced-motion`).
+ * de groupe (animation coupée sous `prefers-reduced-motion`). Le tiroir se replie : seul le rail reste,
+ * avec un bouton en bas pour le rouvrir.
  */
 export function NavRail({
   groups,
@@ -44,6 +76,8 @@ export function NavRail({
   counts,
   onNavigate,
   theme,
+  drawerCollapsed = false,
+  onToggleDrawer,
 }: NavViewProps) {
   const shown = groups.find((g) => g.id === shownGroupId) ?? groups[0];
   const ids = groups.map((g) => g.id);
@@ -95,6 +129,9 @@ export function NavRail({
           })}
         </div>
         <div className="grow" />
+        {drawerCollapsed && onToggleDrawer && (
+          <DrawerToggleButton collapsed onToggle={onToggleDrawer} className="mb-1" />
+        )}
         {theme && (
           <button
             type="button"
@@ -116,8 +153,15 @@ export function NavRail({
       <div
         id={NAV_DRAWER_ID}
         key={shown.id}
-        className="nav-drawer flex w-58 flex-col gap-1 border-r border-line bg-bg px-3.5 py-6"
+        // Replié : `display: none`, donc aucun lien ne reste focusable
+        className={cx(
+          "nav-drawer w-58 flex-col gap-1 border-r border-line bg-bg px-3.5 py-6",
+          drawerCollapsed ? "hidden" : "flex",
+        )}
       >
+        {onToggleDrawer && (
+          <DrawerToggleButton collapsed={false} onToggle={onToggleDrawer} className="mb-2 self-end" />
+        )}
         <p className="kicker mb-1">Synthoria Studio</p>
         <h2 className="mb-4 font-serif text-xl font-medium text-ink">{shown.title}</h2>
         <ul className="flex flex-col gap-1">

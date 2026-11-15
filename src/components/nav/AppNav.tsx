@@ -1,12 +1,13 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useTheme } from "@/shared/hooks/useTheme";
 import { NavBar } from "./NavBar";
 import { NavRail } from "./NavRail";
 import { findActiveNav } from "./navActive";
 import { NAV_GROUPS } from "./navConfig";
+import { readDrawerCollapsed, storeDrawerCollapsed, subscribeDrawer } from "./navDrawer";
 import { useLocationHash } from "./useLocationHash";
 import { useNavCounts } from "./useNavCounts";
 
@@ -24,6 +25,9 @@ export function AppNav() {
   const counts = useNavCounts();
   const { theme, toggleTheme, darkEnabled } = useTheme();
 
+  // Dépliée au rendu serveur, puis l'état mémorisé une fois monté
+  const drawerCollapsed = useSyncExternalStore(subscribeDrawer, readDrawerCollapsed, () => false);
+
   const active = findActiveNav(NAV_GROUPS, pathname, hash);
   const activeGroupId = active?.groupId ?? null;
   // Sélection manuelle valable tant que le groupe de la page ne change pas
@@ -39,6 +43,8 @@ export function AppNav() {
     onSelectGroup: (groupId: string) => setPick({ groupId, anchor: activeGroupId }),
     counts,
     onNavigate: refresh,
+    drawerCollapsed,
+    onToggleDrawer: () => storeDrawerCollapsed(!drawerCollapsed),
     theme: darkEnabled ? { dark: theme === "dark", onToggle: toggleTheme } : null,
   };
 

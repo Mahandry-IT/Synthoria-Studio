@@ -13,6 +13,9 @@ export interface NavViewProps {
   counts: NavCounts;
   /** Appelé au clic sur un sous-élément (relit le hash de l'URL). */
   onNavigate: () => void;
+  /** Tiroir des sous-éléments replié (rail ≥ lg seulement ; sans effet sur la barre mobile). */
+  drawerCollapsed?: boolean;
+  onToggleDrawer?: () => void;
   /** `null` : bouton de thème masqué (`DARK_THEME_ENABLED` faux). */
   theme: { dark: boolean; onToggle: () => void } | null;
 }

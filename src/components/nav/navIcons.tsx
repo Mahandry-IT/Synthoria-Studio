@@ -1,4 +1,6 @@
 import type { ComponentType } from "react";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import EditNoteOutlinedIcon from "@mui/icons-material/EditNoteOutlined";
@@ -38,4 +40,9 @@ export function NavIcon({ name, small = false }: { name: NavIconName; small?: bo
 
 export function ThemeIcon({ dark }: { dark: boolean }) {
   return dark ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />;
+}
+
+/** Chevron du bouton de repli : pointe vers la gauche pour masquer, vers la droite pour afficher. */
+export function DrawerToggleIcon({ collapsed }: { collapsed: boolean }) {
+  return collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />;
 }
