@@ -87,15 +87,18 @@ const answerBlockSchema = z.object({
   table: courseTableSchema.nullish(),
 });
 
+/** Le backend renvoie `null` pour une clé absente (ex. réponse ciblée sans `quoi`) : chaîne vide ou liste vide. */
+const textOrEmpty = z.string().nullish().transform((v) => v ?? "");
+
 const courseAnswerSchema = z.object({
-  summary: z.string().optional().default(""),
-  blocks: z.array(answerBlockSchema).optional().default([]),
-  quoi: z.string().optional().default(""),
-  pourquoi: z.string().optional().default(""),
-  comment: z.string().optional().default(""),
-  worked_example: workedExampleSchema.optional(),
-  key_points: z.array(z.string()).optional().default([]),
-  tables: z.array(courseTableSchema).optional().default([]),
+  summary: textOrEmpty,
+  blocks: z.array(answerBlockSchema).nullish().transform((v) => v ?? []),
+  quoi: textOrEmpty,
+  pourquoi: textOrEmpty,
+  comment: textOrEmpty,
+  worked_example: workedExampleSchema.nullish().transform((v) => v ?? undefined),
+  key_points: z.array(z.string()).nullish().transform((v) => v ?? []),
+  tables: z.array(courseTableSchema).nullish().transform((v) => v ?? []),
 });
 
 export const courseContentBlockSchema = z.object({
@@ -174,11 +177,11 @@ export const courseSectionSchema = z.object({
   recall_prompt: recallPromptSchema.nullish(),
   subsections: z.array(courseSubsectionSchema).optional().default([]),
   title: z.string(),
-  quoi: z.string().optional().default(""),
-  pourquoi: z.string().optional().default(""),
-  comment: z.string().optional().default(""),
-  worked_example: workedExampleSchema.optional(),
-  key_points: z.array(z.string()).optional().default([]),
+  quoi: textOrEmpty,
+  pourquoi: textOrEmpty,
+  comment: textOrEmpty,
+  worked_example: workedExampleSchema.nullish().transform((v) => v ?? undefined),
+  key_points: z.array(z.string()).nullish().transform((v) => v ?? []),
   /** « Ce qu'il faut retenir » / « Ce qu'il faut éviter » : absents des cours antérieurs au lot 2 → []. */
   key_takeaways: lenientArray(z.string()),
   pitfalls_to_avoid: lenientArray(sectionPitfallSchema),

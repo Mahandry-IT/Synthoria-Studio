@@ -54,7 +54,7 @@ const PLAN_ASSIST_TIMEOUT_MS = 120_000;
  * Valide la réponse d'un cours par Zod ; en cas d'écart, retourne les données
  * brutes (le frontend gère les champs null/undefined de toute façon).
  */
-function parseCourseResponse(raw: CourseGenerationResponse): CourseGenerationResponse {
+export function parseCourseResponse(raw: CourseGenerationResponse): CourseGenerationResponse {
   const parsed = courseResponseSchema.safeParse(raw);
 
   if (!parsed.success) {

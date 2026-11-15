@@ -30,7 +30,7 @@ export function CycleVocabulary({ terms }: { terms: VocabTerm[] }) {
               </th>
               <td className="px-3.5 py-2.5 align-top text-ink-2">
                 <RichText text={entry.plain} />
-                {entry.formula_latex.trim() && (
+                {entry.formula_latex?.trim() && (
                   <div className="mt-1 overflow-x-auto">
                     <LatexText text={`$${stripMathDelimiters(entry.formula_latex)}$`} />
                   </div>

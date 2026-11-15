@@ -92,6 +92,14 @@ describe("lecture du cycle (zod tolérant)", () => {
     expect(section?.vocabulary.map((v) => v.term)).toEqual(["ok"]);
   });
 
+  it("vocabulaire : un formula_latex nul du backend devient une chaîne vide (le rendu appelle .trim())", () => {
+    const section = parse({
+      ...rawCycle,
+      vocabulary: [{ term: "Hyperviseur", plain: "Crée les machines virtuelles.", formula_latex: null }, { term: "RAM", plain: "Mémoire." }],
+    }).cycle;
+    expect(section?.vocabulary.map((v) => v.formula_latex)).toEqual(["", ""]);
+  });
+
   it("support invalide : l'étape garde son texte sans support", () => {
     const section = parse({
       ...rawCycle,
