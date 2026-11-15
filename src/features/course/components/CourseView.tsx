@@ -1,10 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { CourseTabs } from "./CourseTabs";
-import { chooseInitialTab, readStoredTab, storeTab, subscribeTab, type CourseTabId } from "../courseTabs";
+import { chooseInitialTab, readStoredTab, storeTab, subscribeTab } from "../courseTabs";
+import {
+  availableSections,
+  chooseInitialSection,
+  hasCourseBlock,
+  type CourseSectionId,
+} from "../courseSections";
+import { CourseIconNav, sectionPanelId, sectionTabId } from "./CourseIconNav";
+import { CourseIntro, CourseQuestionPanel } from "./CoursePanels";
 import { CourseMetaHeader } from "./CourseMetaHeader";
-import { SourcesList } from "./SourcesList";
 import { useSectionProgress } from "../hooks/useSectionProgress";
 import { headingIdOf, SectionsList } from "./SectionsList";
 import { focusAfterRender } from "./SectionReader";
@@ -16,10 +23,8 @@ import { splitVideosBySection } from "../videoGrouping";
 import { isMissingWrapUp } from "../incompleteCourse";
 import { SummaryBlock } from "./SummaryBlock";
 import { NextStepsList } from "./NextStepsList";
-import { AnswerBlock } from "./AnswerBlock";
 import { VideoCards } from "./VideoCards";
 import { AddCourseContentButton } from "./learning/AddCourseContentButton";
-import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
 import { SessionPodcast } from "@/features/podcast/components/SessionPodcast";
 import { ExercisesPanel } from "@/features/exercises/components/ExercisesPanel";
@@ -38,6 +43,8 @@ interface CourseViewProps {
    * Par défaut `data.session_id` ; l'historique la fournit explicitement.
    */
   sessionId?: string | null;
+  /** Question posée, affichée dans le bloc « Question » ; sans elle, ce bloc ne montre que la réponse directe. */
+  question?: string;
 }
 
 /**
@@ -47,7 +54,7 @@ interface CourseViewProps {
  * Un cours régénéré en entier remplace celui reçu du parent : le contenu est remonté (`key`) pour
  * repartir d'un état neuf — sections ajoutées, overrides et quiz de l'ancien cours n'ont plus cours.
  */
-export function CourseView({ data, sessionId }: CourseViewProps) {
+export function CourseView({ data, sessionId, question }: CourseViewProps) {
   const [regenerated, setRegenerated] = useState<{ course: CourseGenerationResponse; version: number } | null>(null);
 
   return (
@@ -55,6 +62,7 @@ export function CourseView({ data, sessionId }: CourseViewProps) {
       key={regenerated?.version ?? 0}
       data={regenerated?.course ?? data}
       sessionId={sessionId}
+      question={question}
       onCourseRegenerated={(course) =>
         setRegenerated((current) => ({ course, version: (current?.version ?? 0) + 1 }))
       }
@@ -66,7 +74,7 @@ interface CourseContentProps extends CourseViewProps {
   onCourseRegenerated: (course: CourseGenerationResponse) => void;
 }
 
-function CourseContent({ data, sessionId: sessionIdProp, onCourseRegenerated }: CourseContentProps) {
+function CourseContent({ data, sessionId: sessionIdProp, question, onCourseRegenerated }: CourseContentProps) {
   const sessionId = sessionIdProp ?? data.session_id ?? null;
   const isMode3 = data.mode === "question_only";
   const isMode2 = data.mode === "file_question";
@@ -116,6 +124,7 @@ function CourseContent({ data, sessionId: sessionIdProp, onCourseRegenerated }: 
 
   function openExercise(exerciseId: string) {
     setOpenExerciseId(exerciseId);
+    setChosenSection("course");
     storeTab("exercises");
   }
 
@@ -124,6 +133,7 @@ function CourseContent({ data, sessionId: sessionIdProp, onCourseRegenerated }: 
   function backToSection(sectionId: string) {
     setOpenExerciseId(null);
     updateProgress((p) => setCurrentSection(p, sectionId));
+    setChosenSection("course");
     storeTab("lessons");
     const index = sections.findIndex((s) => s.id === sectionId);
     if (index >= 0) focusAfterRender(headingIdOf(index));
@@ -135,6 +145,39 @@ function CourseContent({ data, sessionId: sessionIdProp, onCourseRegenerated }: 
   const isFresh = isFreshCourse(data.meta?.generated_at, mountedAt);
 
   const quizOnOwnPage = quizFlow.phase !== "intro";
+
+  // Bloc actif : « Cours » au rendu serveur, puis le bloc mémorisé s'il a des données
+  const pitfalls = data.common_pitfalls ?? [];
+  const available = availableSections({
+    hasQuestion: Boolean(question?.trim()),
+    hasAnswer: Boolean(data.answer),
+    hasPodcast: Boolean(sessionId),
+    hasCourse: hasCourseBlock({ sectionCount: sections.length, hasQuiz, hasAnswer: Boolean(data.answer) }),
+    hasPitfalls: pitfalls.length > 0,
+    hasSummary: Boolean(data.summary),
+    hasNextSteps: nextSteps.length > 0,
+  });
+  // Choix de l'utilisateur pour CE cours seulement (pas mémorisé d'un cours à l'autre)
+  const [chosenSection, setChosenSection] = useState<CourseSectionId | null>(null);
+  const section = chooseInitialSection(chosenSection, available);
+  const has = (id: CourseSectionId) => available.some((s) => s.id === id);
+  // Tous les blocs restent montés (masqués par `hidden`) : changer d'icône ne perd ni l'état des sections ni un suivi de génération
+  const panelProps = (id: CourseSectionId) => ({
+    role: "tabpanel" as const,
+    id: sectionPanelId(id),
+    "aria-labelledby": sectionTabId(id),
+    hidden: section !== id,
+    tabIndex: 0,
+  });
+
+  // Défilement remis en haut du bloc à chaque changement (pas au premier rendu)
+  const panelRef = useRef<HTMLDivElement>(null);
+  const previousSection = useRef(section);
+  useEffect(() => {
+    if (previousSection.current === section) return;
+    previousSection.current = section;
+    panelRef.current?.scrollIntoView({ block: "start" });
+  }, [section]);
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
@@ -157,94 +200,100 @@ function CourseContent({ data, sessionId: sessionIdProp, onCourseRegenerated }: 
 
       <CourseMetaHeader meta={data.meta} />
 
-      <VideoCards videos={videos.general} sessionId={sessionId} onNoteSaved={saveNote} />
-
-      {sessionId && <SessionPodcast sessionId={sessionId} />}
-
       {sessionId && hasQuiz && isFresh && <ExercisesOffer sessionId={sessionId} />}
 
-      <CourseTabs
-        active={tab}
-        onChange={storeTab}
-        panels={{
-          lessons: (
-            <div className="space-y-6">
-              {data.introduction && (
-                <Card className="p-5">
-                  <div className="text-sm leading-relaxed text-ink-2 space-y-2">
-                    {typeof data.introduction === "object" ? (
-                      Object.entries(data.introduction).map(([key, value]) => (
-                        <p key={key}>
-                          <span className="font-medium">{key}:</span> {value}
-                        </p>
-                      ))
-                    ) : (
-                      <p>{data.introduction}</p>
-                    )}
-                  </div>
-                </Card>
-              )}
-
-              <SourcesList sources={data.sources ?? []} />
-
-              {data.answer && (
-                <Card className="p-5">
-                  <h2 className="kicker mb-3">Réponse directe</h2>
-                  <AnswerBlock answer={data.answer} />
-                </Card>
-              )}
-
-              {sections.length > 0 && (
-                <SectionsList
-                  sections={sections}
-                  sessionId={sessionId}
-                  courseKey={sessionId ?? data.meta?.title ?? "cours"}
-                  videosBySection={videos.bySection}
-                  onVideoNoteSaved={saveNote}
-                  missingWrapUp={isMissingWrapUp(data)}
-                  onCourseRegenerated={onCourseRegenerated}
-                  sectionExercises={sectionExercises}
-                  onDoExercise={openExercise}
-                />
-              )}
-
-              {data.common_pitfalls && data.common_pitfalls.length > 0 && (
-                <PitfallsList pitfalls={data.common_pitfalls} />
-              )}
-
-              {data.summary && <SummaryBlock summary={data.summary} />}
-
-              {nextSteps.length > 0 && <NextStepsList steps={nextSteps} />}
-
-              {sessionId && (
-                <div className="flex justify-center">
-                  <AddCourseContentButton
-                    sessionId={sessionId}
-                    hasNextSteps={nextSteps.length > 0}
-                    onAdded={handleContentAdded}
-                  />
-                </div>
-              )}
+      {/* Barre d'icônes (colonne à gauche ≥ lg, barre fixe en bas sinon) ; marge basse pour ne rien masquer */}
+      <div className="pb-20 lg:flex lg:items-start lg:gap-6 lg:pb-0">
+        <CourseIconNav sections={available} active={section} onChange={setChosenSection} />
+        <div
+          ref={panelRef}
+          className="min-w-0 flex-1"
+        >
+          {has("question") && (
+            <div {...panelProps("question")}>
+              <CourseQuestionPanel question={question} answer={data.answer} />
             </div>
-          ),
-          exercises: (
-            <ExercisesPanel
-              sessionId={sessionId}
-              sectionTitles={sectionTitles}
-              openExerciseId={openExerciseId}
-              onOpenExercise={setOpenExerciseId}
-              onBackToSection={backToSection}
-            />
-          ),
-          quiz: hasQuiz ? (
-            <QuizPanel questions={quiz} flow={quizFlow} />
-          ) : (
-            <p className="rounded-card border border-dashed border-line-2 p-6 text-center text-sm text-ink-3">
-              Ce cours n&apos;a pas de quiz.
-            </p>
-          ),
-        }}
-      />
+          )}
+          {has("podcast") && sessionId && (
+            <div {...panelProps("podcast")}>
+              <SessionPodcast sessionId={sessionId} />
+            </div>
+          )}
+          {has("course") && (
+            <div {...panelProps("course")}>
+            <div className="space-y-6">
+              <VideoCards videos={videos.general} sessionId={sessionId} onNoteSaved={saveNote} />
+              <CourseTabs
+                active={tab}
+                onChange={storeTab}
+                panels={{
+                  lessons: (
+                    <div className="space-y-6">
+                      <CourseIntro introduction={data.introduction} sources={data.sources} />
+
+                      {sections.length > 0 && (
+                        <SectionsList
+                          sections={sections}
+                          sessionId={sessionId}
+                          courseKey={sessionId ?? data.meta?.title ?? "cours"}
+                          videosBySection={videos.bySection}
+                          onVideoNoteSaved={saveNote}
+                          missingWrapUp={isMissingWrapUp(data)}
+                          onCourseRegenerated={onCourseRegenerated}
+                          sectionExercises={sectionExercises}
+                          onDoExercise={openExercise}
+                        />
+                      )}
+
+                      {sessionId && (
+                        <div className="flex justify-center">
+                          <AddCourseContentButton
+                            sessionId={sessionId}
+                            hasNextSteps={nextSteps.length > 0}
+                            onAdded={handleContentAdded}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ),
+                  exercises: (
+                    <ExercisesPanel
+                      sessionId={sessionId}
+                      sectionTitles={sectionTitles}
+                      openExerciseId={openExerciseId}
+                      onOpenExercise={setOpenExerciseId}
+                      onBackToSection={backToSection}
+                    />
+                  ),
+                  quiz: hasQuiz ? (
+                    <QuizPanel questions={quiz} flow={quizFlow} />
+                  ) : (
+                    <p className="rounded-card border border-dashed border-line-2 p-6 text-center text-sm text-ink-3">
+                      Ce cours n&apos;a pas de quiz.
+                    </p>
+                  ),
+                }}
+              />
+            </div>
+            </div>
+          )}
+          {has("pitfalls") && (
+            <div {...panelProps("pitfalls")}>
+              <PitfallsList pitfalls={pitfalls} />
+            </div>
+          )}
+          {has("summary") && data.summary && (
+            <div {...panelProps("summary")}>
+              <SummaryBlock summary={data.summary} />
+            </div>
+          )}
+          {has("next-steps") && (
+            <div {...panelProps("next-steps")}>
+              <NextStepsList steps={nextSteps} />
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Le quiz en page propre (retour anticipé plus haut) masque le chat */}
       {sessionId && <ChatLauncher sessionId={sessionId} sectionId={chatSectionId} />}

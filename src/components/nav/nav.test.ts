@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PendingPlanItem } from "@/features/course/course.types";
 import { NavBar } from "./NavBar";
 import { NavRail } from "./NavRail";
@@ -10,6 +10,7 @@ import type { NavViewProps } from "./nav.types";
 import { findActiveNav } from "./navActive";
 import { buildNavCounts, formatNavCount } from "./navCounts";
 import { NAV_GROUPS, navHref } from "./navConfig";
+import { NAV_DRAWER_STORAGE_KEY, parseDrawerCollapsed, readDrawerCollapsed, storeDrawerCollapsed } from "./navDrawer";
 
 const APP_DIR = join(process.cwd(), "src", "app");
 const allItems = NAV_GROUPS.flatMap((g) => g.items);
@@ -129,5 +130,72 @@ describe("rendu statique", () => {
     const theme = { dark: false, onToggle: () => {} };
     expect(renderToStaticMarkup(h(NavRail, { ...base, theme }))).toContain("Passer au thème sombre");
     expect(renderToStaticMarkup(h(NavBar, { ...base, theme }))).toContain("Passer au thème sombre");
+  });
+});
+
+describe("tiroir repliable", () => {
+  const base: NavViewProps = {
+    groups: NAV_GROUPS,
+    activeGroupId: "fichiers",
+    activeItemId: "files",
+    shownGroupId: "fichiers",
+    onSelectGroup: () => {},
+    counts: { files: 24 },
+    onNavigate: () => {},
+    theme: null,
+  };
+  const toggle = { onToggleDrawer: () => {} };
+
+  it("déplié : bouton « Masquer le menu » dans le tiroir, liens visibles", () => {
+    const out = renderToStaticMarkup(h(NavRail, { ...base, ...toggle, drawerCollapsed: false }));
+    expect(out).toContain('aria-label="Masquer le menu"');
+    expect(out).not.toContain("Afficher le menu");
+    expect(out).toContain('aria-expanded="true" aria-controls="nav-drawer" aria-label="Masquer le menu"');
+    expect(out).toContain("Importer un PDF");
+    expect(out).not.toMatch(/id="nav-drawer"[^>]*class="[^"]*\bhidden\b/);
+  });
+
+  it("replié : tiroir hidden, bouton « Afficher le menu » dans le rail", () => {
+    const out = renderToStaticMarkup(h(NavRail, { ...base, ...toggle, drawerCollapsed: true }));
+    expect(out).toContain('aria-expanded="false" aria-controls="nav-drawer" aria-label="Afficher le menu"');
+    expect(out).toMatch(/id="nav-drawer"[^>]*class="[^"]*\bhidden\b|class="[^"]*\bhidden\b[^"]*"[^>]*id="nav-drawer"/);
+  });
+
+  it("sans effet sur la barre mobile", () => {
+    const out = renderToStaticMarkup(h(NavBar, { ...base, ...toggle, drawerCollapsed: true }));
+    expect(out).not.toContain("le menu");
+    expect(out).toContain("Importer un PDF");
+  });
+});
+
+describe("persistance du tiroir", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("parseDrawerCollapsed : seulement « 1 » replie", () => {
+    expect(parseDrawerCollapsed("1")).toBe(true);
+    expect(parseDrawerCollapsed("0")).toBe(false);
+    expect(parseDrawerCollapsed("oui")).toBe(false);
+    expect(parseDrawerCollapsed(null)).toBe(false);
+  });
+
+  it("écrit dans localStorage, mémoire conservée si le stockage lève une erreur", () => {
+    const setItem = vi.fn();
+    vi.stubGlobal("window", { localStorage: { setItem, getItem: () => null } });
+    storeDrawerCollapsed(true);
+    expect(setItem).toHaveBeenCalledWith(NAV_DRAWER_STORAGE_KEY, "1");
+    expect(readDrawerCollapsed()).toBe(true);
+
+    vi.stubGlobal("window", {
+      localStorage: {
+        setItem: () => {
+          throw new Error("quota");
+        },
+        getItem: () => {
+          throw new Error("denied");
+        },
+      },
+    });
+    expect(() => storeDrawerCollapsed(false)).not.toThrow();
+    expect(readDrawerCollapsed()).toBe(false);
   });
 });

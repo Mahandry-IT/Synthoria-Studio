@@ -100,7 +100,7 @@ export default function HistoryDetailPage({
         )}
       </Card>
 
-      <CourseView data={data.gemini_response} sessionId={data.id} />
+      <CourseView data={data.gemini_response} sessionId={data.id} question={data.question} />
 
       {confirming && (
         <ConfirmDialog
