@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from "react";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
+import { SLIDE_CLASSES, StepPager, useStepPager } from "@/components/StepPager";
 import { Stepper } from "@/components/Stepper";
 import { sectionAnchorId } from "@/features/exercises/exerciseLinks";
 import { LatexText } from "@/shared/utils/latex";
 import type { CourseSection, CourseVideo, SectionCycle } from "../../course.types";
 import { cycleDurationLabel } from "../../cycleDuration";
-import { CYCLE_STAGE_TITLES, cycleStages, stageProgressLabel, stageView, type CycleStageKey } from "../../cycleFormat";
+import { CYCLE_STAGE_TITLES, cycleStages, stageView, type CycleStageKey } from "../../cycleFormat";
 import {
   getAnswer,
   recordAnswer,
@@ -83,14 +83,15 @@ export function CycleReader({
   const stepsFullyShown = done || revealed - 1 > stepsIndex;
   const stepCount = revealedMiniSteps(cycleProgress, id, cycle.steps.length, stepsFullyShown);
   const duration = cycleDurationLabel(section);
-  // Temps dévoilé par un clic sur « Continuer » : seul celui-là entre en fondu (jamais à la reprise).
-  const [entering, setEntering] = useState<CycleStageKey | null>(null);
+  // Temps affiché par les flèches (état d'affichage local, non persisté).
+  const pager = useStepPager();
+  const shown = pager.shownFor(revealed);
 
   const answerOf = (answer: string) => getAnswer(cycleProgress, id, answer);
   const answer = (answerId: string, record: CycleAnswerRecord) => updateCycle((p) => recordAnswer(p, id, answerId, record));
 
   const goToNextStage = () => {
-    setEntering(stages[revealed]);
+    pager.followLatest(shown);
     update((p) => revealNextStep(p, id, total));
     focusAfterRender(`${stageDomId(stages[revealed])}-title`);
   };
@@ -178,33 +179,45 @@ export function CycleReader({
         </p>
       )}
       <Stepper total={total} current={revealed} complete={done} label="Progression de la section" className="mb-3" />
-      <p className="kicker mb-4">
-        {stageProgressLabel(revealed, total, stages[revealed - 1])}
-        {duration ? ` · ${duration}` : ""}
-      </p>
-      <ol className="space-y-5">
+      {duration && <p className="kicker mb-4">{duration}</p>}
+      <StepPager
+        current={shown}
+        revealed={revealed}
+        total={total}
+        title={CYCLE_STAGE_TITLES[stages[shown]]}
+        onChange={(i) => pager.goTo(i, shown)}
+        label={`Temps de la section ${index + 1}`}
+        unit="Temps"
+        previousLabel="Temps précédent"
+        nextLabel="Temps suivant"
+      >
+      <ol>
         {stages.slice(0, revealed).map((key, position) => {
           const current = stageView(position, revealed, done) === "current";
           const next = advance(key, position);
+          const visible = position === shown;
+          const slide = visible && pager.direction ? SLIDE_CLASSES[pager.direction] : "";
           return (
             <li
               key={key}
               id={stageDomId(key)}
+              hidden={!visible}
               className={`${
                 current
                   ? "rounded-card border border-line bg-surface p-3 shadow-paper sm:p-5"
                   : "border-l-2 border-primary pl-3 sm:pl-4"
-              } ${entering === key ? "stage-in" : ""}`}
+              } ${slide}`}
             >
               <StageHeading id={`${stageDomId(key)}-title`} done={!current}>
                 {CYCLE_STAGE_TITLES[key]}
               </StageHeading>
-              {content(key)}
+              {pager.isMounted(position, shown) && content(key)}
               {next && <div className="mt-4 flex flex-col gap-2 border-t border-line pt-4 sm:flex-row sm:justify-end">{next}</div>}
             </li>
           );
         })}
       </ol>
+      </StepPager>
       {done && (
         <>
           <SectionTakeaways section={{ key_takeaways: section.key_takeaways }} idPrefix={`${domPrefix}-takeaways`} />
